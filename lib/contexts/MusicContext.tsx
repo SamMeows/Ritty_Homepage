@@ -14,7 +14,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
-    audioRef.current = new Audio('/audio/bgm.mp3')
+    audioRef.current = new Audio('/audio/bgm.wav')
     audioRef.current.loop = true
     audioRef.current.volume = 0.3
 
