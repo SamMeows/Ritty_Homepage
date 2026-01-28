@@ -1,0 +1,67 @@
+{
+  "hero": {
+    "line1": "A Happy Butler Life",
+    "line2": "with Ritty"
+  },
+  "nav": {
+    "intro": "Intro",
+    "worldview": "Worldview",
+    "news": "News"
+  },
+  "sections": {
+    "worldview": {
+      "title": "Worldview",
+      "comingSoon": "Coming Soon"
+    },
+    "news": {
+      "title": "News",
+      "comingSoon": "Coming Soon"
+    }
+  },
+  "footer": {
+    "copyright": "2025 Sammeows. All rights reserved.",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy"
+  },
+  "community": {
+    "title": "Community"
+  },
+  "meta": {
+    "title": "Ritty - Talking Cat Virtual Pet | AI Tamagotchi",
+    "description": "Meet Ritty, the space cat looking for a butler! A modern Tamagotchi experience. Chat with your cute cat, feed it, dress it up, and play mini-games. If you need healing in your busy life, become Ritty's butler.",
+    "keywords": "Ritty, talking cat, virtual pet, Tamagotchi, AI cat, AI chat, AI friend, pet game, healing app, cat game, space cat",
+    "ogTitle": "Ritty - Talking Cat Virtual Pet | AI Tamagotchi"
+  },
+  "links": {
+    "appStore": "https://apps.apple.com/us/app/id6743311040",
+    "googlePlay": "https://play.google.com/store/apps/details?id=com.sammeows.ritty&hl=en",
+    "instagram": "https://www.instagram.com/ritty_kr/",
+    "discord": "https://discord.gg/wghaFYCkCV",
+    "youtube": "https://www.youtube.com/@Ritty_meow",
+    "tiktok": "https://www.tiktok.com/@rittymeow"
+  },
+  "alt": {
+    "logo": "Ritty - Modern Talking Tamagotchi! AI Cat Chat & Care",
+    "heroImage": "AI Cat Ritty App Screenshot - Space Cat Character",
+    "appStore": "Download Ritty on App Store - iOS",
+    "googlePlay": "Download Ritty on Google Play - Android",
+    "instagram": "Ritty Official Instagram",
+    "discord": "Ritty Discord Community",
+    "youtube": "Ritty YouTube Channel",
+    "tiktok": "Ritty TikTok Account",
+    "sammeowsLogo": "Sammeows Logo"
+  },
+  "aria": {
+    "switchToEnglish": "Switch to English",
+    "switchToKorean": "한국어로 변경",
+    "downloadIos": "Download Ritty iOS App",
+    "downloadAndroid": "Download Ritty Android App",
+    "visitInstagram": "Visit Ritty Official Instagram",
+    "joinDiscord": "Join Ritty Discord Community",
+    "subscribeYoutube": "Subscribe to Ritty YouTube Channel",
+    "followTiktok": "Follow Ritty TikTok Account",
+    "toggleMusic": "Toggle background music",
+    "scrollDown": "Scroll down",
+    "changeLanguage": "Change language"
+  }
+}

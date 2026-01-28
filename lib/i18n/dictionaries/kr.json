@@ -1,0 +1,67 @@
+{
+  "hero": {
+    "line1": "리티와 함께하는",
+    "line2": "행복한 집사 생활"
+  },
+  "nav": {
+    "intro": "소개",
+    "worldview": "세계관",
+    "news": "소식"
+  },
+  "sections": {
+    "worldview": {
+      "title": "세계관",
+      "comingSoon": "Coming Soon"
+    },
+    "news": {
+      "title": "소식",
+      "comingSoon": "Coming Soon"
+    }
+  },
+  "footer": {
+    "copyright": "2025 Sammeows. All rights reserved.",
+    "terms": "이용약관",
+    "privacy": "개인정보처리방침"
+  },
+  "community": {
+    "title": "커뮤니티"
+  },
+  "meta": {
+    "title": "리티 Ritty - 말하는 고양이 키우기 | AI 다마고치 고양이",
+    "description": "우주에서 집사를 찾아온 고양이 리티! 다마고치, 토킹톰의 현대판 버전. 귀여운 고양이와 대화하고, 밥주고, 꾸미고, 미니게임까지. 바쁜 일상 속 힐링이 필요하다면 리티의 집사가 되어보세요.",
+    "keywords": "리티, Ritty, 리티 앱, 고양이 키우기, 말하는 고양이, 다마고치, 토킹톰, AI 고양이, AI 채팅, AI 대화, AI 친구, 가상 펫, 펫 키우기, 힐링 앱, 고양이 게임, 우주 고양이",
+    "ogTitle": "리티 Ritty - 말하는 고양이 키우기 | AI 다마고치 토킹톰"
+  },
+  "links": {
+    "appStore": "https://apps.apple.com/kr/app/id6743311040",
+    "googlePlay": "https://play.google.com/store/apps/details?id=com.sammeows.ritty&hl=ko",
+    "instagram": "https://www.instagram.com/ritty_kr/",
+    "discord": "https://discord.gg/wghaFYCkCV",
+    "youtube": "https://www.youtube.com/@Ritty_meow",
+    "tiktok": "https://www.tiktok.com/@rittymeow"
+  },
+  "alt": {
+    "logo": "리티 Ritty - 현대판 말하는 다마고치! AI 고양이 대화·키우기",
+    "heroImage": "AI 고양이 리티 앱 스크린샷 - 우주 고양이 캐릭터",
+    "appStore": "리티 앱 스토어 다운로드 - iOS",
+    "googlePlay": "리티 구글 플레이 다운로드 - Android",
+    "instagram": "리티 인스타그램 공식 계정",
+    "discord": "리티 디스코드 커뮤니티",
+    "youtube": "리티 유튜브 채널",
+    "tiktok": "리티 틱톡 계정",
+    "sammeowsLogo": "삼냥이즈 로고"
+  },
+  "aria": {
+    "switchToEnglish": "Switch to English",
+    "switchToKorean": "한국어로 변경",
+    "downloadIos": "리티 iOS 앱 다운로드하기",
+    "downloadAndroid": "리티 Android 앱 다운로드하기",
+    "visitInstagram": "리티 인스타그램 공식 계정 방문하기",
+    "joinDiscord": "리티 디스코드 커뮤니티 참여하기",
+    "subscribeYoutube": "리티 유튜브 채널 구독하기",
+    "followTiktok": "리티 틱톡 계정 팔로우하기",
+    "toggleMusic": "배경 음악 토글",
+    "scrollDown": "아래로 스크롤",
+    "changeLanguage": "언어 변경"
+  }
+}

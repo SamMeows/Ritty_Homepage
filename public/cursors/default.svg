@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Cat paw cursor -->
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="1" dy="1" stdDeviation="1" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <!-- Main pad -->
+  <ellipse cx="16" cy="20" rx="8" ry="7" fill="#FFB6C1" filter="url(#shadow)"/>
+  <!-- Top pads -->
+  <ellipse cx="8" cy="10" rx="4" ry="5" fill="#FFB6C1" filter="url(#shadow)"/>
+  <ellipse cx="16" cy="7" rx="4" ry="5" fill="#FFB6C1" filter="url(#shadow)"/>
+  <ellipse cx="24" cy="10" rx="4" ry="5" fill="#FFB6C1" filter="url(#shadow)"/>
+  <!-- Inner pad details -->
+  <ellipse cx="16" cy="21" rx="5" ry="4" fill="#FF91A4"/>
+  <ellipse cx="8" cy="10" rx="2.5" ry="3" fill="#FF91A4"/>
+  <ellipse cx="16" cy="7" rx="2.5" ry="3" fill="#FF91A4"/>
+  <ellipse cx="24" cy="10" rx="2.5" ry="3" fill="#FF91A4"/>
+</svg>
