@@ -55,11 +55,15 @@
   "links": {
     "appStore": "https://apps.apple.com/us/app/id6743311040",
     "googlePlay": "https://play.google.com/store/apps/details?id=com.sammeows.ritty&hl=en",
-    "instagram": "https://www.instagram.com/ritty_kr/",
-    "discord": "https://discord.gg/wghaFYCkCV",
-    "youtube": "https://www.youtube.com/@Ritty_meow",
-    "tiktok": "https://www.tiktok.com/@rittymeow"
+    "terms": "https://project-meow.notion.site/Terms-of-Service-1ef423ba89b6806c9170f8f7295ea042",
+    "privacy": "https://project-meow.notion.site/Privacy-Policy-1ef423ba89b680f4b0f1e6f84d1b9994"
   },
+  "social": [
+    { "key": "discord", "url": "https://discord.gg/wghaFYCkCV", "sidebarIcon": "/images/discord-sidebar.svg", "footerIcon": "/images/discord-footer.svg" },
+    { "key": "instagram", "url": "https://www.instagram.com/ritty_kr/", "sidebarIcon": "/images/instagram-sidebar.svg", "footerIcon": "/images/instagram-footer.svg" },
+    { "key": "youtube", "url": "https://www.youtube.com/@Ritty_meow", "sidebarIcon": "/images/youtube-sidebar.png", "footerIcon": "/images/youtube-footer.png" },
+    { "key": "tiktok", "url": "https://www.tiktok.com/@rittymeow", "sidebarIcon": "/images/tiktok-sidebar.png", "footerIcon": "/images/tiktok-sidebar.png" }
+  ],
   "alt": {
     "logo": "Ritty - Modern Talking Tamagotchi! AI Cat Chat & Care",
     "heroImage": "AI Cat Ritty App Screenshot - Space Cat Character",

@@ -8,15 +8,7 @@ interface FooterProps {
   dict: Dictionary
 }
 
-const socialLinks = [
-  { key: 'discord', icon: '/images/discord-footer.svg' },
-  { key: 'instagram', icon: '/images/instagram-footer.svg' },
-  { key: 'youtube', icon: '/images/youtube-footer.png' },
-  { key: 'tiktok', icon: '/images/tiktok-sidebar.png' },
-] as const
-
 export default function Footer({ dict }: FooterProps) {
-  const getLink = (key: string) => dict.links[key as keyof typeof dict.links]
   const getAria = (key: string) => {
     const ariaMap: Record<string, keyof typeof dict.aria> = {
       discord: 'joinDiscord',
@@ -24,7 +16,7 @@ export default function Footer({ dict }: FooterProps) {
       youtube: 'subscribeYoutube',
       tiktok: 'followTiktok',
     }
-    return dict.aria[ariaMap[key]]
+    return dict.aria[ariaMap[key]] || key
   }
 
   const containerVariants = {
@@ -60,13 +52,13 @@ export default function Footer({ dict }: FooterProps) {
     >
       {/* Social Links */}
       <motion.div className="flex justify-center gap-[10px]" variants={itemVariants}>
-        {socialLinks.map(({ key, icon }, index) => (
+        {dict.social.map((social, index) => (
           <motion.a
-            key={key}
-            href={getLink(key)}
+            key={social.key}
+            href={social.url}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={getAria(key)}
+            aria-label={getAria(social.key)}
             className="w-[51px] h-[51px] rounded-[25px] bg-bg-light flex items-center justify-center overflow-hidden"
             whileHover={{
               scale: 1.15,
@@ -84,7 +76,7 @@ export default function Footer({ dict }: FooterProps) {
             }}
           >
             <Image
-              src={icon}
+              src={social.footerIcon}
               alt=""
               width={24}
               height={24}
@@ -110,27 +102,31 @@ export default function Footer({ dict }: FooterProps) {
         className="font-paperlogy text-[12px] font-bold text-white opacity-70 tracking-[0.83px]"
         variants={itemVariants}
       >
-        © 2026 Sam-Meows Inc. All Rights Reserved.
+        {dict.footer.copyright}
       </motion.p>
 
       {/* Links */}
       <motion.div
-        className="flex items-center justify-between w-[259px] font-poppins text-[14px] text-[#9aa2ae]"
+        className="flex items-center justify-center gap-8 font-poppins text-[14px] text-[#9aa2ae]"
         variants={itemVariants}
       >
         <motion.a
-          href="#"
+          href={dict.links.terms}
+          target="_blank"
+          rel="noopener noreferrer"
           className="hover:text-white transition-colors"
           whileHover={{ scale: 1.05, color: '#ffffff' }}
         >
-          Terms of service
+          {dict.footer.terms}
         </motion.a>
         <motion.a
-          href="#"
+          href={dict.links.privacy}
+          target="_blank"
+          rel="noopener noreferrer"
           className="hover:text-white transition-colors"
           whileHover={{ scale: 1.05, color: '#ffffff' }}
         >
-          Privacy policy
+          {dict.footer.privacy}
         </motion.a>
       </motion.div>
     </motion.footer>

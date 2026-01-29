@@ -8,15 +8,7 @@ interface SocialSidebarProps {
   dict: Dictionary
 }
 
-const socialLinks = [
-  { key: 'discord', icon: '/images/discord-sidebar.svg' },
-  { key: 'instagram', icon: '/images/instagram-sidebar.svg' },
-  { key: 'youtube', icon: '/images/youtube-sidebar.png' },
-  { key: 'tiktok', icon: '/images/tiktok-sidebar.png' },
-] as const
-
 export default function SocialSidebar({ dict }: SocialSidebarProps) {
-  const getLink = (key: string) => dict.links[key as keyof typeof dict.links]
   const getAria = (key: string) => {
     const ariaMap: Record<string, keyof typeof dict.aria> = {
       discord: 'joinDiscord',
@@ -24,7 +16,7 @@ export default function SocialSidebar({ dict }: SocialSidebarProps) {
       youtube: 'subscribeYoutube',
       tiktok: 'followTiktok',
     }
-    return dict.aria[ariaMap[key]]
+    return dict.aria[ariaMap[key]] || key
   }
 
   const containerVariants = {
@@ -59,13 +51,13 @@ export default function SocialSidebar({ dict }: SocialSidebarProps) {
       initial="hidden"
       animate="visible"
     >
-      {socialLinks.map(({ key, icon }, index) => (
+      {dict.social.map((social, index) => (
         <motion.a
-          key={key}
-          href={getLink(key)}
+          key={social.key}
+          href={social.url}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={getAria(key)}
+          aria-label={getAria(social.key)}
           className="w-[70px] h-[70px] rounded-[35px] bg-white/65 border-[1.5px] border-white flex items-center justify-center overflow-hidden"
           variants={itemVariants}
           whileHover={{
@@ -86,7 +78,7 @@ export default function SocialSidebar({ dict }: SocialSidebarProps) {
           }}
         >
           <Image
-            src={icon}
+            src={social.sidebarIcon}
             alt=""
             width={34}
             height={34}

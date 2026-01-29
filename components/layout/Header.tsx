@@ -109,7 +109,7 @@ export default function Header({ dict, locale }: HeaderProps) {
         </button>
 
         {/* Navigation */}
-        <nav className="hidden md:flex items-center justify-between w-[526px]">
+        <nav className="hidden md:flex items-center gap-8 lg:gap-12">
           {navItems.map(({ key, href, external }, index) => (
             <motion.a
               key={key}
