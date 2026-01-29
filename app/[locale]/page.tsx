@@ -75,8 +75,8 @@ export default async function LandingPage({ params }: Props) {
       <SocialSidebar dict={dict} />
       <main className="bg-dark-bg h-screen overflow-y-scroll snap-y snap-mandatory scroll-smooth">
         <HeroSection dict={dict} locale={locale} />
-        <RittyIntroSection dict={dict} />
         <WorldviewSection dict={dict} />
+        <RittyIntroSection dict={dict} />
         <Footer dict={dict} />
       </main>
     </>

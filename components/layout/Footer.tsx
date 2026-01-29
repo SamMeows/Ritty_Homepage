@@ -51,7 +51,7 @@ export default function Footer({ dict }: FooterProps) {
       viewport={{ once: true, amount: 0.5 }}
     >
       {/* Social Links */}
-      <motion.div className="flex justify-center gap-[10px]" variants={itemVariants}>
+      <motion.div className="flex justify-center gap-[28px]" variants={itemVariants}>
         {dict.social.map((social, index) => (
           <motion.a
             key={social.key}
@@ -59,10 +59,9 @@ export default function Footer({ dict }: FooterProps) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={getAria(social.key)}
-            className="w-[51px] h-[51px] rounded-[25px] bg-bg-light flex items-center justify-center overflow-hidden"
+            className="flex items-center justify-center"
             whileHover={{
               scale: 1.15,
-              rotate: [0, -5, 5, 0],
               transition: { duration: 0.3 },
             }}
             whileTap={{ scale: 0.9 }}
@@ -76,11 +75,11 @@ export default function Footer({ dict }: FooterProps) {
             }}
           >
             <Image
-              src={social.footerIcon}
+              src={social.sidebarIcon}
               alt=""
-              width={24}
-              height={24}
-              className="w-6 h-6 object-contain"
+              width={40}
+              height={34}
+              className="h-[34px] w-auto object-contain"
             />
           </motion.a>
         ))}

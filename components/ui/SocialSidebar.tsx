@@ -80,9 +80,9 @@ export default function SocialSidebar({ dict }: SocialSidebarProps) {
           <Image
             src={social.sidebarIcon}
             alt=""
-            width={34}
+            width={40}
             height={34}
-            className="w-[34px] h-[34px] object-contain"
+            className="h-[34px] w-auto object-contain"
           />
         </motion.a>
       ))}
