@@ -61,9 +61,10 @@ export default function SocialSidebar({ dict }: SocialSidebarProps) {
           className="w-[70px] h-[70px] rounded-[35px] bg-white/65 border-[1.5px] border-white flex items-center justify-center overflow-hidden"
           variants={itemVariants}
           whileHover={{
-            scale: 1.15,
-            rotate: [0, -5, 5, 0],
-            backgroundColor: 'rgba(255,255,255,0.9)',
+            scale: 1.2,
+            rotate: [0, -10, 10, 0],
+            backgroundColor: 'rgba(255,255,255,1)',
+            boxShadow: '0 0 25px rgba(255,255,255,0.8), 0 0 50px rgba(255,255,255,0.4)',
             transition: { duration: 0.3 },
           }}
           whileTap={{ scale: 0.9 }}

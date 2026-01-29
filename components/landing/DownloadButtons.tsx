@@ -20,7 +20,7 @@ export default function DownloadButtons({ dict, locale }: DownloadButtonsProps) 
     hover: {
       scale: 1.08,
       y: -5,
-      boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+      boxShadow: '0 10px 40px rgba(255,255,255,0.3), 0 0 60px rgba(255,255,255,0.2)',
       transition: {
         type: 'spring',
         stiffness: 400,
@@ -33,6 +33,14 @@ export default function DownloadButtons({ dict, locale }: DownloadButtonsProps) 
     },
   }
 
+  const glowAnimation = {
+    boxShadow: [
+      '0 0 20px rgba(255,255,255,0.1), 0 0 40px rgba(255,255,255,0.05)',
+      '0 0 30px rgba(255,255,255,0.2), 0 0 60px rgba(255,255,255,0.1)',
+      '0 0 20px rgba(255,255,255,0.1), 0 0 40px rgba(255,255,255,0.05)',
+    ],
+  }
+
   return (
     <div className="flex gap-[clamp(16px,2.5vw,43px)]">
       <motion.button
@@ -42,9 +50,20 @@ export default function DownloadButtons({ dict, locale }: DownloadButtonsProps) 
         variants={buttonVariants}
         whileHover="hover"
         whileTap="tap"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, type: 'spring', stiffness: 200, damping: 20 }}
+        initial={{ opacity: 0, y: 20, scale: 0.9 }}
+        animate={{
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          ...glowAnimation,
+        }}
+        transition={{
+          delay: 0.5,
+          type: 'spring',
+          stiffness: 200,
+          damping: 20,
+          boxShadow: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+        }}
       >
         <Image
           src="/images/AppStoreButton-new.svg"
@@ -61,9 +80,20 @@ export default function DownloadButtons({ dict, locale }: DownloadButtonsProps) 
         variants={buttonVariants}
         whileHover="hover"
         whileTap="tap"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6, type: 'spring', stiffness: 200, damping: 20 }}
+        initial={{ opacity: 0, y: 20, scale: 0.9 }}
+        animate={{
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          ...glowAnimation,
+        }}
+        transition={{
+          delay: 0.6,
+          type: 'spring',
+          stiffness: 200,
+          damping: 20,
+          boxShadow: { duration: 2, repeat: Infinity, ease: 'easeInOut', delay: 0.5 },
+        }}
       >
         <Image
           src="/images/GooglePlayButton-new.svg"

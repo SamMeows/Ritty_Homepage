@@ -25,6 +25,11 @@ export default function ScrollIndicator({ targetId, ariaLabel }: ScrollIndicator
       animate={{
         opacity: 1,
         y: [0, 15, 0],
+        filter: [
+          'drop-shadow(0 0 5px rgba(255,255,255,0.3))',
+          'drop-shadow(0 0 15px rgba(255,255,255,0.6))',
+          'drop-shadow(0 0 5px rgba(255,255,255,0.3))',
+        ],
       }}
       transition={{
         opacity: { delay: 1, duration: 0.5 },
@@ -34,9 +39,16 @@ export default function ScrollIndicator({ targetId, ariaLabel }: ScrollIndicator
           repeat: Infinity,
           ease: 'easeInOut',
         },
+        filter: {
+          delay: 1.5,
+          duration: 1.5,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        },
       }}
       whileHover={{
-        scale: 1.2,
+        scale: 1.3,
+        filter: 'drop-shadow(0 0 25px rgba(255,255,255,0.9))',
         transition: { type: 'spring', stiffness: 400, damping: 17 },
       }}
       whileTap={{ scale: 0.9 }}

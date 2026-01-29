@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Image from 'next/image'
+import FloatingParticles from '@/components/effects/FloatingParticles'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 
 interface FooterProps {
@@ -44,14 +45,17 @@ export default function Footer({ dict }: FooterProps) {
 
   return (
     <motion.footer
-      className="bg-dark-header min-h-[274px] py-12 flex-shrink-0 flex flex-col items-center justify-center gap-8 snap-start"
+      className="relative bg-dark-header min-h-[274px] py-12 flex-shrink-0 flex flex-col items-center justify-center gap-8 snap-start overflow-hidden"
       variants={containerVariants}
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.5 }}
     >
+      {/* Background Particles */}
+      <FloatingParticles count={15} color="rgba(255, 255, 255, 0.15)" minSize={1} maxSize={3} />
+
       {/* Social Links */}
-      <motion.div className="flex justify-center gap-[28px]" variants={itemVariants}>
+      <motion.div className="flex justify-center gap-[28px] z-10" variants={itemVariants}>
         {dict.social.map((social, index) => (
           <motion.a
             key={social.key}
@@ -59,14 +63,15 @@ export default function Footer({ dict }: FooterProps) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={getAria(social.key)}
-            className="flex items-center justify-center"
+            className="flex items-center justify-center relative"
             whileHover={{
-              scale: 1.15,
+              scale: 1.2,
+              filter: 'drop-shadow(0 0 15px rgba(255, 255, 255, 0.6))',
               transition: { duration: 0.3 },
             }}
             whileTap={{ scale: 0.9 }}
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, scale: 0, rotate: -180 }}
+            animate={{ opacity: 1, scale: 1, rotate: 0 }}
             transition={{
               delay: 0.1 * index,
               type: 'spring',
@@ -86,7 +91,15 @@ export default function Footer({ dict }: FooterProps) {
       </motion.div>
 
       {/* Sammeows Logo */}
-      <motion.div className="flex justify-center" variants={itemVariants}>
+      <motion.a
+        href="https://sam-meows.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex justify-center z-10"
+        variants={itemVariants}
+        whileHover={{ scale: 1.1, filter: 'drop-shadow(0 0 10px rgba(255, 255, 255, 0.5))' }}
+        whileTap={{ scale: 0.95 }}
+      >
         <Image
           src="/images/sammeows-logo.svg"
           alt={dict.alt.sammeowsLogo}
@@ -94,19 +107,20 @@ export default function Footer({ dict }: FooterProps) {
           height={16}
           className="h-4 w-auto object-contain"
         />
-      </motion.div>
+      </motion.a>
 
       {/* Copyright */}
       <motion.p
-        className="font-paperlogy text-[12px] font-bold text-white opacity-70 tracking-[0.83px]"
+        className="font-paperlogy text-[12px] font-bold text-white opacity-70 tracking-[0.83px] z-10"
         variants={itemVariants}
+        whileHover={{ opacity: 1, scale: 1.02 }}
       >
         {dict.footer.copyright}
       </motion.p>
 
       {/* Links */}
       <motion.div
-        className="flex items-center justify-center gap-8 font-poppins text-[14px] text-[#9aa2ae]"
+        className="flex items-center justify-center gap-8 font-poppins text-[14px] text-[#9aa2ae] z-10"
         variants={itemVariants}
       >
         <motion.a

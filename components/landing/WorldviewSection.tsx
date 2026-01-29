@@ -3,6 +3,8 @@
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import ScrollIndicator from '@/components/ui/ScrollIndicator'
+import GlowingStars from '@/components/effects/GlowingStars'
+import FloatingParticles from '@/components/effects/FloatingParticles'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 
 interface WorldviewSectionProps {
@@ -81,6 +83,12 @@ export default function WorldviewSection({ dict }: WorldviewSectionProps) {
           background: 'linear-gradient(270deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.75) 35%, rgba(0,0,0,0.75) 50%, rgba(0,0,0,0.75) 65%, rgba(0,0,0,0) 100%)',
         }}
       />
+
+      {/* Glowing Stars Effect */}
+      <GlowingStars count={25} />
+
+      {/* Floating Particles */}
+      <FloatingParticles count={15} color="rgba(255, 255, 255, 0.6)" minSize={1} maxSize={3} />
 
       {/* Story Text */}
       <motion.div

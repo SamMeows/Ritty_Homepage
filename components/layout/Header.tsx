@@ -93,7 +93,15 @@ export default function Header({ dict, locale }: HeaderProps) {
             </span>
             <motion.div
               className="absolute -top-1 -right-7"
-              animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
+              animate={{
+                rotate: [0, 15, -15, 0],
+                scale: [1, 1.3, 1],
+                filter: [
+                  'drop-shadow(0 0 5px rgba(255,255,255,0.5))',
+                  'drop-shadow(0 0 15px rgba(255,255,255,1))',
+                  'drop-shadow(0 0 5px rgba(255,255,255,0.5))',
+                ],
+              }}
               transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
             >
               <Image
@@ -122,7 +130,11 @@ export default function Header({ dict, locale }: HeaderProps) {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 * index, type: 'spring', stiffness: 300, damping: 20 }}
-              whileHover={{ scale: 1.1, color: '#fffbc0' }}
+              whileHover={{
+                scale: 1.1,
+                color: '#fffbc0',
+                textShadow: '0 0 20px rgba(255, 251, 192, 0.8), 0 0 40px rgba(255, 251, 192, 0.4)',
+              }}
               whileTap={{ scale: 0.95 }}
             >
               {dict.nav[key as keyof typeof dict.nav]}

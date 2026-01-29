@@ -5,6 +5,8 @@ import Image from 'next/image'
 import { motion } from 'framer-motion'
 import DownloadButtons from './DownloadButtons'
 import ScrollIndicator from '@/components/ui/ScrollIndicator'
+import Snowfall from '@/components/effects/Snowfall'
+import FloatingParticles from '@/components/effects/FloatingParticles'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 
 interface HeroSectionProps {
@@ -78,6 +80,12 @@ export default function HeroSection({ dict, locale }: HeroSectionProps) {
         />
       </motion.div>
 
+      {/* Snowfall Effect */}
+      <Snowfall count={60} />
+
+      {/* Floating Particles */}
+      <FloatingParticles count={20} color="rgba(255, 255, 255, 0.5)" minSize={2} maxSize={4} />
+
       {/* Content */}
       <motion.div
         className="relative z-10 w-full max-w-[1440px] px-6 lg:px-12 flex flex-col items-center justify-center pt-[5vh] lg:pt-[7vh]"
@@ -91,17 +99,29 @@ export default function HeroSection({ dict, locale }: HeroSectionProps) {
           variants={itemVariants}
         >
           <motion.p
-            className="font-paperlogy text-[clamp(28px,5vw,80px)] font-extrabold text-white leading-[1.42] [text-shadow:0_0_25px_rgba(54,34,25,1)]"
+            className="font-paperlogy text-[clamp(28px,5vw,80px)] font-extrabold text-white leading-[1.42]"
+            style={{
+              textShadow: '0 0 25px rgba(54,34,25,1), 0 0 50px rgba(255,255,255,0.3)',
+            }}
             variants={textVariants}
-            whileHover={{ scale: 1.02 }}
+            whileHover={{
+              scale: 1.05,
+              textShadow: '0 0 30px rgba(54,34,25,1), 0 0 60px rgba(255,255,255,0.5), 0 0 100px rgba(255,200,150,0.3)',
+            }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           >
             {dict.hero.line1}
           </motion.p>
           <motion.h1
-            className="font-paperlogy text-[clamp(36px,7vw,110px)] font-extrabold text-white leading-[1.42] [text-shadow:0_0_25px_rgba(54,34,25,1)]"
+            className="font-paperlogy text-[clamp(36px,7vw,110px)] font-extrabold text-white leading-[1.42]"
+            style={{
+              textShadow: '0 0 25px rgba(54,34,25,1), 0 0 50px rgba(255,255,255,0.3)',
+            }}
             variants={textVariants}
-            whileHover={{ scale: 1.02 }}
+            whileHover={{
+              scale: 1.05,
+              textShadow: '0 0 30px rgba(54,34,25,1), 0 0 60px rgba(255,255,255,0.5), 0 0 100px rgba(255,200,150,0.3)',
+            }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           >
             {dict.hero.line2}

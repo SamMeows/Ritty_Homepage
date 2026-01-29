@@ -89,6 +89,10 @@ input[type="search"], textarea, [contenteditable="true"] {
 body {
   font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
   background-color: var(--white);
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 /* Custom Animations */
