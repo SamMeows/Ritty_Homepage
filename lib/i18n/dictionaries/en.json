@@ -52,10 +52,11 @@
     "title": "Community"
   },
   "meta": {
-    "title": "Ritty - Talking Cat Virtual Pet | AI Tamagotchi",
-    "description": "Meet Ritty, the space cat looking for a butler! A modern Tamagotchi experience. Chat with your cute cat, feed it, dress it up, and play mini-games. If you need healing in your busy life, become Ritty's butler.",
+    "title": "Ritty - Talking AI Cat Pet Game | Virtual Tamagotchi",
+    "description": "Meet Ritty, the space cat! Chat, feed, dress up your AI cat. Modern Tamagotchi experience. Free download.",
     "keywords": "Ritty, talking cat, virtual pet, Tamagotchi, AI cat, AI chat, AI friend, pet game, healing app, cat game, space cat",
-    "ogTitle": "Ritty - Talking Cat Virtual Pet | AI Tamagotchi"
+    "ogTitle": "Ritty - Talking AI Cat Virtual Pet Game",
+    "ogImageAlt": "Ritty app screenshot - cute AI space cat Ritty chatting with you"
   },
   "links": {
     "appStore": "https://apps.apple.com/us/app/id6743311040",
@@ -71,13 +72,25 @@
   "alt": {
     "logo": "Ritty - Modern Talking Tamagotchi! AI Cat Chat & Care",
     "heroImage": "AI Cat Ritty App Screenshot - Space Cat Character",
+    "heroBg": "Ritty app background - winter snowy landscape",
+    "worldviewBg": "Ritty worldview background - space and starry Meow Planet",
     "appStore": "Download Ritty on App Store - iOS",
     "googlePlay": "Download Ritty on Google Play - Android",
     "instagram": "Ritty Official Instagram",
     "discord": "Ritty Discord Community",
     "youtube": "Ritty YouTube Channel",
     "tiktok": "Ritty TikTok Account",
-    "sammeowsLogo": "Sammeows Logo"
+    "x": "Ritty X (Twitter) Account",
+    "sammeowsLogo": "Sammeows Logo",
+    "starDecoration": "Sparkling star decoration",
+    "sparkle": "Sparkle effect",
+    "arrowLeft": "Go to previous slide",
+    "arrowRight": "Go to next slide",
+    "slide1": "Ritty app screenshot - chatting with AI cat",
+    "slide2": "Ritty app screenshot - dressing up cat",
+    "slide3": "Ritty app screenshot - playing mini-games",
+    "slide4": "Ritty app screenshot - feeding cat",
+    "globeIcon": "Change language"
   },
   "aria": {
     "switchToEnglish": "Switch to English",

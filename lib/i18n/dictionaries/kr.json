@@ -52,10 +52,11 @@
     "title": "커뮤니티"
   },
   "meta": {
-    "title": "리티 Ritty - 말하는 고양이 키우기 | AI 다마고치 고양이",
-    "description": "우주에서 집사를 찾아온 고양이 리티! 다마고치, 토킹톰의 현대판 버전. 귀여운 고양이와 대화하고, 밥주고, 꾸미고, 미니게임까지. 바쁜 일상 속 힐링이 필요하다면 리티의 집사가 되어보세요.",
+    "title": "리티 Ritty - 말하는 고양이 키우기 | AI 다마고치",
+    "description": "우주에서 온 고양이 리티와 대화하고 키워보세요! 현대판 다마고치, AI 고양이 육성 게임. 무료 다운로드.",
     "keywords": "리티, Ritty, 리티 앱, 고양이 키우기, 말하는 고양이, 다마고치, 토킹톰, AI 고양이, AI 채팅, AI 대화, AI 친구, 가상 펫, 펫 키우기, 힐링 앱, 고양이 게임, 우주 고양이",
-    "ogTitle": "리티 Ritty - 말하는 고양이 키우기 | AI 다마고치 토킹톰"
+    "ogTitle": "리티 Ritty - 말하는 AI 고양이 키우기 게임",
+    "ogImageAlt": "리티 앱 스크린샷 - 귀여운 AI 우주고양이 리티와 대화하는 모습"
   },
   "links": {
     "appStore": "https://apps.apple.com/kr/app/id6743311040",
@@ -73,13 +74,25 @@
   "alt": {
     "logo": "리티 Ritty - 현대판 말하는 다마고치! AI 고양이 대화·키우기",
     "heroImage": "AI 고양이 리티 앱 스크린샷 - 우주 고양이 캐릭터",
+    "heroBg": "리티 앱 배경 - 겨울 눈 내리는 풍경",
+    "worldviewBg": "리티 세계관 배경 - 우주와 별이 빛나는 야옹이별",
     "appStore": "리티 앱 스토어 다운로드 - iOS",
     "googlePlay": "리티 구글 플레이 다운로드 - Android",
     "instagram": "리티 인스타그램 공식 계정",
     "discord": "리티 디스코드 커뮤니티",
     "youtube": "리티 유튜브 채널",
     "tiktok": "리티 틱톡 계정",
-    "sammeowsLogo": "삼냥이즈 로고"
+    "x": "리티 X(트위터) 계정",
+    "sammeowsLogo": "삼냥이즈 로고",
+    "starDecoration": "반짝이는 별 장식",
+    "sparkle": "반짝임 효과",
+    "arrowLeft": "이전 슬라이드로 이동",
+    "arrowRight": "다음 슬라이드로 이동",
+    "slide1": "리티 앱 스크린샷 - AI 고양이와 대화하기",
+    "slide2": "리티 앱 스크린샷 - 고양이 꾸미기",
+    "slide3": "리티 앱 스크린샷 - 미니게임 즐기기",
+    "slide4": "리티 앱 스크린샷 - 고양이 밥주기",
+    "globeIcon": "언어 변경"
   },
   "aria": {
     "switchToEnglish": "Switch to English",

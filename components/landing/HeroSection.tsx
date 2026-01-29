@@ -73,7 +73,7 @@ export default function HeroSection({ dict, locale }: HeroSectionProps) {
       >
         <Image
           src="/images/hero-bg-winter.png"
-          alt=""
+          alt={dict.alt.heroBg}
           fill
           className="object-cover object-center"
           priority

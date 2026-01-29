@@ -27,7 +27,7 @@ export default function LanguageSwitcher({
       >
         <Image
           src="/images/globe-icon.png"
-          alt=""
+          alt="Change language"
           width={24}
           height={24}
           className="w-6 h-6 object-contain"

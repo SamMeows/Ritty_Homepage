@@ -27,7 +27,7 @@ export default function MusicToggle({ ariaLabel }: MusicToggleProps) {
       >
         <Image
           src="/images/vinyl-icon.png"
-          alt=""
+          alt="Background music toggle"
           width={33}
           height={33}
           className="w-[33px] h-[33px] object-contain"

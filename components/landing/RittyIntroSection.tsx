@@ -14,6 +14,7 @@ export default function RittyIntroSection({ dict }: RittyIntroSectionProps) {
   const [currentSlide, setCurrentSlide] = useState(0)
   const slideImages = dict.sections.rittyIntro.slides
   const totalSlides = slideImages.length
+  const slideAlts = [dict.alt.slide1, dict.alt.slide2, dict.alt.slide3, dict.alt.slide4]
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % totalSlides)
@@ -55,7 +56,7 @@ export default function RittyIntroSection({ dict }: RittyIntroSectionProps) {
           >
             <Image
               src="/images/star-decoration.svg"
-              alt=""
+              alt={dict.alt.starDecoration}
               fill
               className="object-contain"
             />
@@ -80,7 +81,7 @@ export default function RittyIntroSection({ dict }: RittyIntroSectionProps) {
           >
             <Image
               src="/images/star-decoration.svg"
-              alt=""
+              alt={dict.alt.starDecoration}
               fill
               className="object-contain"
             />
@@ -105,7 +106,7 @@ export default function RittyIntroSection({ dict }: RittyIntroSectionProps) {
           >
             <Image
               src="/images/star-decoration.svg"
-              alt=""
+              alt={dict.alt.starDecoration}
               fill
               className="object-contain"
             />
@@ -130,7 +131,7 @@ export default function RittyIntroSection({ dict }: RittyIntroSectionProps) {
           >
             <Image
               src="/images/star-decoration.svg"
-              alt=""
+              alt={dict.alt.starDecoration}
               fill
               className="object-contain"
             />
@@ -155,7 +156,7 @@ export default function RittyIntroSection({ dict }: RittyIntroSectionProps) {
           >
             <Image
               src="/images/star-decoration.svg"
-              alt=""
+              alt={dict.alt.starDecoration}
               fill
               className="object-contain"
             />
@@ -197,7 +198,7 @@ export default function RittyIntroSection({ dict }: RittyIntroSectionProps) {
         >
           <Image
             src="/images/sparkle-purple.svg"
-            alt=""
+            alt={dict.alt.sparkle}
             width={22}
             height={22}
             className="w-[clamp(14px,1.5vw,22px)] h-[clamp(14px,1.5vw,22px)]"
@@ -212,7 +213,7 @@ export default function RittyIntroSection({ dict }: RittyIntroSectionProps) {
         >
           <Image
             src="/images/sparkle-purple.svg"
-            alt=""
+            alt={dict.alt.sparkle}
             width={22}
             height={22}
             className="w-[clamp(14px,1.5vw,22px)] h-[clamp(14px,1.5vw,22px)]"
@@ -232,7 +233,7 @@ export default function RittyIntroSection({ dict }: RittyIntroSectionProps) {
         >
           <Image
             src="/images/arrow-right.svg"
-            alt=""
+            alt={dict.alt.arrowLeft}
             width={50}
             height={75}
             className="rotate-180 w-full h-full"
@@ -265,7 +266,7 @@ export default function RittyIntroSection({ dict }: RittyIntroSectionProps) {
             >
               <Image
                 src={slideImages[currentSlide]}
-                alt={`Slide ${currentSlide + 1}`}
+                alt={slideAlts[currentSlide] || `Slide ${currentSlide + 1}`}
                 fill
                 className="object-cover"
               />
@@ -283,7 +284,7 @@ export default function RittyIntroSection({ dict }: RittyIntroSectionProps) {
         >
           <Image
             src="/images/arrow-right.svg"
-            alt=""
+            alt={dict.alt.arrowRight}
             width={50}
             height={75}
             className="w-full h-full"

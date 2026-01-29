@@ -59,7 +59,7 @@ export default function ScrollIndicator({ targetId, ariaLabel }: ScrollIndicator
       >
         <Image
           src="/images/scroll-arrow.svg"
-          alt=""
+          alt="Scroll down arrow"
           width={75}
           height={50}
           className="w-[75px] h-[50px] object-contain"

@@ -45,7 +45,7 @@ export default function LanguageDropdown({ currentLocale, ariaLabel }: LanguageD
       >
         <Image
           src="/images/globe-icon.png"
-          alt=""
+          alt="Change language"
           width={29}
           height={29}
           className={`w-[29px] h-[29px] object-contain transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}

@@ -20,6 +20,17 @@ export default function Footer({ dict }: FooterProps) {
     return dict.aria[ariaMap[key]] || key
   }
 
+  const getAlt = (key: string) => {
+    const altMap: Record<string, keyof typeof dict.alt> = {
+      discord: 'discord',
+      instagram: 'instagram',
+      youtube: 'youtube',
+      tiktok: 'tiktok',
+      X: 'x',
+    }
+    return dict.alt[altMap[key]] || key
+  }
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -81,7 +92,7 @@ export default function Footer({ dict }: FooterProps) {
           >
             <Image
               src={social.sidebarIcon}
-              alt=""
+              alt={getAlt(social.key)}
               width={40}
               height={34}
               className="h-[34px] w-auto object-contain"

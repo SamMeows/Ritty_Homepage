@@ -69,7 +69,7 @@ export default function WorldviewSection({ dict }: WorldviewSectionProps) {
       <div className="absolute inset-0">
         <Image
           src="/images/worldview-bg.png"
-          alt=""
+          alt={dict.alt.worldviewBg}
           fill
           className="object-cover object-center"
           priority

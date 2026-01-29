@@ -11,18 +11,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const dict = await getDictionary(locale)
   const url = locale === 'kr' ? 'https://ritty.me/kr' : 'https://ritty.me/en'
   const ogLocale = locale === 'kr' ? 'ko_KR' : 'en_US'
+  const htmlLang = locale === 'kr' ? 'ko' : 'en'
 
   return {
     title: dict.meta.title,
     description: dict.meta.description,
     keywords: dict.meta.keywords,
-    authors: [{ name: '리티' }],
+    authors: [{ name: '삼냥이즈 (Sam-Meows)' }],
     robots: 'index, follow',
     alternates: {
       canonical: url,
       languages: {
-        ko: 'https://ritty.me/kr',
-        en: 'https://ritty.me/en',
+        'ko': 'https://ritty.me/kr',
+        'en': 'https://ritty.me/en',
+        'x-default': 'https://ritty.me/kr',
       },
     },
     verification: {
@@ -37,12 +39,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: dict.meta.description,
       siteName: '리티 Ritty',
       locale: ogLocale,
+      alternateLocale: locale === 'kr' ? 'en_US' : 'ko_KR',
       images: [
         {
           url: 'https://ritty.me/og-image.png',
-          width: 800,
-          height: 400,
-          alt: dict.meta.title,
+          width: 1200,
+          height: 630,
+          alt: dict.meta.ogImageAlt,
         },
       ],
     },
@@ -52,6 +55,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: dict.meta.description,
       images: ['https://ritty.me/og-image.png'],
     },
+    other: {
+      'content-language': htmlLang,
+    },
   }
 }
 
@@ -59,6 +65,13 @@ export async function generateStaticParams() {
   return [{ locale: 'kr' }, { locale: 'en' }]
 }
 
-export default async function LocaleLayout({ children }: Props) {
-  return <>{children}</>
+export default async function LocaleLayout({ params, children }: Props) {
+  const { locale } = await params
+  const htmlLang = locale === 'kr' ? 'ko' : 'en'
+
+  return (
+    <div lang={htmlLang}>
+      {children}
+    </div>
+  )
 }

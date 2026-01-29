@@ -106,7 +106,7 @@ export default function Header({ dict, locale }: HeaderProps) {
             >
               <Image
                 src="/images/logo-sparkle.svg"
-                alt=""
+                alt={dict.alt.sparkle || 'sparkle'}
                 width={27}
                 height={28}
                 className="w-[27px] h-[28px]"
