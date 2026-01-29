@@ -4,7 +4,6 @@ import Footer from '@/components/layout/Footer'
 import HeroSection from '@/components/landing/HeroSection'
 import RittyIntroSection from '@/components/landing/RittyIntroSection'
 import WorldviewSection from '@/components/landing/WorldviewSection'
-import NewsSection from '@/components/landing/NewsSection'
 
 type Props = {
   params: Promise<{ locale: Locale }>
@@ -76,7 +75,6 @@ export default async function LandingPage({ params }: Props) {
         <HeroSection dict={dict} locale={locale} />
         <RittyIntroSection dict={dict} />
         <WorldviewSection dict={dict} />
-        <NewsSection dict={dict} />
         <Footer dict={dict} />
       </main>
     </>

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
-import Link from 'next/link'
 import MusicToggle from '@/components/ui/MusicToggle'
 import LanguageDropdown from '@/components/ui/LanguageDropdown'
 import type { Dictionary, Locale } from '@/lib/i18n/dictionaries'
@@ -14,10 +13,10 @@ interface HeaderProps {
 }
 
 const navItems = [
-  { key: 'home', href: '#home' },
-  { key: 'rittyIntro', href: '#ritty-intro' },
-  { key: 'worldview', href: '#worldview' },
-  { key: 'news', href: '#news' },
+  { key: 'home', href: '#home', external: false },
+  { key: 'rittyIntro', href: '#ritty-intro', external: false },
+  { key: 'worldview', href: '#worldview', external: false },
+  { key: 'news', href: 'https://project-meow.notion.site/Notice-253423ba89b680e6b2c9c4c952c8847f', external: true },
 ] as const
 
 export default function Header({ dict, locale }: HeaderProps) {
@@ -32,13 +31,17 @@ export default function Header({ dict, locale }: HeaderProps) {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault()
+  const scrollToSection = (href: string) => {
     const targetId = href.replace('#', '')
     const element = document.getElementById(targetId)
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' })
     }
+  }
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault()
+    scrollToSection(href)
   }
 
   return (
@@ -67,7 +70,11 @@ export default function Header({ dict, locale }: HeaderProps) {
 
       <div className="relative max-w-[1441px] mx-auto px-[50px] py-[25px] flex items-center justify-between">
         {/* Logo */}
-        <Link href={`/${locale}`} className="flex items-center group" aria-label={dict.alt.logo}>
+        <button
+          onClick={() => scrollToSection('#home')}
+          className="flex items-center group cursor-pointer"
+          aria-label={dict.alt.logo}
+        >
           <motion.div
             className="relative flex items-start"
             whileHover={{ scale: 1.05 }}
@@ -99,18 +106,20 @@ export default function Header({ dict, locale }: HeaderProps) {
               />
             </motion.div>
           </motion.div>
-        </Link>
+        </button>
 
         {/* Navigation */}
         <nav className="hidden md:flex items-center justify-between w-[526px]">
-          {navItems.map(({ key, href }, index) => (
+          {navItems.map(({ key, href, external }, index) => (
             <motion.a
               key={key}
               href={href}
-              onClick={(e) => handleNavClick(e, href)}
+              onClick={external ? undefined : (e) => handleNavClick(e, href)}
+              target={external ? '_blank' : undefined}
+              rel={external ? 'noopener noreferrer' : undefined}
               onHoverStart={() => setActiveNav(key)}
               onHoverEnd={() => setActiveNav(null)}
-              className="relative font-paperlogy text-[25px] font-bold text-white tracking-[0.83px] transition-colors"
+              className="relative font-paperlogy text-[25px] font-bold text-white tracking-[0.83px] transition-colors flex items-center gap-1"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 * index, type: 'spring', stiffness: 300, damping: 20 }}
@@ -118,7 +127,24 @@ export default function Header({ dict, locale }: HeaderProps) {
               whileTap={{ scale: 0.95 }}
             >
               {dict.nav[key as keyof typeof dict.nav]}
-              {activeNav === key && (
+              {external && (
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="ml-1"
+                >
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+              )}
+              {activeNav === key && !external && (
                 <motion.div
                   layoutId="navUnderline"
                   className="absolute -bottom-1 left-0 right-0 h-0.5 bg-white rounded-full"
