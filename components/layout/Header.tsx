@@ -14,8 +14,8 @@ interface HeaderProps {
 
 const navItems = [
   { key: 'home', href: '#home', external: false },
-  { key: 'rittyIntro', href: '#ritty-intro', external: false },
   { key: 'worldview', href: '#worldview', external: false },
+  { key: 'rittyIntro', href: '#ritty-intro', external: false },
   { key: 'news', href: 'https://project-meow.notion.site/Notice-253423ba89b680e6b2c9c4c952c8847f', external: true },
 ] as const
 
@@ -60,12 +60,11 @@ export default function Header({ dict, locale }: HeaderProps) {
           transition={{ duration: 0.3 }}
         />
       )}
-      <Image
-        src="/images/header-gradient.png"
-        alt=""
-        fill
-        className={`object-cover object-center transition-opacity duration-300 ${isScrolled ? 'opacity-0' : 'opacity-100'}`}
-        priority
+      <div
+        className={`absolute inset-0 transition-opacity duration-300 ${isScrolled ? 'opacity-0' : 'opacity-100'}`}
+        style={{
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0) 100%)',
+        }}
       />
 
       <div className="relative max-w-[1441px] mx-auto px-[50px] py-[25px] flex items-center justify-between">

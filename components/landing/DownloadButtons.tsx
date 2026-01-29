@@ -34,11 +34,11 @@ export default function DownloadButtons({ dict, locale }: DownloadButtonsProps) 
   }
 
   return (
-    <div className="flex gap-[14px]">
+    <div className="flex gap-[clamp(16px,2.5vw,43px)]">
       <motion.button
         onClick={() => handleDownload('ios', dict.links.appStore)}
         aria-label={dict.aria.downloadIos}
-        className="w-[272px] h-[72px] rounded-[20px] overflow-hidden cursor-pointer bg-black border-none p-0"
+        className="w-[clamp(140px,18vw,297px)] h-[clamp(49px,6.3vw,104px)] rounded-[clamp(14px,1.8vw,29px)] overflow-hidden cursor-pointer border-none"
         variants={buttonVariants}
         whileHover="hover"
         whileTap="tap"
@@ -47,17 +47,17 @@ export default function DownloadButtons({ dict, locale }: DownloadButtonsProps) 
         transition={{ delay: 0.5, type: 'spring', stiffness: 200, damping: 20 }}
       >
         <Image
-          src="/images/AppStoreButton-new.png"
+          src="/images/AppStoreButton-new.svg"
           alt={dict.alt.appStore}
-          width={206}
-          height={72}
-          className="w-full h-full object-cover"
+          width={297}
+          height={104}
+          className="w-full h-full object-fill"
         />
       </motion.button>
       <motion.button
         onClick={() => handleDownload('android', dict.links.googlePlay)}
         aria-label={dict.aria.downloadAndroid}
-        className="w-[272px] h-[72px] rounded-[20px] overflow-hidden cursor-pointer bg-[#100f0d] border-none p-0"
+        className="w-[clamp(140px,18vw,297px)] h-[clamp(49px,6.3vw,104px)] rounded-[clamp(14px,1.8vw,29px)] overflow-hidden cursor-pointer border-none"
         variants={buttonVariants}
         whileHover="hover"
         whileTap="tap"
@@ -66,11 +66,11 @@ export default function DownloadButtons({ dict, locale }: DownloadButtonsProps) 
         transition={{ delay: 0.6, type: 'spring', stiffness: 200, damping: 20 }}
       >
         <Image
-          src="/images/GooglePlayButton-new.png"
+          src="/images/GooglePlayButton-new.svg"
           alt={dict.alt.googlePlay}
-          width={206}
-          height={72}
-          className="w-full h-full object-cover"
+          width={297}
+          height={104}
+          className="w-full h-full object-fill"
         />
       </motion.button>
     </div>

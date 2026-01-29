@@ -11,7 +11,8 @@ interface RittyIntroSectionProps {
 
 export default function RittyIntroSection({ dict }: RittyIntroSectionProps) {
   const [currentSlide, setCurrentSlide] = useState(0)
-  const totalSlides = 3
+  const slideImages = dict.sections.rittyIntro.slides
+  const totalSlides = slideImages.length
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % totalSlides)
@@ -26,23 +27,100 @@ export default function RittyIntroSection({ dict }: RittyIntroSectionProps) {
       id="ritty-intro"
       className="relative w-full h-screen flex flex-col items-center justify-center overflow-hidden snap-start snap-always"
       style={{
-        background: 'linear-gradient(180deg, #6761fa 0%, #918dff 100%)',
+        backgroundColor: '#564596',
       }}
     >
-      {/* Label */}
-      <motion.p
-        className="font-paperlogy text-[20px] font-extrabold text-white text-center mb-2"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.1 }}
-      >
-        {dict.sections.rittyIntro.label}
-      </motion.p>
+      {/* Background Decorative Elements */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Top right large decoration */}
+        <motion.div
+          className="absolute -top-10 -right-20 w-[350px] h-[350px]"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 0.68 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.3, duration: 0.8 }}
+          style={{ transform: 'rotate(-154deg)' }}
+        >
+          <Image
+            src="/images/star-decoration.svg"
+            alt=""
+            fill
+            className="object-contain"
+          />
+        </motion.div>
+
+        {/* Top center decoration */}
+        <motion.div
+          className="absolute top-10 right-1/4 w-[250px] h-[250px]"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 0.68 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.4, duration: 0.8 }}
+          style={{ transform: 'rotate(-154deg)' }}
+        >
+          <Image
+            src="/images/star-decoration.svg"
+            alt=""
+            fill
+            className="object-contain"
+          />
+        </motion.div>
+
+        {/* Bottom right small decoration */}
+        <motion.div
+          className="absolute bottom-32 right-1/4 w-[180px] h-[180px]"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 0.68 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.5, duration: 0.8 }}
+          style={{ transform: 'rotate(-154deg)' }}
+        >
+          <Image
+            src="/images/star-decoration.svg"
+            alt=""
+            fill
+            className="object-contain"
+          />
+        </motion.div>
+
+        {/* Left large decoration */}
+        <motion.div
+          className="absolute bottom-10 -left-20 w-[380px] h-[380px]"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 0.68 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.35, duration: 0.8 }}
+          style={{ transform: 'rotate(-154deg)' }}
+        >
+          <Image
+            src="/images/star-decoration.svg"
+            alt=""
+            fill
+            className="object-contain"
+          />
+        </motion.div>
+
+        {/* Center left decoration */}
+        <motion.div
+          className="absolute top-1/4 left-1/4 w-[280px] h-[280px]"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 0.68 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.45, duration: 0.8 }}
+          style={{ transform: 'rotate(153deg)' }}
+        >
+          <Image
+            src="/images/star-decoration.svg"
+            alt=""
+            fill
+            className="object-contain"
+          />
+        </motion.div>
+      </div>
 
       {/* Title */}
       <motion.h2
-        className="font-paperlogy text-[36px] lg:text-[48px] font-extrabold text-white text-center mb-4"
+        className="font-paperlogy text-[clamp(28px,5vw,80px)] font-extrabold text-white text-center mb-[1vh] z-10"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
@@ -53,61 +131,53 @@ export default function RittyIntroSection({ dict }: RittyIntroSectionProps) {
 
       {/* Tagline Button */}
       <motion.div
-        className="flex items-center justify-center gap-2 bg-white border border-white/30 rounded-full px-6 py-2 mb-8"
+        className="flex items-center justify-center gap-[clamp(8px,1vw,16px)] bg-white border border-white/30 rounded-full px-[clamp(16px,2vw,28px)] py-[clamp(8px,1vh,12px)] mb-[3vh] z-10"
         initial={{ opacity: 0, scale: 0.9 }}
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true }}
         transition={{ delay: 0.3 }}
       >
         <Image
-          src="/images/logo-sparkle.svg"
+          src="/images/sparkle-purple.svg"
           alt=""
-          width={13}
-          height={13}
-          className="rotate-[22deg]"
+          width={22}
+          height={22}
+          className="rotate-[22deg] w-[clamp(14px,1.5vw,22px)] h-[clamp(14px,1.5vw,22px)]"
         />
-        <span className="font-paperlogy text-[13px] lg:text-[15px] font-semibold text-[#726df2]">
+        <span className="font-paperlogy text-[clamp(11px,1.4vw,22px)] font-semibold text-[#726df2]">
           {dict.sections.rittyIntro.tagline}
         </span>
         <Image
-          src="/images/logo-sparkle.svg"
+          src="/images/sparkle-purple.svg"
           alt=""
-          width={13}
-          height={13}
-          className="rotate-[22deg]"
+          width={22}
+          height={22}
+          className="rotate-[22deg] w-[clamp(14px,1.5vw,22px)] h-[clamp(14px,1.5vw,22px)]"
         />
       </motion.div>
 
       {/* Card Container with Arrows */}
-      <div className="relative flex items-center justify-center w-full max-w-[900px] px-4">
+      <div className="relative flex items-center justify-center w-full max-w-[90vw] lg:max-w-[1200px] px-4 z-10">
         {/* Left Arrow */}
         <motion.button
           onClick={prevSlide}
-          className="absolute left-0 lg:left-[-60px] z-10 p-2"
+          className="absolute left-2 lg:left-[-70px] z-10 w-[clamp(30px,3vw,50px)] aspect-[2/3]"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           aria-label={dict.aria.previousSlide}
         >
-          <svg
-            width="50"
-            height="75"
-            viewBox="0 0 50 75"
-            fill="none"
-            className="rotate-180"
-          >
-            <path
-              d="M10 20L35 37.5L10 55"
-              stroke="white"
-              strokeWidth="8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <Image
+            src="/images/arrow-right.svg"
+            alt=""
+            width={50}
+            height={75}
+            className="rotate-180 w-full h-full"
+          />
         </motion.button>
 
         {/* White Card */}
         <motion.div
-          className="bg-white rounded-[40px] w-full max-w-[710px] h-[300px] lg:h-[393px] flex items-center justify-center overflow-hidden"
+          className="bg-white rounded-[clamp(20px,3vw,42px)] w-[clamp(300px,75vw,1000px)] aspect-[1000/540] flex items-center justify-center overflow-hidden p-[clamp(12px,1.5vw,20px)]"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -120,11 +190,14 @@ export default function RittyIntroSection({ dict }: RittyIntroSectionProps) {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -50 }}
               transition={{ duration: 0.3 }}
-              className="flex items-center justify-center w-full h-full"
+              className="relative w-full h-full rounded-[clamp(16px,2vw,32px)] overflow-hidden bg-[#d2d2d2]"
             >
-              <p className="font-paperlogy text-[24px] text-gray-400">
-                Slide {currentSlide + 1}
-              </p>
+              <Image
+                src={slideImages[currentSlide]}
+                alt={`Slide ${currentSlide + 1}`}
+                fill
+                className="object-cover"
+              />
             </motion.div>
           </AnimatePresence>
         </motion.div>
@@ -132,31 +205,24 @@ export default function RittyIntroSection({ dict }: RittyIntroSectionProps) {
         {/* Right Arrow */}
         <motion.button
           onClick={nextSlide}
-          className="absolute right-0 lg:right-[-60px] z-10 p-2"
+          className="absolute right-2 lg:right-[-70px] z-10 w-[clamp(30px,3vw,50px)] aspect-[2/3]"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           aria-label={dict.aria.nextSlide}
         >
-          <svg
-            width="50"
-            height="75"
-            viewBox="0 0 50 75"
-            fill="none"
-          >
-            <path
-              d="M10 20L35 37.5L10 55"
-              stroke="white"
-              strokeWidth="8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <Image
+            src="/images/arrow-right.svg"
+            alt=""
+            width={50}
+            height={75}
+            className="w-full h-full"
+          />
         </motion.button>
       </div>
 
       {/* Pagination Dots */}
       <motion.div
-        className="flex items-center gap-4 mt-8"
+        className="flex items-center gap-[clamp(10px,1.2vw,18px)] mt-[2vh] z-10"
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
@@ -166,7 +232,7 @@ export default function RittyIntroSection({ dict }: RittyIntroSectionProps) {
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
-            className={`w-[22px] h-[22px] rounded-full border-[1.5px] border-white transition-all ${
+            className={`w-[clamp(16px,1.6vw,26px)] h-[clamp(16px,1.6vw,26px)] rounded-full border-[2px] border-white transition-all ${
               currentSlide === index
                 ? 'bg-white'
                 : 'bg-white/65'

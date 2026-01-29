@@ -80,18 +80,18 @@ export default function HeroSection({ dict, locale }: HeroSectionProps) {
 
       {/* Content */}
       <motion.div
-        className="relative z-10 w-full max-w-[1440px] px-6 lg:px-12 flex flex-col items-center justify-center"
+        className="relative z-10 w-full max-w-[1440px] px-6 lg:px-12 flex flex-col items-center justify-center pt-[5vh] lg:pt-[7vh]"
         variants={containerVariants}
         initial="hidden"
         animate={isLoaded ? 'visible' : 'hidden'}
       >
         {/* Hero Text */}
         <motion.div
-          className="flex flex-col items-center text-center mb-12 lg:mb-16"
+          className="flex flex-col items-center text-center mb-[30vh] lg:mb-[38vh]"
           variants={itemVariants}
         >
           <motion.p
-            className="font-paperlogy text-[40px] lg:text-[62px] font-extrabold text-white leading-[1.42] [text-shadow:0_0_25px_rgba(54,34,25,1)]"
+            className="font-paperlogy text-[clamp(28px,5vw,80px)] font-extrabold text-white leading-[1.42] [text-shadow:0_0_25px_rgba(54,34,25,1)]"
             variants={textVariants}
             whileHover={{ scale: 1.02 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
@@ -99,7 +99,7 @@ export default function HeroSection({ dict, locale }: HeroSectionProps) {
             {dict.hero.line1}
           </motion.p>
           <motion.h1
-            className="font-paperlogy text-[52px] lg:text-[80px] font-extrabold text-white leading-[1.42] [text-shadow:0_0_25px_rgba(54,34,25,1)]"
+            className="font-paperlogy text-[clamp(36px,7vw,110px)] font-extrabold text-white leading-[1.42] [text-shadow:0_0_25px_rgba(54,34,25,1)]"
             variants={textVariants}
             whileHover={{ scale: 1.02 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
@@ -116,7 +116,7 @@ export default function HeroSection({ dict, locale }: HeroSectionProps) {
 
       
       {/* Scroll Indicator */}
-      <ScrollIndicator targetId="ritty-intro" ariaLabel={dict.aria.scrollDown} />
+      <ScrollIndicator targetId="worldview" ariaLabel={dict.aria.scrollDown} />
     </section>
   )
 }

@@ -1,6 +1,8 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Image from 'next/image'
+import ScrollIndicator from '@/components/ui/ScrollIndicator'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 
 interface WorldviewSectionProps {
@@ -8,15 +10,15 @@ interface WorldviewSectionProps {
 }
 
 export default function WorldviewSection({ dict }: WorldviewSectionProps) {
-  const renderStoryLine = (line: string, index: number) => {
+  const renderStoryLine = (line: string, index: number, isLast: boolean) => {
     if (line === '') {
-      return <br key={index} />
+      return <p key={index} className="leading-[1.85] mb-0">&nbsp;</p>
     }
 
     // Handle bold text marked with {text}
     const parts = line.split(/(\{[^}]+\})/)
     return (
-      <p key={index} className="leading-[1.42] mb-0">
+      <p key={index} className={`leading-[1.85] mb-0 ${isLast ? 'text-[25px] lg:text-[45px] mt-2' : ''}`}>
         {parts.map((part, i) => {
           if (part.startsWith('{') && part.endsWith('}')) {
             const text = part.slice(1, -1)
@@ -37,14 +39,14 @@ export default function WorldviewSection({ dict }: WorldviewSectionProps) {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: 0.05,
         delayChildren: 0.2,
       },
     },
   }
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 10 },
     visible: {
       opacity: 1,
       y: 0,
@@ -59,46 +61,44 @@ export default function WorldviewSection({ dict }: WorldviewSectionProps) {
   return (
     <section
       id="worldview"
-      className="bg-[#3c3c3c] w-full h-screen flex flex-col items-center justify-center snap-start snap-always overflow-hidden px-6"
+      className="relative w-full h-screen flex items-center justify-center snap-start snap-always overflow-hidden"
     >
+      {/* Background Image */}
+      <div className="absolute inset-0">
+        <Image
+          src="/images/worldview-bg.png"
+          alt=""
+          fill
+          className="object-cover object-center"
+          priority
+        />
+      </div>
+
+      {/* Gradient Overlay - darker in center */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'linear-gradient(270deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.75) 35%, rgba(0,0,0,0.75) 50%, rgba(0,0,0,0.75) 65%, rgba(0,0,0,0) 100%)',
+        }}
+      />
+
+      {/* Story Text */}
       <motion.div
-        className="max-w-[1440px] mx-auto flex flex-col items-center text-center text-white"
+        className="relative z-10 flex flex-col items-center text-center text-white font-paperlogy text-[16px] lg:text-[25px] font-normal px-6"
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.3 }}
       >
-        {/* Label */}
-        <motion.p
-          className="font-paperlogy text-[20px] font-extrabold mb-6"
-          variants={itemVariants}
-        >
-          {dict.sections.worldview.label}
-        </motion.p>
-
-        {/* Title */}
-        <motion.div
-          className="mb-16 lg:mb-20"
-          variants={itemVariants}
-        >
-          <h2 className="font-paperlogy text-[32px] lg:text-[48px] font-extrabold leading-[1.42]">
-            {dict.sections.worldview.title1}
-          </h2>
-          <h2 className="font-paperlogy text-[32px] lg:text-[48px] font-extrabold leading-[1.42]">
-            {dict.sections.worldview.title2}
-          </h2>
-        </motion.div>
-
-        {/* Story */}
-        <motion.div
-          className="font-paperlogy text-[18px] lg:text-[25px] font-normal text-center"
-          variants={itemVariants}
-        >
-          {dict.sections.worldview.story.map((line, index) =>
-            renderStoryLine(line, index)
-          )}
-        </motion.div>
+        {dict.sections.worldview.story.map((line, index, arr) => (
+          <motion.div key={index} variants={itemVariants}>
+            {renderStoryLine(line, index, index === arr.length - 1)}
+          </motion.div>
+        ))}
       </motion.div>
+
+      {/* Scroll Indicator */}
+      <ScrollIndicator targetId="ritty-intro" ariaLabel={dict.aria.scrollDown} />
     </section>
   )
 }

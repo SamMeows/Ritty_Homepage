@@ -20,7 +20,7 @@ export default function ScrollIndicator({ targetId, ariaLabel }: ScrollIndicator
     <motion.button
       onClick={handleClick}
       aria-label={ariaLabel}
-      className="absolute bottom-8 left-1/2 -translate-x-1/2 w-[75px] h-[50px] flex items-center justify-center cursor-pointer bg-transparent border-none"
+      className="absolute bottom-8 left-0 right-0 mx-auto w-[75px] h-[50px] flex items-center justify-center cursor-pointer bg-transparent border-none z-20"
       initial={{ opacity: 0, y: -20 }}
       animate={{
         opacity: 1,
