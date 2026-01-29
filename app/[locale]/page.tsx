@@ -7,11 +7,12 @@ import RittyIntroSection from '@/components/landing/RittyIntroSection'
 import WorldviewSection from '@/components/landing/WorldviewSection'
 
 type Props = {
-  params: Promise<{ locale: Locale }>
+  params: Promise<{ locale: string }>
 }
 
 export default async function LandingPage({ params }: Props) {
-  const { locale } = await params
+  const { locale: localeParam } = await params
+  const locale = localeParam as Locale
   const dict = await getDictionary(locale)
 
   const jsonLdOrganization = {
