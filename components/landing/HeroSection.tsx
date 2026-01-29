@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import DownloadButtons from './DownloadButtons'
-import SocialSidebar from '@/components/ui/SocialSidebar'
 import ScrollIndicator from '@/components/ui/ScrollIndicator'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 
@@ -115,9 +114,7 @@ export default function HeroSection({ dict, locale }: HeroSectionProps) {
         </motion.div>
       </motion.div>
 
-      {/* Social Sidebar (desktop only) */}
-      <SocialSidebar dict={dict} />
-
+      
       {/* Scroll Indicator */}
       <ScrollIndicator targetId="ritty-intro" ariaLabel={dict.aria.scrollDown} />
     </section>

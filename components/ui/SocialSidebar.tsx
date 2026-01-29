@@ -54,7 +54,7 @@ export default function SocialSidebar({ dict }: SocialSidebarProps) {
 
   return (
     <motion.div
-      className="absolute right-[42px] top-[244px] z-40 hidden lg:flex flex-col gap-[14px]"
+      className="fixed right-[42px] top-1/2 -translate-y-1/2 z-40 hidden lg:flex flex-col gap-[14px]"
       variants={containerVariants}
       initial="hidden"
       animate="visible"

@@ -1,6 +1,7 @@
 import { getDictionary, type Locale } from '@/lib/i18n/dictionaries'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
+import SocialSidebar from '@/components/ui/SocialSidebar'
 import HeroSection from '@/components/landing/HeroSection'
 import RittyIntroSection from '@/components/landing/RittyIntroSection'
 import WorldviewSection from '@/components/landing/WorldviewSection'
@@ -71,6 +72,7 @@ export default async function LandingPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdApp) }}
       />
       <Header dict={dict} locale={locale} />
+      <SocialSidebar dict={dict} />
       <main className="bg-dark-bg h-screen overflow-y-scroll snap-y snap-mandatory scroll-smooth">
         <HeroSection dict={dict} locale={locale} />
         <RittyIntroSection dict={dict} />
