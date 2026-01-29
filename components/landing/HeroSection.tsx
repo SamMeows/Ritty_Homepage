@@ -60,7 +60,7 @@ export default function HeroSection({ dict, locale }: HeroSectionProps) {
 
   return (
     <section
-      id="intro"
+      id="home"
       className="relative w-full h-screen flex items-center justify-center overflow-hidden snap-start snap-always"
     >
       {/* Background Image with parallax effect */}
@@ -119,7 +119,7 @@ export default function HeroSection({ dict, locale }: HeroSectionProps) {
       <SocialSidebar dict={dict} />
 
       {/* Scroll Indicator */}
-      <ScrollIndicator targetId="worldview" ariaLabel={dict.aria.scrollDown} />
+      <ScrollIndicator targetId="ritty-intro" ariaLabel={dict.aria.scrollDown} />
     </section>
   )
 }

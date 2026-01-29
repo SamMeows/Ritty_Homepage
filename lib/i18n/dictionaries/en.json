@@ -4,24 +4,44 @@
     "line2": "with Ritty"
   },
   "nav": {
-    "intro": "Intro",
+    "home": "Home",
+    "rittyIntro": "About Ritty",
     "worldview": "Worldview",
     "news": "News"
   },
   "sections": {
+    "rittyIntro": {
+      "label": "About Ritty",
+      "title": "Become a Cat Butler",
+      "tagline": "World's First Talking Space Cat Raising Simulation"
+    },
     "worldview": {
-      "title": "Worldview",
-      "comingSoon": "Coming Soon"
+      "label": "Worldview",
+      "title1": "A Space Cat Who Came to Earth",
+      "title2": "Looking for a Butler!",
+      "story": [
+        "Far beyond the galaxy,",
+        "there was a planet called Meow Planet where cats lived",
+        "It was a special place where they lived on various {emotions} as energy",
+        "",
+        "Then one day, a small crisis came to Meow Planet",
+        "The emotional energy started to decrease little by little",
+        "So the cats of Meow Planet came to {Earth} looking for energy",
+        "",
+        "One day, a space cat Ritty came to our doorstep,",
+        "How about it, will you become Ritty's butler?"
+      ]
     },
     "news": {
-      "title": "News",
+      "label": "News",
+      "title": "Ritty's Latest News",
       "comingSoon": "Coming Soon"
     }
   },
   "footer": {
-    "copyright": "2025 Sammeows. All rights reserved.",
-    "terms": "Terms of Service",
-    "privacy": "Privacy Policy"
+    "copyright": "© 2026 Sam-Meows Inc. All Rights Reserved.",
+    "terms": "Terms of service",
+    "privacy": "Privacy policy"
   },
   "community": {
     "title": "Community"
@@ -62,6 +82,8 @@
     "followTiktok": "Follow Ritty TikTok Account",
     "toggleMusic": "Toggle background music",
     "scrollDown": "Scroll down",
-    "changeLanguage": "Change language"
+    "changeLanguage": "Change language",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide"
   }
 }

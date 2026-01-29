@@ -14,7 +14,8 @@ interface HeaderProps {
 }
 
 const navItems = [
-  { key: 'intro', href: '#intro' },
+  { key: 'home', href: '#home' },
+  { key: 'rittyIntro', href: '#ritty-intro' },
   { key: 'worldview', href: '#worldview' },
   { key: 'news', href: '#news' },
 ] as const

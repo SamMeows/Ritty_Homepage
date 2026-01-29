@@ -2,6 +2,7 @@ import { getDictionary, type Locale } from '@/lib/i18n/dictionaries'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import HeroSection from '@/components/landing/HeroSection'
+import RittyIntroSection from '@/components/landing/RittyIntroSection'
 import WorldviewSection from '@/components/landing/WorldviewSection'
 import NewsSection from '@/components/landing/NewsSection'
 
@@ -73,6 +74,7 @@ export default async function LandingPage({ params }: Props) {
       <Header dict={dict} locale={locale} />
       <main className="bg-dark-bg h-screen overflow-y-scroll snap-y snap-mandatory scroll-smooth">
         <HeroSection dict={dict} locale={locale} />
+        <RittyIntroSection dict={dict} />
         <WorldviewSection dict={dict} />
         <NewsSection dict={dict} />
         <Footer dict={dict} />

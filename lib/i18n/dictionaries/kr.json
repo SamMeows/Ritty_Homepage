@@ -4,24 +4,44 @@
     "line2": "행복한 집사 생활"
   },
   "nav": {
-    "intro": "소개",
+    "home": "홈",
+    "rittyIntro": "리티 소개",
     "worldview": "세계관",
     "news": "소식"
   },
   "sections": {
+    "rittyIntro": {
+      "label": "리티 소개",
+      "title": "고양이 집사가 되어보자",
+      "tagline": "세계 최초 말하는 우주고양이 육성 시뮬레이션"
+    },
     "worldview": {
-      "title": "세계관",
-      "comingSoon": "Coming Soon"
+      "label": "세계관",
+      "title1": "집사를 찾아 지구로 찾아온",
+      "title2": "우주 고양이 리티!",
+      "story": [
+        "아주 먼 은하계 너머,",
+        "고양이들이 살아가는 야옹이별이 있었어",
+        "이곳은 다양한 {감정}들을 에너지로 살아가는 특별한 곳이지",
+        "",
+        "그러던 어느 날, 야옹이별에 작은 위기가 찾아왔어",
+        "감정 에너지가 조금씩 줄어들기 시작한거야",
+        "그렇게 야옹이별의 고양이들은 에너지를 찾아 {지구별}에 찾아왔어",
+        "",
+        "어느 날 우리 집 앞으로 찾아온 우주고양이 리티,",
+        "어때, 리티의 집사가 되어줄래?"
+      ]
     },
     "news": {
-      "title": "소식",
+      "label": "소식",
+      "title": "리티의 새로운 소식",
       "comingSoon": "Coming Soon"
     }
   },
   "footer": {
-    "copyright": "2025 Sammeows. All rights reserved.",
-    "terms": "이용약관",
-    "privacy": "개인정보처리방침"
+    "copyright": "© 2026 Sam-Meows Inc. All Rights Reserved.",
+    "terms": "Terms of service",
+    "privacy": "Privacy policy"
   },
   "community": {
     "title": "커뮤니티"
@@ -62,6 +82,8 @@
     "followTiktok": "리티 틱톡 계정 팔로우하기",
     "toggleMusic": "배경 음악 토글",
     "scrollDown": "아래로 스크롤",
-    "changeLanguage": "언어 변경"
+    "changeLanguage": "언어 변경",
+    "previousSlide": "이전 슬라이드",
+    "nextSlide": "다음 슬라이드"
   }
 }
