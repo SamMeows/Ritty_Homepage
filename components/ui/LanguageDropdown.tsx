@@ -12,8 +12,8 @@ interface LanguageDropdownProps {
 }
 
 const languages = [
-  { code: 'kr', label: '한국어', flag: '🇰🇷' },
-  { code: 'en', label: 'English', flag: '🇺🇸' },
+  { code: 'kr', label: '한국어', flag: '🇰🇷', href: '/' },
+  { code: 'en', label: 'English', flag: '🇺🇸', href: '/en' },
 ] as const
 
 export default function LanguageDropdown({ currentLocale, ariaLabel }: LanguageDropdownProps) {
@@ -69,7 +69,7 @@ export default function LanguageDropdown({ currentLocale, ariaLabel }: LanguageD
                 transition={{ delay: index * 0.05, type: 'spring', stiffness: 500, damping: 30 }}
               >
                 <Link
-                  href={`/${lang.code}`}
+                  href={lang.href}
                   onClick={() => setIsOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 transition-all duration-200 ${
                     currentLocale === lang.code

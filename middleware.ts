@@ -1,18 +1,8 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const locales = ['kr', 'en']
-const defaultLocale = 'kr'
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-
-  // Check if pathname already has a locale
-  const pathnameHasLocale = locales.some(
-    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
-  )
-
-  if (pathnameHasLocale) return NextResponse.next()
 
   // Skip for static files and api routes
   if (
@@ -23,10 +13,22 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Redirect to default locale
+  // Redirect /kr to / (301 permanent redirect for SEO)
+  if (pathname === '/kr' || pathname.startsWith('/kr/')) {
+    const url = request.nextUrl.clone()
+    url.pathname = pathname.replace(/^\/kr/, '') || '/'
+    return NextResponse.redirect(url, 301)
+  }
+
+  // /en routes - pass through to [locale] handler
+  if (pathname === '/en' || pathname.startsWith('/en/')) {
+    return NextResponse.next()
+  }
+
+  // Root and other paths - rewrite to /kr internally (no redirect)
   const url = request.nextUrl.clone()
-  url.pathname = `/${defaultLocale}${pathname}`
-  return NextResponse.redirect(url)
+  url.pathname = `/kr${pathname}`
+  return NextResponse.rewrite(url)
 }
 
 export const config = {

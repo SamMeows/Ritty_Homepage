@@ -10,7 +10,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale: localeParam } = await params
   const locale = localeParam as Locale
   const dict = await getDictionary(locale)
-  const url = locale === 'kr' ? 'https://ritty.me/kr' : 'https://ritty.me/en'
+  // Root (/) is the canonical for Korean, /en for English
+  const url = locale === 'kr' ? 'https://ritty.me' : 'https://ritty.me/en'
   const ogLocale = locale === 'kr' ? 'ko_KR' : 'en_US'
   const htmlLang = locale === 'kr' ? 'ko' : 'en'
 
@@ -23,9 +24,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     alternates: {
       canonical: url,
       languages: {
-        'ko': 'https://ritty.me/kr',
+        'ko': 'https://ritty.me',
         'en': 'https://ritty.me/en',
-        'x-default': 'https://ritty.me/kr',
+        'x-default': 'https://ritty.me',
       },
     },
     verification: {
