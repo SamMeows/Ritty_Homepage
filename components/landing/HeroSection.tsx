@@ -80,11 +80,11 @@ export default function HeroSection({ dict, locale }: HeroSectionProps) {
         />
       </motion.div>
 
-      {/* Snowfall Effect */}
-      <Snowfall count={60} />
+      {/* Snowfall Effect - reduced for better INP */}
+      <Snowfall count={35} />
 
-      {/* Floating Particles */}
-      <FloatingParticles count={20} color="rgba(255, 255, 255, 0.5)" minSize={2} maxSize={4} />
+      {/* Floating Particles - reduced for better INP */}
+      <FloatingParticles count={12} color="rgba(255, 255, 255, 0.5)" minSize={2} maxSize={4} />
 
       {/* Content */}
       <motion.div
