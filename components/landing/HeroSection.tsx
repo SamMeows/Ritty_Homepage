@@ -98,33 +98,36 @@ export default function HeroSection({ dict, locale }: HeroSectionProps) {
           className="flex flex-col items-center text-center mb-[30vh] lg:mb-[38vh]"
           variants={itemVariants}
         >
-          <motion.p
-            className="font-paperlogy text-[clamp(28px,5vw,80px)] font-extrabold text-white leading-[1.42]"
-            style={{
-              textShadow: '0 0 25px rgba(54,34,25,1), 0 0 50px rgba(255,255,255,0.3)',
-            }}
-            variants={textVariants}
-            whileHover={{
-              scale: 1.05,
-              textShadow: '0 0 30px rgba(54,34,25,1), 0 0 60px rgba(255,255,255,0.5), 0 0 100px rgba(255,200,150,0.3)',
-            }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-          >
-            {dict.hero.line1}
-          </motion.p>
           <motion.h1
-            className="font-paperlogy text-[clamp(36px,7vw,110px)] font-extrabold text-white leading-[1.42]"
-            style={{
-              textShadow: '0 0 25px rgba(54,34,25,1), 0 0 50px rgba(255,255,255,0.3)',
-            }}
+            className="flex flex-col items-center"
             variants={textVariants}
-            whileHover={{
-              scale: 1.05,
-              textShadow: '0 0 30px rgba(54,34,25,1), 0 0 60px rgba(255,255,255,0.5), 0 0 100px rgba(255,200,150,0.3)',
-            }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           >
-            {dict.hero.line2}
+            <motion.span
+              className="font-paperlogy text-[clamp(28px,5vw,80px)] font-extrabold text-white leading-[1.42]"
+              style={{
+                textShadow: '0 0 25px rgba(54,34,25,1), 0 0 50px rgba(255,255,255,0.3)',
+              }}
+              whileHover={{
+                scale: 1.05,
+                textShadow: '0 0 30px rgba(54,34,25,1), 0 0 60px rgba(255,255,255,0.5), 0 0 100px rgba(255,200,150,0.3)',
+              }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            >
+              {dict.hero.line1}
+            </motion.span>
+            <motion.span
+              className="font-paperlogy text-[clamp(36px,7vw,110px)] font-extrabold text-white leading-[1.42]"
+              style={{
+                textShadow: '0 0 25px rgba(54,34,25,1), 0 0 50px rgba(255,255,255,0.3)',
+              }}
+              whileHover={{
+                scale: 1.05,
+                textShadow: '0 0 30px rgba(54,34,25,1), 0 0 60px rgba(255,255,255,0.5), 0 0 100px rgba(255,200,150,0.3)',
+              }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            >
+              {dict.hero.line2}
+            </motion.span>
           </motion.h1>
         </motion.div>
 

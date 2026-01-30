@@ -52,8 +52,8 @@
     "title": "Community"
   },
   "meta": {
-    "title": "Ritty - Talking AI Cat Pet Game | Virtual Tamagotchi",
-    "description": "Meet Ritty, the space cat! Chat, feed, dress up your AI cat. Modern Tamagotchi experience. Free download.",
+    "title": "Ritty - Talk to Your AI Cat | Virtual Pet Game & Modern Tamagotchi Free Download",
+    "description": "Meet Ritty, a talking space cat powered by AI! Have real conversations, feed, dress up, and play mini-games with your virtual pet. The ultimate modern Tamagotchi experience. Free on iOS & Android.",
     "keywords": "Ritty, talking cat, virtual pet, Tamagotchi, AI cat, AI chat, AI friend, pet game, healing app, cat game, space cat",
     "ogTitle": "Ritty - Talking AI Cat Virtual Pet Game",
     "ogImageAlt": "Ritty app screenshot - cute AI space cat Ritty chatting with you"
@@ -67,7 +67,8 @@
   "social": [
     { "key": "discord", "url": "https://discord.gg/wghaFYCkCV", "sidebarIcon": "/images/discord-sidebar.svg", "footerIcon": "/images/discord-footer.svg" },
     { "key": "instagram", "url": "https://www.instagram.com/ritty_meow/", "sidebarIcon": "/images/instagram-sidebar.svg", "footerIcon": "/images/instagram-footer.svg" },
-    { "key": "youtube", "url": "https://www.youtube.com/@Ritty_meow", "sidebarIcon": "/images/youtube-sidebar.png", "footerIcon": "/images/youtube-footer.png" }
+    { "key": "youtube", "url": "https://www.youtube.com/@Ritty_meow", "sidebarIcon": "/images/youtube-sidebar.png", "footerIcon": "/images/youtube-footer.png" },
+    { "key": "facebook", "url": "https://www.facebook.com/people/%EB%A6%AC%ED%8B%B0-RITTY/61575225267956/", "sidebarIcon": "/images/facebook-sidebar.svg", "footerIcon": "/images/facebook-footer.svg" }
   ],
   "alt": {
     "logo": "Ritty - Modern Talking Tamagotchi! AI Cat Chat & Care",
@@ -81,6 +82,7 @@
     "youtube": "Ritty YouTube Channel",
     "tiktok": "Ritty TikTok Account",
     "x": "Ritty X (Twitter) Account",
+    "facebook": "Ritty Official Facebook Page",
     "sammeowsLogo": "Sammeows Logo",
     "starDecoration": "Sparkling star decoration",
     "sparkle": "Sparkle effect",
