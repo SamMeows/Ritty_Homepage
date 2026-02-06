@@ -101,24 +101,37 @@ export default function Footer({ dict }: FooterProps) {
         ))}
       </motion.div>
 
-      {/* Sammeows Logo */}
-      <motion.a
-        href="https://sam-meows.com"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex justify-center z-10"
+      {/* Official Site Text */}
+      <motion.p
+        className="font-paperlogy text-[14px] font-bold text-white z-10"
         variants={itemVariants}
-        whileHover={{ scale: 1.1, filter: 'drop-shadow(0 0 10px rgba(255, 255, 255, 0.5))' }}
-        whileTap={{ scale: 0.95 }}
       >
-        <Image
-          src="/images/sammeows-logo.svg"
-          alt={dict.alt.sammeowsLogo}
-          width={107}
-          height={16}
-          className="h-4 w-auto object-contain"
-        />
-      </motion.a>
+        {dict.footer.officialSite}
+      </motion.p>
+
+      {/* Sammeows Logo with Developer Text */}
+      <motion.div
+        className="flex flex-col items-center gap-1 z-10"
+        variants={itemVariants}
+      >
+        <span className="text-[11px] text-gray-400">{dict.footer.developer}</span>
+        <motion.a
+          href="https://sam-meows.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex justify-center"
+          whileHover={{ scale: 1.1, filter: 'drop-shadow(0 0 10px rgba(255, 255, 255, 0.5))' }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Image
+            src="/images/sammeows-logo.svg"
+            alt={dict.alt.sammeowsLogo}
+            width={107}
+            height={16}
+            className="h-4 w-auto object-contain"
+          />
+        </motion.a>
+      </motion.div>
 
       {/* Copyright */}
       <motion.p

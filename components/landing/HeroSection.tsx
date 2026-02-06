@@ -102,6 +102,8 @@ export default function HeroSection({ dict, locale }: HeroSectionProps) {
             className="flex flex-col items-center"
             variants={textVariants}
           >
+            {/* SEO-optimized sr-only text for search engines */}
+            <span className="sr-only">{dict.meta.h1SrOnly}</span>
             <motion.span
               className="font-paperlogy text-[clamp(28px,5vw,80px)] font-extrabold text-white leading-[1.42]"
               style={{

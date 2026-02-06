@@ -46,17 +46,27 @@
   "footer": {
     "copyright": "© 2026 Sam-Meows Inc. All Rights Reserved.",
     "terms": "Terms of service",
-    "privacy": "Privacy policy"
+    "privacy": "Privacy policy",
+    "officialSite": "리티 (Ritty) 공식 홈페이지",
+    "developer": "삼냥이즈 (SamMeows)"
   },
   "community": {
     "title": "커뮤니티"
   },
   "meta": {
-    "title": "리티 Ritty - 말하는 AI 고양이 키우기 게임 | 현대판 다마고치 무료 다운로드",
-    "description": "우주에서 온 말하는 고양이 리티와 대화하고 키워보세요! AI와 실시간 대화하며 밥주기, 꾸미기, 미니게임까지. 토킹톰을 뛰어넘는 현대판 다마고치 육성 게임. iOS, Android 무료 다운로드.",
-    "keywords": "리티, Ritty, 리티 앱, 고양이 키우기, 말하는 고양이, 다마고치, 토킹톰, AI 고양이, AI 채팅, AI 대화, AI 친구, 가상 펫, 펫 키우기, 힐링 앱, 고양이 게임, 우주 고양이",
-    "ogTitle": "리티 Ritty - 말하는 AI 고양이 키우기 게임",
-    "ogImageAlt": "리티 앱 스크린샷 - 귀여운 AI 우주고양이 리티와 대화하는 모습"
+    "title": "리티 (Ritty) 공식 홈페이지 | 삼냥이즈 AI 고양이 앱",
+    "description": "리티 (Ritty) 공식 홈페이지입니다. 삼냥이즈(SamMeows)가 개발한 AI 우주 고양이 리티와 대화하고 키워보세요. 공식 사이트 ritty.me에서 iOS, Android 무료 다운로드.",
+    "keywords": "리티, Ritty, 리티 공식, 리티 공식 홈페이지, Ritty 공식, 삼냥이즈, SamMeows, 리티 앱, 고양이 키우기, 말하는 고양이, AI 고양이, AI 채팅, 가상 펫, 고양이 게임, 우주 고양이",
+    "ogTitle": "리티 (Ritty) 공식 홈페이지 | 삼냥이즈",
+    "ogImageAlt": "리티 앱 스크린샷 - 귀여운 AI 우주고양이 리티와 대화하는 모습",
+    "h1SrOnly": "리티 (Ritty) 공식 홈페이지 - 삼냥이즈 AI 고양이 앱"
+  },
+  "official": {
+    "heading": "리티 (Ritty) 공식 홈페이지",
+    "company": "삼냥이즈 (SamMeows)",
+    "description": "삼냥이즈(SamMeows)가 개발한 AI 우주 고양이 육성 시뮬레이션 앱입니다.",
+    "siteLabel": "공식 사이트",
+    "siteUrl": "https://ritty.me"
   },
   "links": {
     "appStore": "https://apps.apple.com/kr/app/id6743311040",

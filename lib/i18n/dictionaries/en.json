@@ -46,17 +46,27 @@
   "footer": {
     "copyright": "© 2026 Sam-Meows Inc. All Rights Reserved.",
     "terms": "Terms of service",
-    "privacy": "Privacy policy"
+    "privacy": "Privacy policy",
+    "officialSite": "Ritty Official Website",
+    "developer": "SamMeows"
   },
   "community": {
     "title": "Community"
   },
   "meta": {
-    "title": "Ritty - Talk to Your AI Cat | Virtual Pet Game & Modern Tamagotchi Free Download",
-    "description": "Meet Ritty, a talking space cat powered by AI! Have real conversations, feed, dress up, and play mini-games with your virtual pet. The ultimate modern Tamagotchi experience. Free on iOS & Android.",
-    "keywords": "Ritty, talking cat, virtual pet, Tamagotchi, AI cat, AI chat, AI friend, pet game, healing app, cat game, space cat",
-    "ogTitle": "Ritty - Talking AI Cat Virtual Pet Game",
-    "ogImageAlt": "Ritty app screenshot - cute AI space cat Ritty chatting with you"
+    "title": "Ritty Official Website | SamMeows AI Cat App",
+    "description": "Ritty Official Website. Meet Ritty, an AI space cat developed by SamMeows. Chat, feed, dress up and play with your virtual pet. Free download on iOS & Android at ritty.me.",
+    "keywords": "Ritty, Ritty official, Ritty official website, SamMeows, Sam-Meows, Ritty app, talking cat, virtual pet, AI cat, AI chat, pet game, space cat",
+    "ogTitle": "Ritty Official Website | SamMeows",
+    "ogImageAlt": "Ritty app screenshot - cute AI space cat Ritty chatting with you",
+    "h1SrOnly": "Ritty Official Website - SamMeows AI Cat App"
+  },
+  "official": {
+    "heading": "Ritty Official Website",
+    "company": "SamMeows",
+    "description": "An AI space cat simulation app developed by SamMeows.",
+    "siteLabel": "Official Site",
+    "siteUrl": "https://ritty.me"
   },
   "links": {
     "appStore": "https://apps.apple.com/us/app/id6743311040",
