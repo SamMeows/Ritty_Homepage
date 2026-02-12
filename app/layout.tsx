@@ -5,7 +5,7 @@ import ClickEffect from '@/components/effects/ClickEffect'
 import './globals.css'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://ritty.me'),
+  metadataBase: new URL('https://ritty.sam-meows.com'),
   icons: {
     icon: '/favicon.png',
     apple: '/apple-touch-icon.png',

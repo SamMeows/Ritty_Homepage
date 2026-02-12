@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const locale = localeParam as Locale
   const dict = await getDictionary(locale)
   // Root (/) is the canonical for Korean, /en for English
-  const url = locale === 'kr' ? 'https://ritty.me' : 'https://ritty.me/en'
+  const url = locale === 'kr' ? 'https://ritty.sam-meows.com' : 'https://ritty.sam-meows.com/en'
   const ogLocale = locale === 'kr' ? 'ko_KR' : 'en_US'
   const htmlLang = locale === 'kr' ? 'ko' : 'en'
 
@@ -24,9 +24,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     alternates: {
       canonical: url,
       languages: {
-        'ko': 'https://ritty.me',
-        'en': 'https://ritty.me/en',
-        'x-default': 'https://ritty.me',
+        'ko': 'https://ritty.sam-meows.com',
+        'en': 'https://ritty.sam-meows.com/en',
+        'x-default': 'https://ritty.sam-meows.com',
       },
     },
     verification: {
@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       alternateLocale: locale === 'kr' ? 'en_US' : 'ko_KR',
       images: [
         {
-          url: 'https://ritty.me/og-image.png',
+          url: 'https://ritty.sam-meows.com/og-image.png',
           width: 1200,
           height: 630,
           alt: dict.meta.ogImageAlt,
@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: 'summary_large_image',
       title: dict.meta.ogTitle,
       description: dict.meta.description,
-      images: ['https://ritty.me/og-image.png'],
+      images: ['https://ritty.sam-meows.com/og-image.png'],
     },
     other: {
       'content-language': htmlLang,

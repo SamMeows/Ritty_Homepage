@@ -55,7 +55,7 @@
   },
   "meta": {
     "title": "리티 (Ritty) 공식 홈페이지 | 삼냥이즈 AI 고양이 앱",
-    "description": "리티 (Ritty) 공식 홈페이지입니다. 삼냥이즈(SamMeows)가 개발한 AI 우주 고양이 리티와 대화하고 키워보세요. 공식 사이트 ritty.me에서 iOS, Android 무료 다운로드.",
+    "description": "리티 (Ritty) 공식 홈페이지입니다. 삼냥이즈(SamMeows)가 개발한 AI 우주 고양이 리티와 대화하고 키워보세요. 공식 사이트 ritty.sam-meows.com에서 iOS, Android 무료 다운로드.",
     "keywords": "리티, Ritty, 리티 공식, 리티 공식 홈페이지, Ritty 공식, 삼냥이즈, SamMeows, 리티 앱, 고양이 키우기, 말하는 고양이, AI 고양이, AI 채팅, 가상 펫, 고양이 게임, 우주 고양이",
     "ogTitle": "리티 (Ritty) 공식 홈페이지 | 삼냥이즈",
     "ogImageAlt": "리티 앱 스크린샷 - 귀여운 AI 우주고양이 리티와 대화하는 모습",
@@ -66,7 +66,7 @@
     "company": "삼냥이즈 (SamMeows)",
     "description": "삼냥이즈(SamMeows)가 개발한 AI 우주 고양이 육성 시뮬레이션 앱입니다.",
     "siteLabel": "공식 사이트",
-    "siteUrl": "https://ritty.me"
+    "siteUrl": "https://ritty.sam-meows.com"
   },
   "links": {
     "appStore": "https://apps.apple.com/kr/app/id6743311040",

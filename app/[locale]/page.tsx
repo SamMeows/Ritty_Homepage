@@ -21,8 +21,8 @@ export default async function LandingPage({ params }: Props) {
     '@type': 'Organization',
     name: '삼냥이즈',
     alternateName: ['SamMeows', 'Sam-Meows', 'Sam-Meows Inc.'],
-    url: 'https://ritty.me',
-    logo: 'https://ritty.me/apple-touch-icon.png',
+    url: 'https://ritty.sam-meows.com',
+    logo: 'https://ritty.sam-meows.com/apple-touch-icon.png',
     sameAs: [
       'https://sam-meows.com',
       'https://www.instagram.com/ritty_kr/',
@@ -45,8 +45,8 @@ export default async function LandingPage({ params }: Props) {
       '@type': 'Brand',
       name: '리티',
       alternateName: ['Ritty', '리티 Ritty'],
-      logo: 'https://ritty.me/apple-touch-icon.png',
-      url: 'https://ritty.me',
+      logo: 'https://ritty.sam-meows.com/apple-touch-icon.png',
+      url: 'https://ritty.sam-meows.com',
     },
   }
 
@@ -58,7 +58,7 @@ export default async function LandingPage({ params }: Props) {
     applicationCategory: 'GameApplication',
     operatingSystem: 'iOS, Android',
     description: dict.meta.description,
-    url: 'https://ritty.me',
+    url: 'https://ritty.sam-meows.com',
     offers: {
       '@type': 'Offer',
       price: '0',
@@ -73,13 +73,13 @@ export default async function LandingPage({ params }: Props) {
       '@type': 'Organization',
       name: '삼냥이즈',
       alternateName: 'SamMeows',
-      url: 'https://ritty.me',
+      url: 'https://ritty.sam-meows.com',
     },
     publisher: {
       '@type': 'Organization',
       name: '삼냥이즈',
       alternateName: 'SamMeows',
-      url: 'https://ritty.me',
+      url: 'https://ritty.sam-meows.com',
     },
     downloadUrl: [
       dict.links.appStore,
@@ -96,7 +96,7 @@ export default async function LandingPage({ params }: Props) {
     '@type': 'WebSite',
     name: locale === 'kr' ? '리티 (Ritty) 공식 홈페이지' : 'Ritty Official Website',
     alternateName: ['리티 공식 홈페이지', 'Ritty Official Website', '리티 Ritty'],
-    url: 'https://ritty.me',
+    url: 'https://ritty.sam-meows.com',
     publisher: {
       '@type': 'Organization',
       name: '삼냥이즈',
