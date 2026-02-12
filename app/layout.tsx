@@ -36,6 +36,8 @@ export default function RootLayout({
           crossOrigin="anonymous"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
         />
+      </head>
+      <body>
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-RSYNTB8CZV"
           strategy="afterInteractive"
@@ -48,8 +50,6 @@ export default function RootLayout({
             gtag('config', 'G-RSYNTB8CZV');
           `}
         </Script>
-      </head>
-      <body>
         <MusicProvider>
           {children}
           <ClickEffect />
