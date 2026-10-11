@@ -63,18 +63,17 @@
     },
     "worldview": {
       "label": "Worldview",
-      "title1": "A Space Cat Who Came to Earth",
-      "title2": "Looking for a Butler!",
+      "title1": "Crash-Landed on a Strange Island,",
+      "title2": "Space Cat Ritty!",
       "story": [
         "Far beyond the galaxy,",
-        "there was a planet called Meow Planet where cats lived",
-        "It was a special place where they lived on various {emotions} as energy",
+        "there was a planet where cats lived, called {Meow Planet}",
         "",
-        "Then one day, a small crisis came to Meow Planet",
-        "The emotional energy started to decrease little by little",
-        "So the cats of Meow Planet came to {Earth} looking for energy",
+        "One day, Ritty boarded a spaceship to explore faraway {Earth}",
+        "But just before reaching Earth, an unexpected accident happened",
+        "and the spaceship crash-landed on a {small, nameless island}",
         "",
-        "One day, a space cat Ritty came to our doorstep,",
+        "The first person Ritty met on that strange island was you!",
         "{Will you become Ritty's butler?}"
       ]
     },

@@ -92,7 +92,7 @@ export default function WorldviewSection({ dict }: WorldviewSectionProps) {
 
       {/* Story Text */}
       <motion.div
-        className="relative z-10 flex flex-col items-center text-center text-white font-paperlogy text-[16px] lg:text-[25px] font-normal px-6"
+        className="relative z-10 flex flex-col items-center text-center text-white font-paperlogy text-[16px] lg:text-[25px] font-normal px-6 break-keep"
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
