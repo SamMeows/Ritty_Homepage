@@ -56,6 +56,7 @@ export default function Footer({ dict }: FooterProps) {
 
   return (
     <motion.footer
+      id="footer"
       className="relative bg-dark-header min-h-[274px] py-12 flex-shrink-0 flex flex-col items-center justify-center gap-8 snap-start overflow-hidden"
       variants={containerVariants}
       initial="hidden"

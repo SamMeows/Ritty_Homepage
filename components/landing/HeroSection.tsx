@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import DownloadButtons from './DownloadButtons'
+import PreRegisterButton from '@/components/pre-register/PreRegisterButton'
 import ScrollIndicator from '@/components/ui/ScrollIndicator'
 import Snowfall from '@/components/effects/Snowfall'
 import FloatingParticles from '@/components/effects/FloatingParticles'
+import { LAUNCH_PHASE } from '@/lib/launch'
 import type { Dictionary } from '@/lib/i18n/dictionaries'
 
 interface HeroSectionProps {
@@ -133,9 +135,13 @@ export default function HeroSection({ dict, locale }: HeroSectionProps) {
           </motion.h1>
         </motion.div>
 
-        {/* Download Buttons */}
+        {/* Pre-registration or Download Buttons */}
         <motion.div variants={itemVariants}>
-          <DownloadButtons dict={dict} locale={locale} />
+          {LAUNCH_PHASE === 'pre-register' ? (
+            <PreRegisterButton dict={dict} />
+          ) : (
+            <DownloadButtons dict={dict} locale={locale} />
+          )}
         </motion.div>
       </motion.div>
 

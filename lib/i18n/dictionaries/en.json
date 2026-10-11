@@ -3,6 +3,47 @@
     "line1": "A Happy Butler Life",
     "line2": "with Ritty"
   },
+  "preRegister": {
+    "cta": "Pre-register",
+    "releaseNote": "Coming in 2027",
+    "title": "Ritty 2.0 Pre-registration",
+    "description": "Be the first to know when Ritty 2.0 launches.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "ritty@example.com",
+    "platformLabel": "Device",
+    "agreeAll": "Agree to all",
+    "consents": {
+      "age": "[Required] I am 14 years of age or older",
+      "privacy": "[Required] Consent to the collection and use of personal information",
+      "marketing": "[Required] Consent to receive promotional emails"
+    },
+    "privacyTable": [
+      { "label": "Collected", "value": "Email address, device (iOS/Android)" },
+      { "label": "Purpose", "value": "Ritty 2.0 launch notifications and pre-registration reward information" },
+      { "label": "Retention", "value": "1 year from collection (deleted immediately upon withdrawal of consent)" }
+    ],
+    "privacyRefusal": "You may refuse, but you won't be able to pre-register without this consent.",
+    "marketingDetail": "Receive Ritty 2.0 launch news and pre-registration reward information by email. You can withdraw your consent at any time.",
+    "showDetail": "Details",
+    "hideDetail": "Hide",
+    "privacyPolicyLink": "View privacy policy",
+    "submit": "Pre-register now",
+    "submitting": "Submitting...",
+    "errors": {
+      "email": "Please enter a valid email address.",
+      "platform": "Please select your device.",
+      "consent": "Please agree to all required items.",
+      "server": "Something went wrong. Please try again in a moment."
+    },
+    "successTitle": "You're pre-registered!",
+    "successBody": "We'll email you as soon as Ritty 2.0 launches.",
+    "duplicateTitle": "You're already pre-registered",
+    "duplicateBody": "We'll let you know at the email you registered when Ritty 2.0 launches.",
+    "copyLink": "Copy link to tell your friends",
+    "copied": "Link copied!",
+    "joinDiscord": "Get news on Discord",
+    "close": "Close"
+  },
   "nav": {
     "home": "Home",
     "rittyIntro": "About Ritty",
@@ -55,7 +96,7 @@
   },
   "meta": {
     "title": "Ritty Official Website | SamMeows AI Cat App",
-    "description": "Ritty Official Website. Meet Ritty, an AI space cat developed by SamMeows. Chat, feed, dress up and play with your virtual pet. Free download on iOS & Android at ritty.sam-meows.com.",
+    "description": "Ritty Official Website. Meet Ritty, an AI space cat developed by SamMeows. Chat, feed, dress up and play with your virtual pet. Pre-register for Ritty 2.0 at ritty.sam-meows.com, coming in 2027.",
     "keywords": "Ritty, Ritty official, Ritty official website, SamMeows, Sam-Meows, Ritty app, talking cat, virtual pet, AI cat, AI chat, pet game, space cat",
     "ogTitle": "Ritty Official Website | SamMeows",
     "ogImageAlt": "Ritty app screenshot - cute AI space cat Ritty chatting with you",

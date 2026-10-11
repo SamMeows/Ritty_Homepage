@@ -6,6 +6,9 @@ import HeroSection from '@/components/landing/HeroSection'
 import OfficialEntitySection from '@/components/landing/OfficialEntitySection'
 import RittyIntroSection from '@/components/landing/RittyIntroSection'
 import WorldviewSection from '@/components/landing/WorldviewSection'
+import PreRegisterFloatingButton from '@/components/pre-register/PreRegisterFloatingButton'
+import { PreRegisterProvider } from '@/lib/contexts/PreRegisterContext'
+import { LAUNCH_PHASE } from '@/lib/launch'
 
 type Props = {
   params: Promise<{ locale: string }>
@@ -15,6 +18,8 @@ export default async function LandingPage({ params }: Props) {
   const { locale: localeParam } = await params
   const locale = localeParam as Locale
   const dict = await getDictionary(locale)
+  // Store links and ratings only make sense while the app is downloadable
+  const isOnStores = LAUNCH_PHASE === 'store'
 
   const jsonLdOrganization = {
     '@context': 'https://schema.org',
@@ -33,8 +38,12 @@ export default async function LandingPage({ params }: Props) {
       'https://discord.gg/wghaFYCkCV',
       'https://x.com/Ritty_kr',
       'https://www.facebook.com/people/%EB%A6%AC%ED%8B%B0-RITTY/61575225267956/',
-      'https://play.google.com/store/apps/details?id=com.sammeows.ritty',
-      'https://apps.apple.com/app/id6743311040',
+      ...(isOnStores
+        ? [
+            'https://play.google.com/store/apps/details?id=com.sammeows.ritty',
+            'https://apps.apple.com/app/id6743311040',
+          ]
+        : []),
     ],
     contactPoint: {
       '@type': 'ContactPoint',
@@ -64,11 +73,13 @@ export default async function LandingPage({ params }: Props) {
       price: '0',
       priceCurrency: locale === 'kr' ? 'KRW' : 'USD',
     },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.9',
-      ratingCount: '1250',
-    },
+    ...(isOnStores && {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: '4.9',
+        ratingCount: '1250',
+      },
+    }),
     author: {
       '@type': 'Organization',
       name: '삼냥이즈',
@@ -81,14 +92,16 @@ export default async function LandingPage({ params }: Props) {
       alternateName: 'SamMeows',
       url: 'https://ritty.sam-meows.com',
     },
-    downloadUrl: [
-      dict.links.appStore,
-      dict.links.googlePlay,
-    ],
-    installUrl: [
-      dict.links.appStore,
-      dict.links.googlePlay,
-    ],
+    ...(isOnStores && {
+      downloadUrl: [
+        dict.links.appStore,
+        dict.links.googlePlay,
+      ],
+      installUrl: [
+        dict.links.appStore,
+        dict.links.googlePlay,
+      ],
+    }),
   }
 
   const jsonLdWebsite = {
@@ -119,15 +132,18 @@ export default async function LandingPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebsite) }}
       />
-      <Header dict={dict} locale={locale} />
-      <SocialSidebar dict={dict} />
-      <main className="bg-dark-bg h-screen overflow-y-scroll snap-y snap-mandatory scroll-smooth">
-        <HeroSection dict={dict} locale={locale} />
-        <OfficialEntitySection dict={dict} />
-        <WorldviewSection dict={dict} />
-        <RittyIntroSection dict={dict} />
-        <Footer dict={dict} />
-      </main>
+      <PreRegisterProvider dict={dict} locale={locale}>
+        <Header dict={dict} locale={locale} />
+        <SocialSidebar dict={dict} />
+        <main className="bg-dark-bg h-screen overflow-y-scroll snap-y snap-mandatory scroll-smooth">
+          <HeroSection dict={dict} locale={locale} />
+          <OfficialEntitySection dict={dict} />
+          <WorldviewSection dict={dict} />
+          <RittyIntroSection dict={dict} />
+          <Footer dict={dict} />
+        </main>
+        {LAUNCH_PHASE === 'pre-register' && <PreRegisterFloatingButton dict={dict} />}
+      </PreRegisterProvider>
     </>
   )
 }

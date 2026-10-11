@@ -3,6 +3,47 @@
     "line1": "리티와 함께하는",
     "line2": "행복한 집사 생활"
   },
+  "preRegister": {
+    "cta": "사전 예약하기",
+    "releaseNote": "2027년 출시 예정",
+    "title": "리티 2.0 사전예약",
+    "description": "출시 소식을 이메일로 가장 먼저 알려드릴게요.",
+    "emailLabel": "이메일",
+    "emailPlaceholder": "ritty@example.com",
+    "platformLabel": "사용 기기",
+    "agreeAll": "전체 동의",
+    "consents": {
+      "age": "[필수] 만 14세 이상입니다",
+      "privacy": "[필수] 개인정보 수집·이용 동의",
+      "marketing": "[필수] 광고성 정보 수신 동의 (이메일)"
+    },
+    "privacyTable": [
+      { "label": "수집 항목", "value": "이메일 주소, 사용 기기(iOS/Android)" },
+      { "label": "수집·이용 목적", "value": "리티 2.0 출시(소프트 런칭 포함) 알림 및 사전예약 보상 안내" },
+      { "label": "보유·이용 기간", "value": "수집일로부터 1년 (동의 철회 시 즉시 파기)" }
+    ],
+    "privacyRefusal": "동의를 거부할 수 있으나, 거부 시 사전예약에 참여할 수 없습니다.",
+    "marketingDetail": "리티 2.0 출시(소프트 런칭 포함) 소식과 사전예약 보상 안내를 이메일로 받습니다. 수신 동의는 언제든 철회할 수 있습니다.",
+    "showDetail": "자세히",
+    "hideDetail": "접기",
+    "privacyPolicyLink": "개인정보처리방침 보기",
+    "submit": "사전예약 완료하기",
+    "submitting": "등록 중...",
+    "errors": {
+      "email": "올바른 이메일 주소를 입력해 주세요.",
+      "platform": "사용 기기를 선택해 주세요.",
+      "consent": "필수 항목에 모두 동의해 주세요.",
+      "server": "일시적인 오류가 발생했어요. 잠시 후 다시 시도해 주세요."
+    },
+    "successTitle": "사전예약 완료!",
+    "successBody": "리티 2.0이 출시되면 이메일로 가장 먼저 알려드릴게요.",
+    "duplicateTitle": "이미 사전예약하셨어요",
+    "duplicateBody": "출시되면 등록하신 이메일로 알려드릴게요.",
+    "copyLink": "링크 복사해서 친구에게 알리기",
+    "copied": "링크를 복사했어요!",
+    "joinDiscord": "디스코드에서 소식 받기",
+    "close": "닫기"
+  },
   "nav": {
     "home": "홈",
     "rittyIntro": "리티 소개",
@@ -55,7 +96,7 @@
   },
   "meta": {
     "title": "리티 (Ritty) 공식 홈페이지 | 삼냥이즈 AI 고양이 앱",
-    "description": "리티 (Ritty) 공식 홈페이지입니다. 삼냥이즈(SamMeows)가 개발한 AI 우주 고양이 리티와 대화하고 키워보세요. 공식 사이트 ritty.sam-meows.com에서 iOS, Android 무료 다운로드.",
+    "description": "리티 (Ritty) 공식 홈페이지입니다. 삼냥이즈(SamMeows)가 개발한 AI 우주 고양이 리티와 대화하고 키워보세요. 공식 사이트 ritty.sam-meows.com에서 리티 2.0 사전예약 진행 중 (2027년 출시 예정).",
     "keywords": "리티, Ritty, 리티 공식, 리티 공식 홈페이지, Ritty 공식, 삼냥이즈, SamMeows, 리티 앱, 고양이 키우기, 말하는 고양이, AI 고양이, AI 채팅, 가상 펫, 고양이 게임, 우주 고양이",
     "ogTitle": "리티 (Ritty) 공식 홈페이지 | 삼냥이즈",
     "ogImageAlt": "리티 앱 스크린샷 - 귀여운 AI 우주고양이 리티와 대화하는 모습",
