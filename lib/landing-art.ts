@@ -11,6 +11,7 @@ export function decorateLandingMarkup(markup: string) {
     result = result.replace(new RegExp(`(data-nav="${section}"[^>]*>)`), `$1${icon(name)}`)
   }
   result = result.replace('<main>', '<div class="reading-progress" aria-hidden="true"><span></span></div><main>')
+  result = result.replace('<div class="hero-shade"></div>', '<div class="hero-shade"></div><div class="hero-meteors" aria-hidden="true"><span class="shooting-star"></span><span class="shooting-star"></span><span class="shooting-star"></span></div>')
   result = result.replace('<div class="cat-world-heading">', '<img class="raster-charm resident-planet" src="/ritty/art/cat-planet-v2.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><div class="cat-world-heading">')
   // Keep the life scene itself as the focus; the unrelated floating cottage is omitted.
   result = result.replace('<div class="life-panel-copy"', '<div class="life-speech" id="life-speech" aria-live="polite"><span>리티</span><p id="life-dialogue">우와, 이거 네가 키운 거야?</p></div><div class="life-panel-copy"')
@@ -18,7 +19,7 @@ export function decorateLandingMarkup(markup: string) {
   result = result.replace('<div class="news-heading">', '<img class="world-decoration news-island" src="/ritty/art/cat-planet-v2.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><div class="news-heading">')
   result = result.replace('<h2 id="life-heading">', `<h2 id="life-heading">${icon('garden')}`)
   result = result.replace('<h2>리티 소식</h2>', `<h2>${icon('letter')}리티 소식</h2>`)
-  result = result.replace(/<div class="hero-sparkles"[^>]*>[\s\S]*?<\/div>/, '<img class="raster-charm hero-charm" src="/ritty/art/star-cloud-v2.webp" alt="" width="160" height="160" aria-hidden="true">')
+  result = result.replace(/<div class="hero-sparkles"[^>]*>[\s\S]*?<\/div>/, '')
   result = result.replace(/<span class="cat-orbit-star"[^>]*>[\s\S]*?<\/span>/, '<img class="raster-charm resident-star" src="/ritty/art/star-cloud-v2.webp" alt="" width="160" height="160" loading="lazy" aria-hidden="true">')
   result = result.replace('<div class="hero-actions">', '<div class="hero-actions"><img class="raster-charm cta-charm" src="/ritty/art/star-cloud-v2.webp" alt="" width="160" height="160" aria-hidden="true">')
   result = result.replace('<footer class="ad-footer">', '<footer class="ad-footer"><img class="raster-charm footer-planet" src="/ritty/art/cat-planet-v2.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true">')

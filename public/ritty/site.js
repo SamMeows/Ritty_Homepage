@@ -71,7 +71,7 @@
     root.querySelector('.cat-story').scrollTop=0;
     const portrait=document.getElementById('cat-portrait'),unknown=document.getElementById('cat-unknown');
     portrait.hidden=!cat.art;unknown.hidden=!!cat.art;
-    if(cat.art){portrait.src='/ritty/cat-'+cat.art+'.webp';portrait.alt=cat.name;animateSwap(portrait,direction)}
+    if(cat.art){portrait.src='/ritty/residents/'+cat.art+'-cutout.webp';portrait.alt=(cat.name||cat.role)+' 일러스트';animateSwap(portrait,direction)}
     else {document.getElementById('cat-unknown-label').textContent=cat.upcoming?'새로운 만남을 기다려 주세요':'어떤 모습일까요?';animateSwap(unknown,direction)}
     animateSwap(document.getElementById('cat-name'),direction);
     animateSwap(root.querySelector('.cat-story'),direction);

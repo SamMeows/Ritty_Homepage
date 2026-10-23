@@ -38,7 +38,7 @@ export default function AdLanding({ markup, news, dict }: { markup: string; news
     }
     node.addEventListener('click', open)
     const script = document.createElement('script')
-    script.src = '/ritty/site.js?v=20261023-scene-dots-dialogue'
+    script.src = '/ritty/site.js?v=20261023-resident-illustrations'
     node.appendChild(script)
     return () => {
       disposeMotion()

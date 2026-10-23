@@ -1,3 +1,4 @@
+import RittyLanding from '@/components/landing/RittyLanding'
 import { getDictionary, type Locale } from '@/lib/i18n/dictionaries'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
@@ -132,7 +133,7 @@ export default async function LandingPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebsite) }}
       />
-      <PreRegisterProvider dict={dict} locale={locale}>
+      {locale === 'kr' ? <RittyLanding /> : <PreRegisterProvider dict={dict} locale={locale}>
         <Header dict={dict} locale={locale} />
         <SocialSidebar dict={dict} />
         <main className="bg-dark-bg h-screen overflow-y-scroll snap-y snap-mandatory scroll-smooth">
@@ -143,7 +144,7 @@ export default async function LandingPage({ params }: Props) {
           <Footer dict={dict} />
         </main>
         {LAUNCH_PHASE === 'pre-register' && <PreRegisterFloatingButton dict={dict} />}
-      </PreRegisterProvider>
+      </PreRegisterProvider>}
     </>
   )
 }
