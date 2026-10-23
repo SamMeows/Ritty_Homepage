@@ -1,14 +1,5 @@
 import RittyLanding from '@/components/landing/RittyLanding'
 import { getDictionary, type Locale } from '@/lib/i18n/dictionaries'
-import Header from '@/components/layout/Header'
-import Footer from '@/components/layout/Footer'
-import SocialSidebar from '@/components/ui/SocialSidebar'
-import HeroSection from '@/components/landing/HeroSection'
-import OfficialEntitySection from '@/components/landing/OfficialEntitySection'
-import RittyIntroSection from '@/components/landing/RittyIntroSection'
-import WorldviewSection from '@/components/landing/WorldviewSection'
-import PreRegisterFloatingButton from '@/components/pre-register/PreRegisterFloatingButton'
-import { PreRegisterProvider } from '@/lib/contexts/PreRegisterContext'
 import { LAUNCH_PHASE } from '@/lib/launch'
 import { serializeJsonLd } from '@/lib/seo'
 
@@ -122,18 +113,7 @@ export default async function LandingPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLdWebsite) }}
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLdPage) }} />
-      {locale === 'kr' ? <RittyLanding /> : <PreRegisterProvider dict={dict} locale={locale}>
-        <Header dict={dict} locale={locale} />
-        <SocialSidebar dict={dict} />
-        <main className="bg-dark-bg h-screen overflow-y-scroll snap-y snap-mandatory scroll-smooth">
-          <HeroSection dict={dict} locale={locale} />
-          <OfficialEntitySection dict={dict} />
-          <WorldviewSection dict={dict} />
-          <RittyIntroSection dict={dict} />
-          <Footer dict={dict} />
-        </main>
-        {LAUNCH_PHASE === 'pre-register' && <PreRegisterFloatingButton dict={dict} />}
-      </PreRegisterProvider>}
+      <RittyLanding locale={locale} />
     </>
   )
 }

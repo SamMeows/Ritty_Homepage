@@ -1,14 +1,14 @@
 import { homeMarkup } from '@/lib/home-markup'
 import { adVariants, type AdVariant } from '@/lib/ad-variants'
-import { getDictionary } from '@/lib/i18n/dictionaries'
+import { getDictionary, type Locale } from '@/lib/i18n/dictionaries'
 import { PreRegisterProvider } from '@/lib/contexts/PreRegisterContext'
 import AdLanding from '@/components/landing/AdLanding'
 import { getNews } from '@/lib/news'
 
-export default async function RittyLanding({ variant = 'cozy-life' }: { variant?: AdVariant }) {
+export default async function RittyLanding({ variant = 'cozy-life', locale = 'kr' }: { variant?: AdVariant; locale?: Locale }) {
   const config = adVariants[variant]
-  const original = await getDictionary('kr')
-  const dict = {...original, preRegister:{...original.preRegister,title:'리티 사전등록',releaseNote:'출시 소식을 가장 먼저 받아보세요'}}
+  const original = await getDictionary(locale)
+  const dict = {...original, preRegister:{...original.preRegister,title:locale === 'en' ? 'Ritty Pre-registration' : '리티 사전등록',releaseNote:locale === 'en' ? 'Be the first to hear about the launch' : '출시 소식을 가장 먼저 받아보세요'}}
   const markup = homeMarkup
     .replace('<div class="company-details">', '<div class="company-details" data-nosnippet>')
     .replace(/<a class="news-link"[\s\S]*?<\/a>/, '<div id="news-feed"></div>')
@@ -21,5 +21,10 @@ export default async function RittyLanding({ variant = 'cozy-life' }: { variant?
     .replaceAll('href="#join"', 'href="#join" data-register')
     .replaceAll('사전등록 안내 보기', '사전등록하기')
     .replaceAll('사전등록 안내', '사전등록하기')
-  return <PreRegisterProvider dict={dict} locale="kr"><AdLanding markup={markup} news={await getNews()} dict={dict} /></PreRegisterProvider>
+  const localizedMarkup = locale === 'en' ? markup
+    .replaceAll('https://project-meow.notion.site/1bd423ba89b680f4b37dcb1ec02aa36c?pvs=74', dict.links.privacy)
+    .replaceAll('https://project-meow.notion.site/1bd423ba89b680cc9c4ffaa284da0d85?pvs=74', dict.links.terms)
+    .replaceAll('https://www.instagram.com/ritty_kr/', 'https://www.instagram.com/ritty_meow/')
+    .replaceAll('https://www.tiktok.com/@ritty_kr', 'https://www.tiktok.com/@rittymeow') : markup
+  return <PreRegisterProvider dict={dict} locale={locale}><AdLanding markup={localizedMarkup} news={await getNews()} dict={dict} locale={locale} /></PreRegisterProvider>
 }

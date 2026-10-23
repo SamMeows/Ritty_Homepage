@@ -23,15 +23,17 @@
   const root = document.querySelector('.ritty-site');
   if (!root || root.dataset.interactiveReady) return;
   root.dataset.interactiveReady = 'true';
+  const translations = JSON.parse(root.querySelector('#landing-translations')?.textContent || '{}');
+  const t = text => translations[text] || text;
   const controller = new AbortController();
   window.addEventListener('ritty:dispose', () => controller.abort(), {once:true, signal:controller.signal});
   const scenes = [
-    ['harvest','01 / GARDEN','오늘은 무얼 수확할까?','씨앗을 심고 물을 줘서 작물을 길러요. 텃밭을 넓히면 더 많이 심을 수 있어요.','수확하는 손을 바라보는 회색 리티','#harvest'],
-    ['cooking','02 / COOKING','뭘 만들어 줄까?','수확한 재료로 요리를 만들어 리티에게 줘보세요. 어떤 음식을 좋아할까요?','요리를 기다리는 회색 리티','#cooking'],
-    ['home','03 / OUR HOME','직접 만들어 꾸미는 집','재료를 모아 가구를 만들고 원하는 곳에 놓아요. 집을 넓혀 더 많은 가구를 배치할 수도 있어요.','가구 제작 곁에서 부품을 살피는 회색 리티','#our-home'],
-    ['fishing','04 / OUTSIDE','낚시도 하고, 마을도 가고','바다에서 낚시를 즐기고, 돌아오는 길엔 마을 상점에도 들러요.','낚시 찌를 살피는 회색 리티','#outside'],
+    ['harvest','01 / GARDEN',t('오늘은 무얼 수확할까?'),t('씨앗을 심고 물을 줘서 작물을 길러요. 텃밭을 넓히면 더 많이 심을 수 있어요.'),t('수확하는 손을 바라보는 회색 리티'),'#harvest'],
+    ['cooking','02 / COOKING',t('뭘 만들어 줄까?'),t('수확한 재료로 요리를 만들어 리티에게 줘보세요. 어떤 음식을 좋아할까요?'),t('요리를 기다리는 회색 리티'),'#cooking'],
+    ['home','03 / OUR HOME',t('직접 만들어 꾸미는 집'),t('재료를 모아 가구를 만들고 원하는 곳에 놓아요. 집을 넓혀 더 많은 가구를 배치할 수도 있어요.'),t('가구 제작 곁에서 부품을 살피는 회색 리티'),'#our-home'],
+    ['fishing','04 / OUTSIDE',t('낚시도 하고, 마을도 가고'),t('바다에서 낚시를 즐기고, 돌아오는 길엔 마을 상점에도 들러요.'),t('낚시 찌를 살피는 회색 리티'),'#outside'],
   ];
-  const lifeDialogue = ['우와, 이거 네가 키운 거야?', '한 입만! 지금 먹어도 돼?', '새 가구야? 나도 구경할래!', '방금 움직였어! 물고기 아니야?'];
+  const lifeDialogue = [t('우와, 이거 네가 키운 거야?'), t('한 입만! 지금 먹어도 돼?'), t('새 가구야? 나도 구경할래!'), t('방금 움직였어! 물고기 아니야?')];
   let lifeIndex=0;
   function animateSwap(element, direction=1){
     if(matchMedia('(prefers-reduced-motion: reduce)').matches || root.classList.contains('motion-paused'))return;
@@ -64,15 +66,15 @@
     catTabs.forEach((tab,i)=>{const position=(i-index+cats.length)%cats.length;tab.hidden=position>=4;tab.style.order=String(position)});
     document.getElementById('cat-profile').setAttribute('aria-labelledby',catTabs[index].id);
     document.getElementById('cat-name').textContent=cat.name||cat.role;
-    document.getElementById('cat-trait').textContent=cat.upcoming?'새로운 친구가 찾아올 예정이에요':cat.role+' · '+cat.personality;
-    const likes=document.getElementById('cat-likes');likes.hidden=!cat.likes;likes.textContent=cat.likes?'좋아하는 것: '+cat.likes:'';
+    document.getElementById('cat-trait').textContent=cat.upcoming?t('새로운 친구가 찾아올 예정이에요'):cat.role+' · '+cat.personality;
+    const likes=document.getElementById('cat-likes');likes.hidden=!cat.likes;likes.textContent=cat.likes?t('좋아하는 것: ')+cat.likes:'';
     const quote=document.getElementById('cat-quote');quote.hidden=!cat.quote;quote.textContent=cat.quote?'“'+cat.quote+'”':'';
     document.getElementById('cat-story').textContent=cat.story;
     root.querySelector('.cat-story').scrollTop=0;
     const portrait=document.getElementById('cat-portrait'),unknown=document.getElementById('cat-unknown');
     portrait.hidden=!cat.art;unknown.hidden=!!cat.art;
-    if(cat.art){portrait.src='/ritty/residents/'+cat.art+'-cutout.webp';portrait.alt=(cat.name||cat.role)+' 일러스트';animateSwap(portrait,direction)}
-    else {document.getElementById('cat-unknown-label').textContent=cat.upcoming?'새로운 만남을 기다려 주세요':'어떤 모습일까요?';animateSwap(unknown,direction)}
+    if(cat.art){portrait.src='/ritty/residents/'+cat.art+'-cutout.webp';portrait.alt=(cat.name||cat.role)+t(' 일러스트');animateSwap(portrait,direction)}
+    else {document.getElementById('cat-unknown-label').textContent=cat.upcoming?t('새로운 만남을 기다려 주세요'):t('어떤 모습일까요?');animateSwap(unknown,direction)}
     animateSwap(document.getElementById('cat-name'),direction);
     animateSwap(root.querySelector('.cat-story'),direction);
     document.getElementById('resident-status').textContent=cat.name||cat.role;
@@ -96,31 +98,31 @@
     root.querySelectorAll('[data-video]').forEach(button=>{
       if(media[button.dataset.video]){
         const label=button.querySelector('small');
-        if(label)label.textContent='플레이 영상 보기';
+        if(label)label.textContent=t('플레이 영상 보기');
       }
     });
   }).catch(()=>{});
   root.querySelectorAll('[data-video]').forEach(button=>button.addEventListener('click',async()=>{
     const request=++videoRequest;videoOpener=button;
-    document.getElementById('video-title').textContent=button.dataset.video==='life'?'리티 생활 플레이':'리티와 대화하기';
+    document.getElementById('video-title').textContent=button.dataset.video==='life'?t('리티 생활 플레이'):t('리티와 대화하기');
     video.pause();video.removeAttribute('src');video.load();video.hidden=true;placeholder.hidden=false;
-    caption.textContent='실제 플레이 영상이 들어갈 자리입니다. 현재는 영상이 등록되지 않았어요.';
+    caption.textContent=t('실제 플레이 영상이 들어갈 자리입니다. 현재는 영상이 등록되지 않았어요.');
     videoDialog.showModal();
     try {
       const {media}=await import('/ritty/media-config.js');
       if(request!==videoRequest || !videoDialog.open)return;
       const source=media[button.dataset.video];
-      if(source){const url=new URL(source,location.href);if(!['https:','http:'].includes(url.protocol))return;video.src=url.href;video.hidden=false;placeholder.hidden=true;caption.textContent='실제 플레이 영상';}
-    } catch {caption.textContent='영상을 아직 불러올 수 없어요. 잠시 후 다시 확인해 주세요.';}
+      if(source){const url=new URL(source,location.href);if(!['https:','http:'].includes(url.protocol))return;video.src=url.href;video.hidden=false;placeholder.hidden=true;caption.textContent=t('실제 플레이 영상');}
+    } catch {caption.textContent=t('영상을 아직 불러올 수 없어요. 잠시 후 다시 확인해 주세요.');}
   }));
-  video.addEventListener('error',()=>{video.hidden=true;placeholder.hidden=false;caption.textContent='영상을 불러오지 못했어요. 영상 파일 주소를 확인해 주세요.'});
+  video.addEventListener('error',()=>{video.hidden=true;placeholder.hidden=false;caption.textContent=t('영상을 불러오지 못했어요. 영상 파일 주소를 확인해 주세요.')});
   videoDialog.querySelector('.close-video').addEventListener('click',()=>videoDialog.close());
   videoDialog.addEventListener('click',e=>{const b=videoDialog.getBoundingClientRect();if(e.target===videoDialog&&(e.clientX<b.left||e.clientX>b.right||e.clientY<b.top||e.clientY>b.bottom))videoDialog.close()});
   videoDialog.addEventListener('close',()=>{videoRequest++;video.pause();videoOpener?.focus()});
   const reduced=matchMedia('(prefers-reduced-motion: reduce)'),fine=matchMedia('(pointer:fine)');
   const hero=document.getElementById('home'),motionButton=root.querySelector('.motion-toggle');
   let paused=reduced.matches,raf=0;
-  function applyMotion(){root.classList.toggle('motion-paused',paused);motionButton.setAttribute('aria-pressed',String(paused));motionButton.setAttribute('aria-label',paused?'배경 움직임 재생하기':'배경 움직임 멈추기');motionButton.textContent=paused?'▷':'Ⅱ';hero.style.setProperty('--mx','0px');hero.style.setProperty('--my','0px')}
+  function applyMotion(){root.classList.toggle('motion-paused',paused);motionButton.setAttribute('aria-pressed',String(paused));motionButton.setAttribute('aria-label',paused?t('배경 움직임 재생하기'):t('배경 움직임 멈추기'));motionButton.textContent=paused?'▷':'Ⅱ';hero.style.setProperty('--mx','0px');hero.style.setProperty('--my','0px')}
   applyMotion();motionButton.addEventListener('click',()=>{paused=!paused;applyMotion()});
   reduced.addEventListener('change',e=>{paused=e.matches;applyMotion()},{signal:controller.signal});
   hero.addEventListener('pointermove',e=>{if(paused||!fine.matches||raf)return;raf=requestAnimationFrame(()=>{const b=hero.getBoundingClientRect();hero.style.setProperty('--mx',((e.clientX-b.left)/b.width-.5)*10+'px');hero.style.setProperty('--my',((e.clientY-b.top)/b.height-.5)*6+'px');raf=0})});

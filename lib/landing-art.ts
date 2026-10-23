@@ -1,8 +1,10 @@
 import { residentChapter } from './ritty-residents'
+import { homeEnglish, translateHomeMarkup } from './i18n/home-en'
+import type { Locale } from './i18n/dictionaries'
 
 const icon = (name: string) => `<span class="world-icon icon-${name}" aria-hidden="true"></span>`
 
-export function decorateLandingMarkup(markup: string) {
+export function decorateLandingMarkup(markup: string, locale: Locale = 'kr') {
   let result = markup
   result = result.replace(/<section class="cat-world"[\s\S]*?<\/section>/, residentChapter())
   result = result.replace(/(<a href="#meet-ritty" data-nav="meet-ritty"[^>]*>[\s\S]*?<\/a>)(<a href="#day" data-nav="day"[^>]*>[\s\S]*?<\/a>)/, '$2$1')
@@ -25,6 +27,10 @@ export function decorateLandingMarkup(markup: string) {
   result = result.replace('<footer class="ad-footer">', '<footer class="ad-footer"><img class="raster-charm footer-planet" src="/ritty/art/cat-planet-v2.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true">')
   result = result.replace(/[✦✧]/g, '')
   result = result.replace('<div class="cat-world-heading">', `<div class="scene-depth" aria-hidden="true"><div class="scene-plane scene-sky" data-depth="0.32"></div><div class="scene-plane scene-clouds" data-depth="0.16"></div><div class="scene-plane scene-hills" data-depth="-0.12"></div></div><div class="cat-world-heading">`)
+  if (locale === 'en') {
+    result = translateHomeMarkup(result).replace('<div class="ritty-site">', '<div class="ritty-site" lang="en">')
+    result = result.replace('</main>', `<script type="application/json" id="landing-translations">${JSON.stringify(homeEnglish).replace(/</g, '\\u003c')}</script></main>`)
+  }
   return result
 }
 
