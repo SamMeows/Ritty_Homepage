@@ -1,0 +1,18 @@
+.ritty-site .news-modal{width:min(900px,calc(100vw - 72px));max-width:none;height:min(820px,calc(100svh - 80px));max-height:none;padding:0;margin:auto;border:1px solid #fff6e5;border-radius:30px;background:#fbf7ef url('/ritty/art/news-pattern-v2.webp') center/cover;color:#4c3b64;box-shadow:0 25px 100px #21183255;overflow:hidden}
+.ritty-site .news-modal::backdrop{background:#211934a6;backdrop-filter:blur(9px)}
+.ritty-site .news-modal[open]{display:flex;flex-direction:column;animation:news-open .25s ease-out}
+.ritty-site .news-modal-bar{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;padding:16px 22px 16px 32px;border-bottom:1px solid #cdbce255;background:#fffaf0d9}
+.ritty-site .news-modal-bar>span{font-size:18px;font-weight:700;color:#8b6caf}
+.ritty-site .news-modal-bar>button{width:44px;height:44px;border:1px solid #c9b7dd;border-radius:50%;background:#fff9;color:#6e538a;font-size:30px;line-height:1;cursor:pointer}
+.ritty-site .news-modal-scroll{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#bea5d6 transparent;flex:1;min-height:0}
+.ritty-site .news-modal .news-article{margin:32px auto 60px;padding:0 42px}
+.ritty-site .news-modal .news-article h1{font-size:30px}
+.ritty-site .news-modal .news-body img{display:block;width:auto;max-width:100%;height:auto;margin:auto}
+.ritty-site .news-modal .news-body{text-align:left}
+.ritty-site .news-feature-art>img{width:100%;height:100%;object-fit:cover}
+.ritty-site .news-modal-state{padding:70px 28px;text-align:center;color:#816d95}
+.ritty-site .news-modal-state>button{padding:12px 22px;border:1px solid #bca2d3;border-radius:99px;background:#fff9;color:#6e538a;cursor:pointer}
+.ritty-site .news-modal button:focus-visible{outline:3px solid #9975c3;outline-offset:3px}
+@keyframes news-open{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+@media(max-width:700px){.ritty-site .news-modal{width:calc(100vw - 24px);height:calc(100svh - 32px);border-radius:22px}.ritty-site .news-modal-bar{padding:10px 14px 10px 22px}.ritty-site .news-modal .news-article{padding:0 24px;margin-top:25px}.ritty-site .news-modal .news-article h1{font-size:25px}}
+@media(prefers-reduced-motion:reduce){.ritty-site .news-modal[open]{animation:none}}

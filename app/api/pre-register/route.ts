@@ -16,7 +16,7 @@ const NOTION_VERSION = '2022-06-28'
 const MAX_NOTION_RETRIES = 2
 
 // Bump whenever the consent wording in the dictionaries changes, so each row records what was agreed to
-const CONSENT_VERSION = '2026-10-attribution'
+const CONSENT_VERSION = '2026-10-new-launch'
 
 type PreRegistration = {
   email: string

@@ -20,7 +20,7 @@ export default async function Page({ params }: Props) {
   const original = await getDictionary('kr')
   const dict = {...original, preRegister:{...original.preRegister,title:'리티 사전등록',releaseNote:'출시 소식을 가장 먼저 받아보세요'}}
   const markup = homeMarkup
-    .replace(/<a class="news-link"[\s\S]*?<\/a>/, '<div id="news-feed"></div><a class="news-all" href="/news">소식 전체 보기 ↗</a>')
+    .replace(/<a class="news-link"[\s\S]*?<\/a>/, '<div id="news-feed"></div>')
     .replace('<h1>고양이가<br>말을 한다.</h1>', `<h1 class="ad-headline">${config.title}</h1>`)
     .replace('말하는 고양이와 함께 살아가는 생활게임</p>', '말하는 고양이와 함께하는 집사 생활 시뮬레이션</p>')
     .replace(/<p class="hero-description">.*?<\/p>/, `<p class="hero-description">${config.description}</p>`)

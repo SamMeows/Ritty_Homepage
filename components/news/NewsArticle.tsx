@@ -1,5 +1,9 @@
-import { safeNewsUrl, type NewsArticle as Article, type NewsBlock } from '@/lib/news'
+import type { NewsArticle as Article, NewsBlock } from '@/lib/news'
 import type { ReactNode } from 'react'
+
+function safeNewsUrl(value: string) {
+  try { const url = new URL(value); return ['https:', 'http:'].includes(url.protocol) ? url.href : undefined } catch { return undefined }
+}
 
 function links(text:string):ReactNode[] {
   return text.split(/(\[[^\]]+\]\([^\s)]+\))/g).map((part,i)=>{
