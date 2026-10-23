@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
+import { headers } from 'next/headers'
 import { MusicProvider } from '@/lib/contexts/MusicContext'
 import ClickEffect from '@/components/effects/ClickEffect'
 import './globals.css'
@@ -7,8 +8,8 @@ import './globals.css'
 export const metadata: Metadata = {
   metadataBase: new URL('https://ritty.sam-meows.com'),
   icons: {
-    icon: '/favicon.png',
-    apple: '/apple-touch-icon.png',
+    icon: [{ url: '/icons/favicon-96.png', sizes: '96x96', type: 'image/png' }],
+    apple: [{ url: '/icons/apple-touch-icon-180.png', sizes: '180x180', type: 'image/png' }],
   },
 }
 
@@ -17,13 +18,15 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const requestHeaders = await headers()
+  const language = requestHeaders.get('x-ritty-language') === 'en' ? 'en' : 'ko'
   return (
-    <html lang="ko" suppressHydrationWarning>
+    <html lang={language} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

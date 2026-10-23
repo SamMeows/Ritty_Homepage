@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { getDictionary, type Locale } from '@/lib/i18n/dictionaries'
+import { notFound } from 'next/navigation'
+import { searchRobots } from '@/lib/seo'
 
 type Props = {
   params: Promise<{ locale: string }>
@@ -8,6 +10,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale: localeParam } = await params
+  if (localeParam !== 'kr' && localeParam !== 'en') notFound()
   const locale = localeParam as Locale
   const dict = await getDictionary(locale)
   // Root (/) is the canonical for Korean, /en for English
@@ -19,8 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: dict.meta.title,
     description: dict.meta.description,
     keywords: dict.meta.keywords,
-    authors: [{ name: '삼냥이즈 (Sam-Meows)' }],
-    robots: 'index, follow',
+    robots: searchRobots,
     alternates: {
       canonical: url,
       languages: {
@@ -44,7 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       alternateLocale: locale === 'kr' ? 'en_US' : 'ko_KR',
       images: [
         {
-          url: 'https://ritty.sam-meows.com/og-image.png',
+          url: 'https://ritty.sam-meows.com/og-ritty-island-v2.png',
           width: 1200,
           height: 630,
           alt: dict.meta.ogImageAlt,
@@ -55,7 +57,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: 'summary_large_image',
       title: dict.meta.ogTitle,
       description: dict.meta.description,
-      images: ['https://ritty.sam-meows.com/og-image.png'],
+      images: ['https://ritty.sam-meows.com/og-ritty-island-v2.png'],
     },
     other: {
       'content-language': htmlLang,
@@ -69,6 +71,7 @@ export async function generateStaticParams() {
 
 export default async function LocaleLayout({ params, children }: Props) {
   const { locale: localeParam } = await params
+  if (localeParam !== 'kr' && localeParam !== 'en') notFound()
   const locale = localeParam as Locale
   const htmlLang = locale === 'kr' ? 'ko' : 'en'
 

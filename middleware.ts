@@ -20,15 +20,20 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 301)
   }
 
-  // /en routes - pass through to [locale] handler
-  if (pathname === '/en' || pathname.startsWith('/en/')) {
-    return NextResponse.next()
+  // News is currently Korean only. Consolidate untranslated duplicate URLs.
+  if (pathname === '/en/news' || pathname.startsWith('/en/news/')) {
+    const url = request.nextUrl.clone()
+    url.pathname = pathname.slice(3)
+    return NextResponse.redirect(url, 301)
   }
 
-  // Root and other paths - rewrite to /kr internally (no redirect)
-  const url = request.nextUrl.clone()
-  url.pathname = `/kr${pathname}`
-  return NextResponse.rewrite(url)
+  // Set the document language on the server, including the initial HTML response.
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-ritty-language', pathname === '/en' || pathname.startsWith('/en/') ? 'en' : 'ko')
+
+  // Internal Korean route mapping lives in next.config.js, after middleware.
+  // Keeping it there avoids re-entering the /kr canonical redirect for dynamic pages.
+  return NextResponse.next({ request: { headers: requestHeaders } })
 }
 
 export const config = {

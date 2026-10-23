@@ -12,8 +12,6 @@ export default function OfficialEntitySection({ dict }: OfficialEntitySectionPro
           {dict.official.heading}
         </h2>
         <p className="text-sm text-gray-300 mb-3 leading-relaxed">
-          <span className="font-semibold text-white">{dict.official.company}</span>
-          {' | '}
           {dict.official.description}
         </p>
         <p className="text-xs text-gray-400">

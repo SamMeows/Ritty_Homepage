@@ -10,6 +10,7 @@ import WorldviewSection from '@/components/landing/WorldviewSection'
 import PreRegisterFloatingButton from '@/components/pre-register/PreRegisterFloatingButton'
 import { PreRegisterProvider } from '@/lib/contexts/PreRegisterContext'
 import { LAUNCH_PHASE } from '@/lib/launch'
+import { serializeJsonLd } from '@/lib/seo'
 
 type Props = {
   params: Promise<{ locale: string }>
@@ -19,33 +20,17 @@ export default async function LandingPage({ params }: Props) {
   const { locale: localeParam } = await params
   const locale = localeParam as Locale
   const dict = await getDictionary(locale)
-  // Store links and ratings only make sense while the app is downloadable
+  // Store links only make sense while the app is downloadable.
   const isOnStores = LAUNCH_PHASE === 'store'
 
   const jsonLdOrganization = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': 'https://ritty.sam-meows.com/#organization',
     name: '삼냥이즈',
     alternateName: ['SamMeows', 'Sam-Meows', 'Sam-Meows Inc.'],
-    url: 'https://ritty.sam-meows.com',
-    logo: 'https://ritty.sam-meows.com/apple-touch-icon.png',
-    sameAs: [
-      'https://sam-meows.com',
-      'https://www.instagram.com/ritty_kr/',
-      'https://www.instagram.com/ritty_meow/',
-      'https://www.youtube.com/@Ritty_meow',
-      'https://www.tiktok.com/@ritty_kr',
-      'https://www.tiktok.com/@rittymeow',
-      'https://discord.gg/wghaFYCkCV',
-      'https://x.com/Ritty_kr',
-      'https://www.facebook.com/people/%EB%A6%AC%ED%8B%B0-RITTY/61575225267956/',
-      ...(isOnStores
-        ? [
-            'https://play.google.com/store/apps/details?id=com.sammeows.ritty',
-            'https://apps.apple.com/app/id6743311040',
-          ]
-        : []),
-    ],
+    url: 'https://sam-meows.com',
+    logo: 'https://ritty.sam-meows.com/images/sammeows-logo.svg',
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer service',
@@ -63,36 +48,27 @@ export default async function LandingPage({ params }: Props) {
   const jsonLdApp = {
     '@context': 'https://schema.org',
     '@type': 'MobileApplication',
+    '@id': 'https://ritty.sam-meows.com/#game',
     name: '리티 Ritty',
     alternateName: ['리티', 'Ritty', 'Ritty App', '리티 앱'],
     applicationCategory: 'GameApplication',
     operatingSystem: 'iOS, Android',
     description: dict.meta.description,
+    inLanguage: locale === 'kr' ? 'ko-KR' : 'en-US',
     url: 'https://ritty.sam-meows.com',
-    offers: {
-      '@type': 'Offer',
-      price: '0',
-      priceCurrency: locale === 'kr' ? 'KRW' : 'USD',
-    },
-    ...(isOnStores && {
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: '4.9',
-        ratingCount: '1250',
-      },
-    }),
-    author: {
-      '@type': 'Organization',
-      name: '삼냥이즈',
-      alternateName: 'SamMeows',
-      url: 'https://ritty.sam-meows.com',
-    },
     publisher: {
-      '@type': 'Organization',
-      name: '삼냥이즈',
-      alternateName: 'SamMeows',
-      url: 'https://ritty.sam-meows.com',
+      '@id': 'https://ritty.sam-meows.com/#organization',
     },
+    sameAs: [
+      'https://www.instagram.com/ritty_kr/',
+      'https://www.instagram.com/ritty_meow/',
+      'https://www.youtube.com/@Ritty_meow',
+      'https://www.tiktok.com/@ritty_kr',
+      'https://www.tiktok.com/@rittymeow',
+      'https://discord.gg/wghaFYCkCV',
+      'https://x.com/Ritty_kr',
+      'https://www.facebook.com/people/%EB%A6%AC%ED%8B%B0-RITTY/61575225267956/',
+    ],
     ...(isOnStores && {
       downloadUrl: [
         dict.links.appStore,
@@ -108,31 +84,44 @@ export default async function LandingPage({ params }: Props) {
   const jsonLdWebsite = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: locale === 'kr' ? '리티 (Ritty) 공식 홈페이지' : 'Ritty Official Website',
-    alternateName: ['리티 공식 홈페이지', 'Ritty Official Website', '리티 Ritty'],
+    '@id': 'https://ritty.sam-meows.com/#website',
+    name: '리티 Ritty',
+    alternateName: ['리티', 'Ritty', '리티 공식 홈페이지'],
     url: 'https://ritty.sam-meows.com',
     publisher: {
-      '@type': 'Organization',
-      name: '삼냥이즈',
-      alternateName: 'SamMeows',
+      '@id': 'https://ritty.sam-meows.com/#organization',
     },
+    about: { '@id': 'https://ritty.sam-meows.com/#game' },
+    inLanguage: ['ko-KR', 'en-US'],
+  }
+
+  const jsonLdPage = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': `${locale === 'kr' ? 'https://ritty.sam-meows.com/' : 'https://ritty.sam-meows.com/en'}#webpage`,
+    url: locale === 'kr' ? 'https://ritty.sam-meows.com' : 'https://ritty.sam-meows.com/en',
+    name: dict.meta.title,
+    description: dict.meta.description,
     inLanguage: locale === 'kr' ? 'ko-KR' : 'en-US',
+    isPartOf: { '@id': 'https://ritty.sam-meows.com/#website' },
+    mainEntity: { '@id': 'https://ritty.sam-meows.com/#game' },
   }
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrganization) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLdOrganization) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdApp) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLdApp) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebsite) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLdWebsite) }}
       />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLdPage) }} />
       {locale === 'kr' ? <RittyLanding /> : <PreRegisterProvider dict={dict} locale={locale}>
         <Header dict={dict} locale={locale} />
         <SocialSidebar dict={dict} />

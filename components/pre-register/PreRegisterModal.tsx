@@ -46,6 +46,7 @@ function ConsentCheckbox({
 
 export default function PreRegisterModal({ dict, locale, onClose, inline = false }: PreRegisterModalProps) {
   const t = dict.preRegister
+  const overlayRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
@@ -63,13 +64,38 @@ export default function PreRegisterModal({ dict, locale, onClose, inline = false
   const allAgreed = consents.age && consents.privacy && consents.marketing
   const discordUrl = dict.social.find((social) => social.key === 'discord')?.url
 
-  // Focus the form on open, keep Tab inside the dialog, close on Escape, restore focus on close
+  // Keep focus in the dialog without opening the mobile keyboard on arrival.
   useEffect(() => {
     if (inline) return
     const previouslyFocused = document.activeElement as HTMLElement | null
-    const previousOverflow = document.body.style.overflow
+    const scrollX = window.scrollX
+    const scrollY = window.scrollY
+    const previousStyle = {
+      overflow: document.body.style.overflow,
+      position: document.body.style.position,
+      top: document.body.style.top,
+      left: document.body.style.left,
+      width: document.body.style.width,
+      paddingRight: document.body.style.paddingRight,
+    }
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+    const paddingRight = parseFloat(getComputedStyle(document.body).paddingRight) || 0
     document.body.style.overflow = 'hidden'
-    emailRef.current?.focus()
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${scrollY}px`
+    document.body.style.left = `-${scrollX}px`
+    document.body.style.width = '100%'
+    if (scrollbarWidth > 0) document.body.style.paddingRight = `${paddingRight + scrollbarWidth}px`
+    closeRef.current?.focus({ preventScroll: true })
+
+    const viewport = window.visualViewport
+    const updateViewport = () => {
+      overlayRef.current?.style.setProperty('--register-height', `${viewport?.height ?? window.innerHeight}px`)
+      overlayRef.current?.style.setProperty('--register-top', `${viewport?.offsetTop ?? 0}px`)
+    }
+    updateViewport()
+    viewport?.addEventListener('resize', updateViewport)
+    viewport?.addEventListener('scroll', updateViewport)
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -96,8 +122,11 @@ export default function PreRegisterModal({ dict, locale, onClose, inline = false
     document.addEventListener('keydown', handleKeyDown)
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
-      document.body.style.overflow = previousOverflow
-      previouslyFocused?.focus()
+      viewport?.removeEventListener('resize', updateViewport)
+      viewport?.removeEventListener('scroll', updateViewport)
+      Object.assign(document.body.style, previousStyle)
+      window.scrollTo({ left: scrollX, top: scrollY, behavior: 'instant' })
+      previouslyFocused?.focus({ preventScroll: true })
     }
   }, [onClose, inline])
 
@@ -172,6 +201,7 @@ export default function PreRegisterModal({ dict, locale, onClose, inline = false
 
   return (
     <div
+      ref={overlayRef}
       className={inline ? "pre-register-inline" : "pre-register-overlay fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"}
       onClick={inline ? undefined : onClose}
     >
