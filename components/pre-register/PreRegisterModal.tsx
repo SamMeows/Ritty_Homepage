@@ -2,13 +2,16 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import Image from 'next/image'
+import './pre-register.css'
 import { trackPreRegisterComplete } from '@/lib/analytics'
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, type Platform, type PreRegisterResult } from '@/lib/pre-register'
 import type { Dictionary, Locale } from '@/lib/i18n/dictionaries'
+import { captureAttribution } from '@/lib/attribution'
 
 interface PreRegisterModalProps {
   dict: Dictionary
   locale: Locale
+  inline?: boolean
   onClose: () => void
 }
 
@@ -41,7 +44,7 @@ function ConsentCheckbox({
   )
 }
 
-export default function PreRegisterModal({ dict, locale, onClose }: PreRegisterModalProps) {
+export default function PreRegisterModal({ dict, locale, onClose, inline = false }: PreRegisterModalProps) {
   const t = dict.preRegister
   const dialogRef = useRef<HTMLDivElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
@@ -62,7 +65,10 @@ export default function PreRegisterModal({ dict, locale, onClose }: PreRegisterM
 
   // Focus the form on open, keep Tab inside the dialog, close on Escape, restore focus on close
   useEffect(() => {
+    if (inline) return
     const previouslyFocused = document.activeElement as HTMLElement | null
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
     emailRef.current?.focus()
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -90,9 +96,10 @@ export default function PreRegisterModal({ dict, locale, onClose }: PreRegisterM
     document.addEventListener('keydown', handleKeyDown)
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = previousOverflow
       previouslyFocused?.focus()
     }
-  }, [onClose])
+  }, [onClose, inline])
 
   useEffect(() => {
     if (result) closeRef.current?.focus()
@@ -123,7 +130,7 @@ export default function PreRegisterModal({ dict, locale, onClose }: PreRegisterM
     setError(null)
     setIsSubmitting(true)
     try {
-      const urlParams = new URLSearchParams(window.location.search)
+      const attribution = captureAttribution()
       const response = await fetch('/api/pre-register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -133,10 +140,11 @@ export default function PreRegisterModal({ dict, locale, onClose }: PreRegisterM
           locale,
           consents,
           website: honeypot,
+          attribution,
           utm: {
-            source: urlParams.get('utm_source') ?? '',
-            medium: urlParams.get('utm_medium') ?? '',
-            campaign: urlParams.get('utm_campaign') ?? '',
+            source: attribution.source,
+            medium: attribution.medium,
+            campaign: attribution.campaign,
           },
         }),
       })
@@ -153,7 +161,7 @@ export default function PreRegisterModal({ dict, locale, onClose }: PreRegisterM
   }
 
   const handleCopyLink = async () => {
-    const path = locale === 'en' ? '/en' : '/'
+    const path = window.location.pathname.startsWith('/ad/') ? window.location.pathname : locale === 'en' ? '/en' : '/'
     try {
       await navigator.clipboard.writeText(`${window.location.origin}${path}?pre-register&utm_source=share`)
       setCopied(true)
@@ -164,18 +172,18 @@ export default function PreRegisterModal({ dict, locale, onClose }: PreRegisterM
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
-      onClick={onClose}
+      className={inline ? "pre-register-inline" : "pre-register-overlay fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"}
+      onClick={inline ? undefined : onClose}
     >
       <div
         ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="pre-register-title"
+        role={inline ? "region" : "dialog"}
+        aria-modal={inline ? undefined : true}
+        aria-labelledby={inline ? "inline-register-title" : "pre-register-title"}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-[440px] max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 bg-gradient-to-b from-[#1a1520] to-[#0d0a12] p-6 sm:p-8 text-white shadow-2xl break-keep animate-slide-up"
+        className="pre-register-panel relative w-full max-w-[440px] max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 bg-gradient-to-b from-[#1a1520] to-[#0d0a12] p-6 sm:p-8 text-white shadow-2xl break-keep"
       >
-        <button
+        {!inline && <button
           ref={closeRef}
           type="button"
           onClick={onClose}
@@ -183,7 +191,7 @@ export default function PreRegisterModal({ dict, locale, onClose }: PreRegisterM
           className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-xl leading-none transition-colors hover:bg-white/20"
         >
           ×
-        </button>
+        </button>}
 
         {result ? (
           <div className="flex flex-col items-center gap-4 py-4 text-center">
@@ -194,7 +202,7 @@ export default function PreRegisterModal({ dict, locale, onClose }: PreRegisterM
               height={48}
               className="h-12 w-12 animate-sparkle"
             />
-            <h2 id="pre-register-title" className="font-paperlogy text-2xl font-extrabold">
+            <h2 id={inline ? "inline-register-title" : "pre-register-title"} className="font-paperlogy text-2xl font-extrabold">
               {result === 'created' ? t.successTitle : t.duplicateTitle}
             </h2>
             <p className="text-sm text-gray-300">
@@ -224,7 +232,7 @@ export default function PreRegisterModal({ dict, locale, onClose }: PreRegisterM
           <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
             <div className="px-8 text-center">
               <p className="font-paperlogy text-sm font-bold text-[#fffbc0]">{t.releaseNote}</p>
-              <h2 id="pre-register-title" className="mt-1 font-paperlogy text-2xl font-extrabold">
+              <h2 id={inline ? "inline-register-title" : "pre-register-title"} className="mt-1 font-paperlogy text-2xl font-extrabold">
                 {t.title}
               </h2>
               <p className="mt-2 text-sm text-gray-300">{t.description}</p>
@@ -259,7 +267,7 @@ export default function PreRegisterModal({ dict, locale, onClose }: PreRegisterM
                   >
                     <input
                       type="radio"
-                      name="platform"
+                      name={inline ? "inline-platform" : "platform"}
                       value={value}
                       checked={platform === value}
                       onChange={() => setPlatform(value)}

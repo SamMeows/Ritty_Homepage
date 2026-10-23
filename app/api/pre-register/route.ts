@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { cleanAttribution, type Attribution } from '@/lib/attribution'
 import {
   EMAIL_PATTERN,
   MAX_EMAIL_LENGTH,
@@ -15,7 +16,7 @@ const NOTION_VERSION = '2022-06-28'
 const MAX_NOTION_RETRIES = 2
 
 // Bump whenever the consent wording in the dictionaries changes, so each row records what was agreed to
-const CONSENT_VERSION = '2026-10'
+const CONSENT_VERSION = '2026-10-attribution'
 
 type PreRegistration = {
   email: string
@@ -23,6 +24,7 @@ type PreRegistration = {
   locale: 'kr' | 'en'
   isBot: boolean
   utm: { source: string; medium: string; campaign: string }
+  attribution: Attribution
 }
 
 const text = (value: unknown, maxLength: number) =>
@@ -51,6 +53,7 @@ function parseRequest(body: unknown): PreRegistration | null {
       medium: text(utm.medium, 100),
       campaign: text(utm.campaign, 100),
     },
+    attribution: cleanAttribution(data.attribution ?? { ...utm, landingPath: data.locale === 'en' ? '/en' : '/' }),
   }
 }
 
@@ -79,12 +82,29 @@ async function notionRequest(
   }
 
   if (!response.ok) {
-    throw new Error(`Notion ${path} failed with ${response.status}: ${await response.text()}`)
+    throw new Error(`Notion request failed with ${response.status}`)
   }
   return response.json()
 }
 
 const richText = (content: string) => ({ rich_text: content ? [{ text: { content } }] : [] })
+
+// Always keep attribution in the record body: older DB schemas need no migration.
+// If these rich-text columns exist, also populate them for filtering/grouping.
+async function attributionProperties(databaseId: string, token: string, entry: Attribution) {
+  const values: Record<string, string> = {
+    'Landing Variant': entry.variant, 'Landing Path': entry.landingPath,
+    'UTM Content': entry.content, 'UTM Term': entry.term, 'Referrer': entry.referrer,
+  }
+  try {
+    const response = await fetch(`${NOTION_API}/databases/${databaseId}`, {
+      headers: { Authorization: `Bearer ${token}`, 'Notion-Version': NOTION_VERSION }, cache: 'no-store',
+    })
+    if (!response.ok) return {}
+    const schema = await response.json()
+    return Object.fromEntries(Object.entries(values).filter(([name]) => schema.properties?.[name]?.type === 'rich_text').map(([name, value]) => [name, richText(value)]))
+  } catch { return {} }
+}
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null)
@@ -115,6 +135,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ status: 'duplicate' satisfies PreRegisterResult })
     }
 
+    const entry = registration.attribution
+    const extraProperties = await attributionProperties(databaseId, token, entry)
+    const details = Object.entries(entry).map(([key, value]) => `${key}: ${value || '(none)'}`).join('\n')
     await notionRequest(
       '/pages',
       {
@@ -125,10 +148,12 @@ export async function POST(request: Request) {
           Locale: { select: { name: registration.locale } },
           'Consented At': { date: { start: new Date().toISOString() } },
           'Consent Version': richText(CONSENT_VERSION),
-          'UTM Source': richText(registration.utm.source),
-          'UTM Medium': richText(registration.utm.medium),
-          'UTM Campaign': richText(registration.utm.campaign),
+          'UTM Source': richText(entry.source),
+          'UTM Medium': richText(entry.medium),
+          'UTM Campaign': richText(entry.campaign),
+          ...extraProperties,
         },
+        children: [{ object: 'block', type: 'paragraph', paragraph: { rich_text: (`광고 유입 정보\n${details}`.match(/[\s\S]{1,1800}/g) || []).map(content => ({ type: 'text', text: { content } })) } }],
       },
       token
     )

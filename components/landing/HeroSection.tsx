@@ -14,9 +14,10 @@ import type { Dictionary } from '@/lib/i18n/dictionaries'
 interface HeroSectionProps {
   dict: Dictionary
   locale: string
+  refreshed?: boolean
 }
 
-export default function HeroSection({ dict, locale }: HeroSectionProps) {
+export default function HeroSection({ dict, locale, refreshed = false }: HeroSectionProps) {
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
@@ -74,16 +75,17 @@ export default function HeroSection({ dict, locale }: HeroSectionProps) {
         transition={{ duration: 1.5, ease: 'easeOut' }}
       >
         <Image
-          src="/images/hero-bg-winter.png"
-          alt={dict.alt.heroBg}
+          src={refreshed ? '/ritty/hero.webp' : '/images/hero-bg-winter.png'}
+          alt={refreshed ? '햇살 드는 집에서 눈을 맞추는 회색 리티 · 콘셉트 아트' : dict.alt.heroBg}
           fill
-          className="object-cover object-center"
+          className={refreshed ? 'object-cover object-[73%_center] lg:object-center' : 'object-cover object-center'}
           priority
         />
       </motion.div>
 
       {/* Snowfall Effect - reduced for better INP */}
-      <Snowfall count={35} />
+      {!refreshed && <Snowfall count={35} />}
+      {refreshed && <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/30" />}
 
       {/* Floating Particles - reduced for better INP */}
       <FloatingParticles count={12} color="rgba(255, 255, 255, 0.5)" minSize={2} maxSize={4} />
@@ -97,7 +99,7 @@ export default function HeroSection({ dict, locale }: HeroSectionProps) {
       >
         {/* Hero Text */}
         <motion.div
-          className="flex flex-col items-center text-center mb-[30vh] lg:mb-[38vh]"
+          className={refreshed ? "flex flex-col items-center text-center mb-[36vh] lg:mb-[44vh]" : "flex flex-col items-center text-center mb-[30vh] lg:mb-[38vh]"}
           variants={itemVariants}
         >
           <motion.h1
@@ -107,7 +109,7 @@ export default function HeroSection({ dict, locale }: HeroSectionProps) {
             {/* SEO-optimized sr-only text for search engines */}
             <span className="sr-only">{dict.meta.h1SrOnly}</span>
             <motion.span
-              className="font-paperlogy text-[clamp(28px,5vw,80px)] font-extrabold text-white leading-[1.42]"
+              className={refreshed ? "font-paperlogy text-[clamp(28px,4vw,64px)] font-extrabold text-white leading-[1.42]" : "font-paperlogy text-[clamp(28px,5vw,80px)] font-extrabold text-white leading-[1.42]"}
               style={{
                 textShadow: '0 0 25px rgba(54,34,25,1), 0 0 50px rgba(255,255,255,0.3)',
               }}
@@ -120,7 +122,7 @@ export default function HeroSection({ dict, locale }: HeroSectionProps) {
               {dict.hero.line1}
             </motion.span>
             <motion.span
-              className="font-paperlogy text-[clamp(36px,7vw,110px)] font-extrabold text-white leading-[1.42]"
+              className={refreshed ? "font-paperlogy text-[clamp(36px,6vw,90px)] font-extrabold text-white leading-[1.42]" : "font-paperlogy text-[clamp(36px,7vw,110px)] font-extrabold text-white leading-[1.42]"}
               style={{
                 textShadow: '0 0 25px rgba(54,34,25,1), 0 0 50px rgba(255,255,255,0.3)',
               }}
@@ -146,8 +148,10 @@ export default function HeroSection({ dict, locale }: HeroSectionProps) {
       </motion.div>
 
       
+      {refreshed && <span className="absolute bottom-5 left-5 text-xs text-white bg-black/40 rounded-full px-3 py-1">콘셉트 아트 · 실제 플레이 화면 아님</span>}
       {/* Scroll Indicator */}
       <ScrollIndicator targetId="worldview" ariaLabel={dict.aria.scrollDown} />
     </section>
   )
 }
+

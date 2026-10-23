@@ -18,9 +18,18 @@
       "marketing": "[Required] Consent to receive promotional emails"
     },
     "privacyTable": [
-      { "label": "Collected", "value": "Email address, device (iOS/Android)" },
-      { "label": "Purpose", "value": "Ritty 2.0 launch notifications and pre-registration reward information" },
-      { "label": "Retention", "value": "1 year from collection (deleted immediately upon withdrawal of consent)" }
+      {
+        "label": "Collected",
+        "value": "Email address, device (iOS/Android), landing page, ad variant, UTM campaign details and referring site domain"
+      },
+      {
+        "label": "Purpose",
+        "value": "Ritty 2.0 launch notifications and pre-registration reward information, analysis of pre-registration performance by campaign"
+      },
+      {
+        "label": "Retention",
+        "value": "1 year from collection (deleted immediately upon withdrawal of consent)"
+      }
     ],
     "privacyRefusal": "You may refuse, but you won't be able to pre-register without this consent.",
     "marketingDetail": "Receive Ritty 2.0 launch news and pre-registration reward information by email. You can withdraw your consent at any time.",
@@ -115,10 +124,30 @@
     "privacy": "https://project-meow.notion.site/Privacy-Policy-1be423ba89b680218e81d5956212eade?pvs=74"
   },
   "social": [
-    { "key": "discord", "url": "https://discord.gg/wghaFYCkCV", "sidebarIcon": "/images/discord-sidebar.svg", "footerIcon": "/images/discord-footer.svg" },
-    { "key": "instagram", "url": "https://www.instagram.com/ritty_meow/", "sidebarIcon": "/images/instagram-sidebar.svg", "footerIcon": "/images/instagram-footer.svg" },
-    { "key": "youtube", "url": "https://www.youtube.com/@Ritty_meow", "sidebarIcon": "/images/youtube-sidebar.png", "footerIcon": "/images/youtube-footer.png" },
-    { "key": "facebook", "url": "https://www.facebook.com/people/%EB%A6%AC%ED%8B%B0-RITTY/61575225267956/", "sidebarIcon": "/images/facebook-sidebar.svg", "footerIcon": "/images/facebook-footer.svg" }
+    {
+      "key": "discord",
+      "url": "https://discord.gg/wghaFYCkCV",
+      "sidebarIcon": "/images/discord-sidebar.svg",
+      "footerIcon": "/images/discord-footer.svg"
+    },
+    {
+      "key": "instagram",
+      "url": "https://www.instagram.com/ritty_meow/",
+      "sidebarIcon": "/images/instagram-sidebar.svg",
+      "footerIcon": "/images/instagram-footer.svg"
+    },
+    {
+      "key": "youtube",
+      "url": "https://www.youtube.com/@Ritty_meow",
+      "sidebarIcon": "/images/youtube-sidebar.png",
+      "footerIcon": "/images/youtube-footer.png"
+    },
+    {
+      "key": "facebook",
+      "url": "https://www.facebook.com/people/%EB%A6%AC%ED%8B%B0-RITTY/61575225267956/",
+      "sidebarIcon": "/images/facebook-sidebar.svg",
+      "footerIcon": "/images/facebook-footer.svg"
+    }
   ],
   "alt": {
     "logo": "Ritty - Modern Talking Tamagotchi! AI Cat Chat & Care",

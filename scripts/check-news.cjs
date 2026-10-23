@@ -1,0 +1,22 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
+process.env.NOTION_NEWS_DATA_SOURCE_ID='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+const file=path.resolve('lib/news.ts'),mod={exports:{}};
+const js=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText;
+new Function('require','module','exports',js)(name=>name==='server-only'?{}:require(path.resolve('lib',name)),mod,mod.exports);
+const {getNews,getNewsArticle,safeNewsUrl}=mod.exports;
+process.env.NOTION_NEWS_TOKEN='mock';process.env.NEWS_PREVIEW_SNAPSHOT='0';
+const source='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',id='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+let published=true,calls=[],parent=source,date='2026-01-01',archived=false,missing=false;
+const page=()=>({id,parent:{data_source_id:parent},archived,properties:{'공개':{checkbox:published},'제목':{title:[{plain_text:'실제 제목'}]},'분류':{select:{name:'공지사항 Notice'}},'게시일':{date:{start:date}}}});
+global.fetch=async(url,opts)=>{calls.push(url);if(missing)return new Response('',{status:404});if(url.includes('/query'))return Response.json({results:[page()],has_more:true,next_cursor:'cursor2'});if(url.includes('/pages/'))return Response.json(page());return Response.json({results:[{type:'paragraph',paragraph:{rich_text:[{plain_text:'본문'}]},has_children:false}],has_more:false})};
+(async()=>{
+ assert.equal(safeNewsUrl('javascript:alert(1)'),undefined);
+ assert.equal((await getNews()).cursor,'cursor2');
+ assert.equal((await getNewsArticle(id)).blocks[0].text,'본문');
+ calls=[];parent='other';assert.equal(await getNewsArticle(id),null);assert.equal(calls.length,1);
+ parent=source;published=false;assert.equal(await getNewsArticle(id),null);assert.equal((await getNews()).items.length,0);published=true;date='2999-01-01';assert.equal(await getNewsArticle(id),null);assert.equal((await getNews()).items.length,0);
+ date='2026-01-01';archived=true;assert.equal(await getNewsArticle(id),null);
+ archived=false;missing=true;assert.equal(await getNewsArticle(id),null);assert.equal((await getNews()).unavailable,true);
+ calls=[];assert.equal(await getNewsArticle('../private'),null);assert.equal(calls.length,0);
+ console.log('Passed: news list/detail, pagination, draft dates, archived rows, membership guard, invalid IDs, failure states and unsafe URLs.');
+})().catch(e=>{console.error(e);process.exitCode=1});

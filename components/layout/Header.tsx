@@ -16,7 +16,7 @@ const navItems = [
   { key: 'home', href: '#home', external: false },
   { key: 'worldview', href: '#worldview', external: false },
   { key: 'rittyIntro', href: '#ritty-intro', external: false },
-  { key: 'news', href: 'https://project-meow.notion.site/Notice-253423ba89b680e6b2c9c4c952c8847f', external: true },
+  { key: 'news', href: '/news', external: false },
 ] as const
 
 export default function Header({ dict, locale }: HeaderProps) {
@@ -40,6 +40,7 @@ export default function Header({ dict, locale }: HeaderProps) {
   }
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (!href.startsWith('#')) return
     e.preventDefault()
     scrollToSection(href)
   }
@@ -67,7 +68,7 @@ export default function Header({ dict, locale }: HeaderProps) {
         }}
       />
 
-      <div className="relative max-w-[1441px] mx-auto px-[50px] py-[25px] flex items-center justify-between">
+      <div className="relative max-w-[1441px] mx-auto px-5 sm:px-[50px] py-[25px] flex items-center justify-between">
         {/* Logo */}
         <button
           onClick={() => scrollToSection('#home')}

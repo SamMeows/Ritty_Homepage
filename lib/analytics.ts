@@ -1,3 +1,4 @@
+import { captureAttribution } from './attribution'
 declare global {
   interface Window {
     gtag: (
@@ -8,14 +9,18 @@ declare global {
   }
 }
 
-export type PreRegisterSource = 'hero' | 'floating' | 'link'
+export type PreRegisterSource = 'hero' | 'floating' | 'link' | 'landing'
 
 const getUtmParams = () => {
-  const urlParams = new URLSearchParams(window.location.search)
+  const entry = captureAttribution()
   return {
-    utm_source: urlParams.get('utm_source') || 'direct',
-    utm_medium: urlParams.get('utm_medium') || 'none',
-    utm_campaign: urlParams.get('utm_campaign') || 'none',
+    utm_source: entry.source || 'direct',
+    utm_medium: entry.medium || 'none',
+    utm_campaign: entry.campaign || 'none',
+    utm_content: entry.content || 'none',
+    utm_term: entry.term || 'none',
+    landing_variant: entry.variant,
+    landing_path: entry.landingPath,
   }
 }
 

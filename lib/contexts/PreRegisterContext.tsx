@@ -3,8 +3,10 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import PreRegisterModal from '@/components/pre-register/PreRegisterModal'
 import { trackPreRegisterOpen, type PreRegisterSource } from '@/lib/analytics'
+import PreviewRegistration from '@/components/pre-register/PreviewRegistration'
 import { LAUNCH_PHASE } from '@/lib/launch'
 import type { Dictionary, Locale } from '@/lib/i18n/dictionaries'
+import { captureAttribution } from '@/lib/attribution'
 
 interface PreRegisterContextType {
   openPreRegister: (source: PreRegisterSource) => void
@@ -16,9 +18,10 @@ interface PreRegisterProviderProps {
   dict: Dictionary
   locale: Locale
   children: ReactNode
+  previewOnly?: boolean
 }
 
-export function PreRegisterProvider({ dict, locale, children }: PreRegisterProviderProps) {
+export function PreRegisterProvider({ dict, locale, children, previewOnly = false }: PreRegisterProviderProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   const openPreRegister = useCallback(
@@ -33,6 +36,7 @@ export function PreRegisterProvider({ dict, locale, children }: PreRegisterProvi
 
   // Links like /?pre-register open the form directly (SNS bios, ads, shared links)
   useEffect(() => {
+    captureAttribution()
     if (LAUNCH_PHASE !== 'pre-register') return
     if (new URLSearchParams(window.location.search).has('pre-register')) {
       openPreRegister('link')
@@ -42,7 +46,7 @@ export function PreRegisterProvider({ dict, locale, children }: PreRegisterProvi
   return (
     <PreRegisterContext.Provider value={{ openPreRegister }}>
       {children}
-      {isOpen && <PreRegisterModal dict={dict} locale={locale} onClose={closePreRegister} />}
+      {isOpen && (previewOnly ? <PreviewRegistration onClose={closePreRegister} /> : <PreRegisterModal dict={dict} locale={locale} onClose={closePreRegister} />)}
     </PreRegisterContext.Provider>
   )
 }
