@@ -38,6 +38,18 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 301)
   }
 
+  if (pathname === '/ja/news' || pathname.startsWith('/ja/news/')) {
+    const url = request.nextUrl.clone()
+    url.pathname = pathname.slice(3)
+    return NextResponse.redirect(url, 301)
+  }
+
+  if (pathname === '/zh-tw/news' || pathname.startsWith('/zh-tw/news/')) {
+    const url = request.nextUrl.clone()
+    url.pathname = pathname.slice('/zh-tw'.length)
+    return NextResponse.redirect(url, 301)
+  }
+
   // News is currently Korean only. Consolidate untranslated duplicate URLs.
   if (pathname === '/en/news' || pathname.startsWith('/en/news/')) {
     const url = request.nextUrl.clone()
@@ -47,7 +59,7 @@ export function middleware(request: NextRequest) {
 
   // Set the document language on the server, including the initial HTML response.
   const requestHeaders = new Headers(request.headers)
-  requestHeaders.set('x-ritty-language', pathname === '/en' || pathname.startsWith('/en/') ? 'en' : 'ko')
+  requestHeaders.set('x-ritty-language', pathname === '/en' || pathname.startsWith('/en/') ? 'en' : pathname === '/ja' || pathname.startsWith('/ja/') ? 'ja' : pathname === '/zh-tw' || pathname.startsWith('/zh-tw/') ? 'zh-Hant-TW' : 'ko')
 
   // Internal Korean route mapping lives in next.config.js, after middleware.
   // Keeping it there avoids re-entering the /kr canonical redirect for dynamic pages.

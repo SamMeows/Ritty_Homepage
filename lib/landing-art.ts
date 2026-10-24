@@ -1,5 +1,7 @@
 import { residentChapter } from './ritty-residents'
 import { homeEnglish, translateHomeMarkup } from './i18n/home-en'
+import { homeJapanese, translateHomeMarkupJapanese } from './i18n/home-ja'
+import { homeChineseTraditional, translateHomeMarkupChineseTraditional } from './i18n/home-zh-tw'
 import type { Locale } from './i18n/dictionaries'
 import { lifePanelsMarkup } from './life-scenes'
 
@@ -31,6 +33,14 @@ export function decorateLandingMarkup(markup: string, locale: Locale = 'kr') {
   if (locale === 'en') {
     result = translateHomeMarkup(result).replace('<div class="ritty-site">', '<div class="ritty-site" lang="en">')
     result = result.replace('</main>', `<script type="application/json" id="landing-translations">${JSON.stringify(homeEnglish).replace(/</g, '\\u003c')}</script></main>`)
+  }
+  if (locale === 'ja') {
+    result = translateHomeMarkupJapanese(result).replace('<div class="ritty-site">', '<div class="ritty-site" lang="ja">')
+    result = result.replace('</main>', `<script type="application/json" id="landing-translations">${JSON.stringify(homeJapanese).replace(/</g, '\\u003c')}</script></main>`)
+  }
+  if (locale === 'zh-tw') {
+    result = translateHomeMarkupChineseTraditional(result).replace('<div class="ritty-site">', '<div class="ritty-site" lang="zh-Hant-TW">')
+    result = result.replace('</main>', `<script type="application/json" id="landing-translations">${JSON.stringify(homeChineseTraditional).replace(/</g, '\\u003c')}</script></main>`)
   }
   return result
 }

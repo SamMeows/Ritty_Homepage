@@ -5,12 +5,14 @@ import { PreRegisterProvider } from '@/lib/contexts/PreRegisterContext'
 import AdLanding from '@/components/landing/AdLanding'
 import { getNews } from '@/lib/news'
 import { newsPreviewMarkup } from '@/lib/news-preview'
+import { translateHomeMarkupJapanese } from '@/lib/i18n/home-ja'
+import { translateHomeMarkupChineseTraditional } from '@/lib/i18n/home-zh-tw'
 
 export default async function RittyLanding({ variant = 'cozy-life', locale = 'kr' }: { variant?: AdVariant; locale?: Locale }) {
   const config = adVariants[variant]
   const news = await getNews()
   const original = await getDictionary(locale)
-  const dict = {...original, preRegister:{...original.preRegister,title:locale === 'en' ? 'Ritty Pre-registration' : '리티 사전등록',releaseNote:locale === 'en' ? 'Be the first to hear about the launch' : '출시 소식을 가장 먼저 받아보세요'}}
+  const dict = {...original, preRegister:{...original.preRegister,title:locale === 'kr' ? '리티 사전등록' : locale === 'ja' ? 'Rittyの事前登録' : locale === 'zh-tw' ? 'Ritty 事前登錄' : 'Ritty Pre-registration',releaseNote:locale === 'kr' ? '출시 소식을 가장 먼저 받아보세요' : locale === 'ja' ? '配信情報をいち早くお届け' : locale === 'zh-tw' ? '搶先收到上線消息' : 'Be the first to hear about the launch'}}
   const markup = homeMarkup
     .replace('<div class="company-details">', '<div class="company-details" data-nosnippet>')
     .replace(/<a class="news-link"[\s\S]*?<\/a>/, '<div id="news-feed"></div>')
@@ -23,7 +25,10 @@ export default async function RittyLanding({ variant = 'cozy-life', locale = 'kr
     .replaceAll('href="#join"', 'href="#join" data-register')
     .replaceAll('사전등록 안내 보기', '사전등록하기')
     .replaceAll('사전등록 안내', '사전등록하기')
-  const localizedMarkup = locale === 'en' ? markup
+  const localizedMarkup = locale === 'zh-tw' ? translateHomeMarkupChineseTraditional(markup)
+    : locale === 'ja' ? translateHomeMarkupJapanese(markup)
+    .replace('내 이야기를 들어주는<br>나만의 고양이 친구', '私の話を聞いてくれる<br>特別な猫の友だち')
+    : locale === 'en' ? markup
     .replaceAll('https://project-meow.notion.site/1bd423ba89b680f4b37dcb1ec02aa36c?pvs=74', dict.links.privacy)
     .replaceAll('https://project-meow.notion.site/1bd423ba89b680cc9c4ffaa284da0d85?pvs=74', dict.links.terms)
     .replaceAll('https://www.instagram.com/ritty_kr/', 'https://www.instagram.com/ritty_meow/')

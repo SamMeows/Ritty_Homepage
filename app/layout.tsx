@@ -24,14 +24,14 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
   const requestHeaders = await headers()
-  const language = requestHeaders.get('x-ritty-language') === 'en' ? 'en' : 'ko'
+  const language = requestHeaders.get('x-ritty-language') || 'ko'
   return (
     <html lang={language} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&family=Poppins:wght@400;500;600&family=Righteous&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Sans+KR:wght@100;300;400;500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Poppins:wght@400;500;600&family=Righteous&display=swap"
           rel="stylesheet"
         />
         <link

@@ -1,0 +1,191 @@
+{
+  "hero": {
+    "line1": "リティのお世話をしながら過ごす、",
+    "line2": "癒やしの島暮らし"
+  },
+  "preRegister": {
+    "cta": "事前登録",
+    "releaseNote": "2027年配信予定",
+    "title": "Rittyの事前登録",
+    "description": "Rittyの配信情報をいち早くお届けします。",
+    "emailLabel": "メールアドレス",
+    "emailPlaceholder": "ritty@example.com",
+    "platformLabel": "ご利用の端末",
+    "agreeAll": "すべてに同意する",
+    "consents": {
+      "age": "【必須】14歳以上です",
+      "privacy": "【必須】個人情報の収集・利用に同意します",
+      "marketing": "【必須】お知らせ・キャンペーンメールの受信に同意します"
+    },
+    "privacyTable": [
+      {
+        "label": "収集項目",
+        "value": "メールアドレス、端末（iOS/Android）、登録ページ、広告の種類、キャンペーン情報、参照元ドメイン"
+      },
+      {
+        "label": "利用目的",
+        "value": "Rittyの配信および事前登録特典のお知らせ、キャンペーンごとの登録状況の分析"
+      },
+      {
+        "label": "保管期間",
+        "value": "取得から1年間（同意撤回時は速やかに削除）"
+      }
+    ],
+    "privacyRefusal": "同意は任意ですが、同意いただけない場合は事前登録をご利用いただけません。",
+    "marketingDetail": "Rittyの配信情報や事前登録特典をメールでお届けします。同意はいつでも撤回できます。",
+    "showDetail": "詳細を見る",
+    "hideDetail": "閉じる",
+    "privacyPolicyLink": "プライバシーポリシーを見る",
+    "submit": "事前登録する",
+    "submitting": "送信中...",
+    "errors": {
+      "email": "有効なメールアドレスを入力してください。",
+      "platform": "ご利用の端末を選択してください。",
+      "consent": "必須項目すべてに同意してください。",
+      "server": "エラーが発生しました。しばらくしてからもう一度お試しください。"
+    },
+    "successTitle": "事前登録が完了しました！",
+    "successBody": "Rittyの配信開始時にメールでお知らせします。",
+    "duplicateTitle": "事前登録済みです",
+    "duplicateBody": "ご登録のメールアドレスに配信開始をお知らせします。",
+    "copyLink": "友だちにシェアする",
+    "copied": "リンクをコピーしました！",
+    "joinDiscord": "Discordで最新情報を見る",
+    "close": "閉じる"
+  },
+  "nav": {
+    "home": "ホーム",
+    "rittyIntro": "リティについて",
+    "worldview": "世界観",
+    "news": "お知らせ"
+  },
+  "sections": {
+    "rittyIntro": {
+      "title": "リティのお世話をしながら過ごす癒やしの島暮らし",
+      "tagline": "おしゃべりする宇宙猫との暮らしを楽しむ育成シミュレーションゲーム",
+      "slides": [
+        "/images/slides/en/slide1.png",
+        "/images/slides/en/slide2.png",
+        "/images/slides/en/slide3.png",
+        "/images/slides/en/slide4.png"
+      ]
+    },
+    "worldview": {
+      "label": "世界観",
+      "title1": "不思議な島に不時着した",
+      "title2": "宇宙猫リティ！",
+      "story": [
+        "はるか銀河の彼方に、",
+        "「ねこ惑星」と呼ばれる猫たちの星がありました。",
+        "",
+        "ある日、リティは遠い「地球」を探検するため宇宙船に乗りました。",
+        "地球に到着する直前、思いがけない事故が起きて",
+        "宇宙船は小さな無人島に不時着してしまいます。",
+        "",
+        "不思議な島でリティが最初に出会ったのは、あなたでした！",
+        "あなたもリティのお世話をしながら、一緒に暮らしてみませんか？"
+      ]
+    },
+    "news": {
+      "label": "お知らせ",
+      "title": "Rittyの最新情報",
+      "comingSoon": "近日公開"
+    }
+  },
+  "footer": {
+    "copyright": "© 2026 Sam-Meows Inc. All Rights Reserved.",
+    "terms": "利用規約",
+    "privacy": "プライバシーポリシー",
+    "officialSite": "Ritty公式サイト",
+    "developer": "SamMeows"
+  },
+  "community": {
+    "title": "コミュニティ"
+  },
+  "meta": {
+    "title": "Ritty｜おしゃべり猫たちとの癒やしの暮らし",
+    "description": "おしゃべりする猫たちと会話し、作物を育て、料理や家の飾り付けを楽しもう。ねこ惑星からやってきたリティと島暮らし。iOS・Android向け事前登録受付中。",
+    "keywords": "Ritty, リティ, 猫, 猫ゲーム, 癒やしゲーム, 生活シミュレーション, 農園, 料理, 着せ替え, バーチャルペット",
+    "ogTitle": "Ritty｜おしゃべり猫たちとの癒やしの暮らし",
+    "ogImageAlt": "流れ星の下、光り輝く島で過ごす3匹のリティ。おしゃべり猫たちとの癒やしの暮らし",
+    "h1SrOnly": "Ritty - おしゃべり猫たちとの癒やしの暮らし"
+  },
+  "official": {
+    "heading": "Ritty公式サイト",
+    "company": "SamMeows",
+    "description": "おしゃべりする猫たちと会話し、作物を育て、料理や島の家づくりを楽しむ生活シミュレーションゲーム。",
+    "siteLabel": "公式サイト",
+    "siteUrl": "https://ritty.sam-meows.com"
+  },
+  "links": {
+    "appStore": "https://apps.apple.com/jp/app/id6743311040",
+    "googlePlay": "https://play.google.com/store/apps/details?id=com.sammeows.ritty&hl=ja",
+    "terms": "https://project-meow.notion.site/Terms-of-Service-24c423ba89b680949493ee55f2990bb0?pvs=74",
+    "privacy": "https://project-meow.notion.site/Privacy-Policy-1be423ba89b680218e81d5956212eade?pvs=74"
+  },
+  "social": [
+    {
+      "key": "discord",
+      "url": "https://discord.gg/wghaFYCkCV",
+      "sidebarIcon": "/images/discord-sidebar.svg",
+      "footerIcon": "/images/discord-footer.svg"
+    },
+    {
+      "key": "instagram",
+      "url": "https://www.instagram.com/ritty_meow/",
+      "sidebarIcon": "/images/instagram-sidebar.svg",
+      "footerIcon": "/images/instagram-footer.svg"
+    },
+    {
+      "key": "youtube",
+      "url": "https://www.youtube.com/@Ritty_meow",
+      "sidebarIcon": "/images/youtube-sidebar.png",
+      "footerIcon": "/images/youtube-footer.png"
+    },
+    {
+      "key": "facebook",
+      "url": "https://www.facebook.com/people/%EB%A6%AC%ED%8B%B0-RITTY/61575225267956/",
+      "sidebarIcon": "/images/facebook-sidebar.svg",
+      "footerIcon": "/images/facebook-footer.svg"
+    }
+  ],
+  "alt": {
+    "logo": "Ritty - おしゃべり猫との暮らし",
+    "heroImage": "宇宙猫リティのゲーム画面",
+    "heroBg": "雪景色のリティの背景",
+    "worldviewBg": "ねこ惑星と星空の世界観",
+    "appStore": "App StoreからRittyをダウンロード",
+    "googlePlay": "Google PlayからRittyをダウンロード",
+    "instagram": "Ritty公式Instagram",
+    "discord": "Ritty Discordコミュニティ",
+    "youtube": "Ritty公式YouTubeチャンネル",
+    "tiktok": "Ritty公式TikTok",
+    "x": "Ritty公式X",
+    "facebook": "Ritty公式Facebook",
+    "sammeowsLogo": "SamMeowsのロゴ",
+    "starDecoration": "きらめく星の飾り",
+    "sparkle": "きらめき",
+    "arrowLeft": "前のスライドへ",
+    "arrowRight": "次のスライドへ",
+    "slide1": "猫と会話するRittyのゲーム画面",
+    "slide2": "猫の着せ替えを楽しむRittyのゲーム画面",
+    "slide3": "ミニゲームを楽しむRittyのゲーム画面",
+    "slide4": "猫にごはんをあげるRittyのゲーム画面",
+    "globeIcon": "言語を変更"
+  },
+  "aria": {
+    "switchToEnglish": "英語に切り替え",
+    "switchToKorean": "韓国語に切り替え",
+    "downloadIos": "iOS版Rittyをダウンロード",
+    "downloadAndroid": "Android版Rittyをダウンロード",
+    "visitInstagram": "Ritty公式Instagramを見る",
+    "joinDiscord": "Ritty Discordコミュニティに参加",
+    "subscribeYoutube": "Ritty公式YouTubeをチャンネル登録",
+    "followTiktok": "Ritty公式TikTokをフォロー",
+    "toggleMusic": "BGMを切り替える",
+    "scrollDown": "下へスクロール",
+    "changeLanguage": "言語を変更",
+    "previousSlide": "前のスライド",
+    "nextSlide": "次のスライド"
+  }
+}

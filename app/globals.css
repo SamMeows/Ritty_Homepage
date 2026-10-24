@@ -103,6 +103,14 @@ body {
   user-select: none;
 }
 
+:lang(ja) {
+  font-family: 'Noto Sans JP', 'Pretendard', sans-serif;
+}
+
+:lang(zh-Hant-TW) {
+  font-family: 'Noto Sans TC', 'Pretendard', sans-serif;
+}
+
 /* Custom Animations */
 @keyframes float {
   0%, 100% { transform: translateY(0); }

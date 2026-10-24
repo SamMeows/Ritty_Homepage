@@ -21,7 +21,7 @@ export default function NewsFeed({initial, locale = 'kr', layout = 'featured'}: 
     const match=link?.getAttribute('href')?.match(/^\/news\/([a-f\d-]+)$/i)
     if(match&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey&&!event.altKey){event.preventDefault();setActiveId(match[1])}
   }}>
-    {locale === 'en' && data.items.length > 0 && <p className="news-language-note">News articles are currently available in Korean.</p>}
+    {(locale === 'en' || locale === 'ja' || locale === 'zh-tw') && data.items.length > 0 && <p className="news-language-note">{locale === 'ja' ? 'ニュース記事は現在韓国語のみでご覧いただけます。' : locale === 'zh-tw' ? '目前的消息內容僅提供韓文版。' : 'News articles are currently available in Korean.'}</p>}
     <div className="news-filters" aria-label={t('소식 분류')}>{['전체','공지사항','개발 소식','팀 레터'].map(name=><button key={name} type="button" aria-pressed={category===name} onClick={()=>setCategory(name)}>{t(name)}</button>)}</div>
     {featured ? layout === 'cards' ? <div className="news-card-grid">{filtered.map(item=><a key={item.id} className="news-feature" href={'/news/'+item.id}>
       <div className="news-feature-art">{item.cover ? <img src={item.cover} alt=""/> : <><span className="official-wordmark"><span>Ritty</span><img src="/images/logo-sparkle.svg" alt="" width="27" height="28"/></span><span aria-hidden="true">NEWS</span></>}</div>

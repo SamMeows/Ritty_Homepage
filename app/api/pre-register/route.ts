@@ -21,7 +21,7 @@ const CONSENT_VERSION = '2026-10-new-launch'
 type PreRegistration = {
   email: string
   platform: Platform
-  locale: 'kr' | 'en'
+  locale: 'kr' | 'en' | 'ja' | 'zh-tw'
   isBot: boolean
   utm: { source: string; medium: string; campaign: string }
   attribution: Attribution
@@ -39,7 +39,7 @@ function parseRequest(body: unknown): PreRegistration | null {
   const email = text(data.email, MAX_EMAIL_LENGTH + 1).toLowerCase()
   if (email.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(email)) return null
   if (!PLATFORMS.includes(data.platform as Platform)) return null
-  if (data.locale !== 'kr' && data.locale !== 'en') return null
+  if (data.locale !== 'kr' && data.locale !== 'en' && data.locale !== 'ja' && data.locale !== 'zh-tw') return null
   if (consents.age !== true || consents.privacy !== true || consents.marketing !== true) return null
 
   return {
@@ -53,7 +53,7 @@ function parseRequest(body: unknown): PreRegistration | null {
       medium: text(utm.medium, 100),
       campaign: text(utm.campaign, 100),
     },
-    attribution: cleanAttribution(data.attribution ?? { ...utm, landingPath: data.locale === 'en' ? '/en' : '/' }),
+    attribution: cleanAttribution(data.attribution ?? { ...utm, landingPath: data.locale === 'kr' ? '/' : `/${data.locale}` }),
   }
 }
 

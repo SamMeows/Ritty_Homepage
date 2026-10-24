@@ -200,7 +200,7 @@ export default function PreRegisterModal({ dict, locale, onClose, inline = false
   }
 
   const handleCopyLink = async () => {
-    const path = window.location.pathname.startsWith('/ad/') ? window.location.pathname : locale === 'en' ? '/en' : '/'
+    const path = window.location.pathname.startsWith('/ad/') ? window.location.pathname : locale === 'kr' ? '/' : `/${locale}`
     try {
       await navigator.clipboard.writeText(`${window.location.origin}${path}?pre-register&utm_source=share`)
       setCopied(true)

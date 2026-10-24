@@ -25,7 +25,7 @@ export default async function LandingPage({ params }: Props) {
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer service',
-      availableLanguage: ['Korean', 'English'],
+      availableLanguage: ['Korean', 'English', 'Japanese', 'Traditional Chinese'],
     },
     brand: {
       '@type': 'Brand',
@@ -45,7 +45,7 @@ export default async function LandingPage({ params }: Props) {
     applicationCategory: 'GameApplication',
     operatingSystem: 'iOS, Android',
     description: dict.meta.description,
-    inLanguage: locale === 'kr' ? 'ko-KR' : 'en-US',
+    inLanguage: locale === 'kr' ? 'ko-KR' : locale === 'ja' ? 'ja-JP' : locale === 'zh-tw' ? 'zh-Hant-TW' : 'en-US',
     url: 'https://ritty.sam-meows.com',
     publisher: {
       '@id': 'https://ritty.sam-meows.com/#organization',
@@ -83,17 +83,17 @@ export default async function LandingPage({ params }: Props) {
       '@id': 'https://ritty.sam-meows.com/#organization',
     },
     about: { '@id': 'https://ritty.sam-meows.com/#game' },
-    inLanguage: ['ko-KR', 'en-US'],
+    inLanguage: ['ko-KR', 'en-US', 'ja-JP', 'zh-Hant-TW'],
   }
 
   const jsonLdPage = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    '@id': `${locale === 'kr' ? 'https://ritty.sam-meows.com/' : 'https://ritty.sam-meows.com/en'}#webpage`,
-    url: locale === 'kr' ? 'https://ritty.sam-meows.com' : 'https://ritty.sam-meows.com/en',
+    '@id': `${locale === 'kr' ? 'https://ritty.sam-meows.com/' : `https://ritty.sam-meows.com/${locale}`}#webpage`,
+    url: locale === 'kr' ? 'https://ritty.sam-meows.com' : `https://ritty.sam-meows.com/${locale}`,
     name: dict.meta.title,
     description: dict.meta.description,
-    inLanguage: locale === 'kr' ? 'ko-KR' : 'en-US',
+    inLanguage: locale === 'kr' ? 'ko-KR' : locale === 'ja' ? 'ja-JP' : locale === 'zh-tw' ? 'zh-Hant-TW' : 'en-US',
     isPartOf: { '@id': 'https://ritty.sam-meows.com/#website' },
     mainEntity: { '@id': 'https://ritty.sam-meows.com/#game' },
   }

@@ -1,0 +1,191 @@
+{
+  "hero": {
+    "line1": "和 Ritty 一起",
+    "line2": "展開療癒的島嶼生活"
+  },
+  "preRegister": {
+    "cta": "事前登錄",
+    "releaseNote": "預計於 2027 年推出",
+    "title": "Ritty 事前登錄",
+    "description": "搶先收到 Ritty 上線通知。",
+    "emailLabel": "電子郵件",
+    "emailPlaceholder": "ritty@example.com",
+    "platformLabel": "裝置",
+    "agreeAll": "同意全部",
+    "consents": {
+      "age": "【必填】我已年滿 14 歲",
+      "privacy": "【必填】我同意個人資料的蒐集與使用",
+      "marketing": "【必填】我同意接收行銷電子郵件"
+    },
+    "privacyTable": [
+      {
+        "label": "蒐集項目",
+        "value": "電子郵件地址、裝置（iOS／Android）、登錄頁面、廣告版本、UTM 行銷活動資訊及來源網站網域"
+      },
+      {
+        "label": "使用目的",
+        "value": "通知 Ritty 上線及事前登錄獎勵資訊，並分析各活動的登錄成效"
+      },
+      {
+        "label": "保存期限",
+        "value": "自蒐集日起保存 1 年（撤回同意後立即刪除）"
+      }
+    ],
+    "privacyRefusal": "您可以選擇不同意；但若不同意，將無法完成事前登錄。",
+    "marketingDetail": "我們會透過電子郵件寄送 Ritty 上線消息及事前登錄獎勵資訊，您可以隨時撤回同意。",
+    "showDetail": "查看詳情",
+    "hideDetail": "收合",
+    "privacyPolicyLink": "查看隱私權政策",
+    "submit": "送出事前登錄",
+    "submitting": "送出中…",
+    "errors": {
+      "email": "請輸入有效的電子郵件地址。",
+      "platform": "請選擇您的裝置。",
+      "consent": "請同意所有必填項目。",
+      "server": "發生錯誤，請稍後再試。"
+    },
+    "successTitle": "事前登錄完成！",
+    "successBody": "Ritty 上線時，我們會寄送電子郵件通知您。",
+    "duplicateTitle": "您已完成事前登錄",
+    "duplicateBody": "Ritty 上線時，我們會寄信通知您。",
+    "copyLink": "複製連結並分享給朋友",
+    "copied": "已複製連結！",
+    "joinDiscord": "前往 Discord 查看最新消息",
+    "close": "關閉"
+  },
+  "nav": {
+    "home": "首頁",
+    "rittyIntro": "認識 Ritty",
+    "worldview": "世界觀",
+    "news": "最新消息"
+  },
+  "sections": {
+    "rittyIntro": {
+      "title": "成為 Ritty 的飼主，展開療癒島嶼生活",
+      "tagline": "與會說話的宇宙貓一起生活的養成模擬遊戲",
+      "slides": [
+        "/images/slides/en/slide1.png",
+        "/images/slides/en/slide2.png",
+        "/images/slides/en/slide3.png",
+        "/images/slides/en/slide4.png"
+      ]
+    },
+    "worldview": {
+      "label": "世界觀",
+      "title1": "迫降在陌生島嶼上的",
+      "title2": "宇宙貓 Ritty！",
+      "story": [
+        "在遙遠的銀河彼端，",
+        "有一顆住著貓咪的星球，名叫「貓咪星球」。",
+        "",
+        "某天，Ritty 搭上太空船，出發探索遙遠的「地球」。",
+        "就在即將抵達地球時，意外突然發生，",
+        "太空船迫降在一座無名的小島上。",
+        "",
+        "Ritty 在陌生島上遇見的第一個人，就是你！",
+        "你願意成為 Ritty 的飼主，陪牠一起生活嗎？"
+      ]
+    },
+    "news": {
+      "label": "最新消息",
+      "title": "Ritty 最新消息",
+      "comingSoon": "即將推出"
+    }
+  },
+  "footer": {
+    "copyright": "© 2026 Sam-Meows Inc. 版權所有。",
+    "terms": "服務條款",
+    "privacy": "隱私權政策",
+    "officialSite": "Ritty 官方網站",
+    "developer": "SamMeows"
+  },
+  "community": {
+    "title": "社群"
+  },
+  "meta": {
+    "title": "Ritty｜與會說話的貓咪展開療癒島嶼生活",
+    "description": "和會說話的貓咪聊天、種植作物、烹飪料理，還能裝飾自己的家。與來自貓咪星球的 Ritty 一起享受島嶼生活。iOS、Android 事前登錄開放中。",
+    "keywords": "Ritty, 貓咪, 貓咪遊戲, 療癒遊戲, 生活模擬, 農場, 烹飪, 家居佈置, 虛擬寵物",
+    "ogTitle": "Ritty｜與會說話的貓咪展開療癒島嶼生活",
+    "ogImageAlt": "流星下，三隻 Ritty 在閃耀的小島上享受療癒生活",
+    "h1SrOnly": "Ritty - 與會說話的貓咪展開療癒島嶼生活"
+  },
+  "official": {
+    "heading": "Ritty 官方網站",
+    "company": "SamMeows",
+    "description": "與會說話的貓咪聊天、種植作物、烹飪料理，並在小島上打造專屬家園的手機生活模擬類遊戲。",
+    "siteLabel": "官方網站",
+    "siteUrl": "https://ritty.sam-meows.com"
+  },
+  "links": {
+    "appStore": "https://apps.apple.com/tw/app/id6743311040",
+    "googlePlay": "https://play.google.com/store/apps/details?id=com.sammeows.ritty&hl=zh_TW",
+    "terms": "https://project-meow.notion.site/Terms-of-Service-24c423ba89b680949493ee55f2990bb0?pvs=74",
+    "privacy": "https://project-meow.notion.site/Privacy-Policy-1be423ba89b680218e81d5956212eade?pvs=74"
+  },
+  "social": [
+    {
+      "key": "discord",
+      "url": "https://discord.gg/wghaFYCkCV",
+      "sidebarIcon": "/images/discord-sidebar.svg",
+      "footerIcon": "/images/discord-footer.svg"
+    },
+    {
+      "key": "instagram",
+      "url": "https://www.instagram.com/ritty_meow/",
+      "sidebarIcon": "/images/instagram-sidebar.svg",
+      "footerIcon": "/images/instagram-footer.svg"
+    },
+    {
+      "key": "youtube",
+      "url": "https://www.youtube.com/@Ritty_meow",
+      "sidebarIcon": "/images/youtube-sidebar.png",
+      "footerIcon": "/images/youtube-footer.png"
+    },
+    {
+      "key": "facebook",
+      "url": "https://www.facebook.com/people/%EB%A6%AC%ED%8B%B0-RITTY/61575225267956/",
+      "sidebarIcon": "/images/facebook-sidebar.svg",
+      "footerIcon": "/images/facebook-footer.svg"
+    }
+  ],
+  "alt": {
+    "logo": "Ritty - 與會說話的貓咪展開療癒島嶼生活",
+    "heroImage": "宇宙貓 Ritty 的遊戲畫面",
+    "heroBg": "Ritty 雪景背景",
+    "worldviewBg": "貓咪星球與星空背景",
+    "appStore": "從 App Store 下載 Ritty",
+    "googlePlay": "從 Google Play 下載 Ritty",
+    "instagram": "Ritty 官方 Instagram",
+    "discord": "Ritty Discord 社群",
+    "youtube": "Ritty 官方 YouTube 頻道",
+    "tiktok": "Ritty 官方 TikTok",
+    "x": "Ritty 官方 X",
+    "facebook": "Ritty 官方 Facebook",
+    "sammeowsLogo": "SamMeows 標誌",
+    "starDecoration": "閃耀星星裝飾",
+    "sparkle": "閃爍效果",
+    "arrowLeft": "上一張圖片",
+    "arrowRight": "下一張圖片",
+    "slide1": "與貓咪聊天的 Ritty 遊戲畫面",
+    "slide2": "為貓咪換裝的 Ritty 遊戲畫面",
+    "slide3": "遊玩小遊戲的 Ritty 遊戲畫面",
+    "slide4": "餵貓咪吃飯的 Ritty 遊戲畫面",
+    "globeIcon": "切換語言"
+  },
+  "aria": {
+    "switchToEnglish": "切換為英文",
+    "switchToKorean": "切換為韓文",
+    "downloadIos": "下載 iOS 版 Ritty",
+    "downloadAndroid": "下載 Android 版 Ritty",
+    "visitInstagram": "前往 Ritty 官方 Instagram",
+    "joinDiscord": "加入 Ritty Discord 社群",
+    "subscribeYoutube": "訂閱 Ritty 官方 YouTube 頻道",
+    "followTiktok": "追蹤 Ritty 官方 TikTok",
+    "toggleMusic": "切換背景音樂",
+    "scrollDown": "向下捲動",
+    "changeLanguage": "切換語言",
+    "previousSlide": "上一張",
+    "nextSlide": "下一張"
+  }
+}

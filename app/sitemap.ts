@@ -9,13 +9,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
-      alternates: { languages: { ko: baseUrl, en: `${baseUrl}/en`, 'x-default': baseUrl } },
+      alternates: { languages: { ko: baseUrl, en: `${baseUrl}/en`, ja: `${baseUrl}/ja`, 'zh-TW': `${baseUrl}/zh-tw`, 'x-default': baseUrl } },
       changeFrequency: 'weekly',
       priority: 1.0,
     },
     {
       url: `${baseUrl}/en`,
-      alternates: { languages: { ko: baseUrl, en: `${baseUrl}/en`, 'x-default': baseUrl } },
+      alternates: { languages: { ko: baseUrl, en: `${baseUrl}/en`, ja: `${baseUrl}/ja`, 'zh-TW': `${baseUrl}/zh-tw`, 'x-default': baseUrl } },
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/ja`,
+      alternates: { languages: { ko: baseUrl, en: `${baseUrl}/en`, ja: `${baseUrl}/ja`, 'zh-TW': `${baseUrl}/zh-tw`, 'x-default': baseUrl } },
       changeFrequency: 'weekly',
       priority: 0.9,
     },

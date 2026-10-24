@@ -1,7 +1,7 @@
 {
   "hero": {
-    "line1": "A Happy Butler Life",
-    "line2": "with Ritty"
+    "line1": "A Cozy Life with",
+    "line2": "Your Talking Space Cat"
   },
   "preRegister": {
     "cta": "Pre-register",
@@ -46,8 +46,8 @@
     },
     "successTitle": "You're pre-registered!",
     "successBody": "We'll email you as soon as Ritty launches.",
-    "duplicateTitle": "You're already pre-registered",
-    "duplicateBody": "We'll let you know at the email you registered when Ritty launches.",
+    "duplicateTitle": "You’re already registered",
+    "duplicateBody": "We’ll send a launch update to your registered email address.",
     "copyLink": "Copy link to tell your friends",
     "copied": "Link copied!",
     "joinDiscord": "Get news on Discord",
@@ -61,8 +61,8 @@
   },
   "sections": {
     "rittyIntro": {
-      "title": "Smart Life as Ritty's Butler",
-      "tagline": "World's First Talking Space Cat Raising Simulation",
+      "title": "A Cozy Life with Your Talking Space Cat",
+      "tagline": "The world's first life sim about raising a talking space cat",
       "slides": [
         "/images/slides/en/slide1.png",
         "/images/slides/en/slide2.png",
@@ -72,18 +72,18 @@
     },
     "worldview": {
       "label": "Worldview",
-      "title1": "Crash-Landed on a Strange Island,",
-      "title2": "Space Cat Ritty!",
+      "title1": "Ritty, a Space Cat,",
+      "title2": "Crash-Lands on a Strange Island!",
       "story": [
         "Far beyond the galaxy,",
-        "there was a planet where cats lived, called {Cat Planet}",
+        "there was a planet inhabited by cats called {Cat Planet}",
         "",
         "One day, Ritty boarded a spaceship to explore faraway {Earth}",
         "But just before reaching Earth, an unexpected accident happened",
         "and the spaceship crash-landed on a {small, nameless island}",
         "",
         "The first person Ritty met on that strange island was you!",
-        "{Will you become Ritty's butler?}"
+        "{Will you become Ritty's cat parent?}"
       ]
     },
     "news": {
@@ -150,8 +150,8 @@
     }
   ],
   "alt": {
-    "logo": "Ritty - Modern Talking Tamagotchi! AI Cat Chat & Care",
-    "heroImage": "AI Cat Ritty App Screenshot - Space Cat Character",
+    "logo": "Ritty - A cozy life with talking cats",
+    "heroImage": "Ritty app screen featuring a space cat character",
     "heroBg": "Ritty app background - winter snowy landscape",
     "worldviewBg": "Ritty worldview background - space and starry Cat Planet",
     "appStore": "Download Ritty on App Store - iOS",

@@ -14,6 +14,8 @@ interface LanguageDropdownProps {
 const languages = [
   { code: 'kr', label: '한국어', flag: '🇰🇷', href: '/' },
   { code: 'en', label: 'English', flag: '🇺🇸', href: '/en' },
+  { code: 'ja', label: '日本語', flag: '🇯🇵', href: '/ja' },
+  { code: 'zh-tw', label: '繁體中文', flag: '🇹🇼', href: '/zh-tw' },
 ] as const
 
 export default function LanguageDropdown({ currentLocale, ariaLabel }: LanguageDropdownProps) {
