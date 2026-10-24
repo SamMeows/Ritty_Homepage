@@ -1,0 +1,142 @@
+.ritty-site.news-list-page {
+  min-height: 100svh;
+  padding-bottom: 0;
+  background: #f5f2fb;
+}
+
+.news-list-page .news-topbar {
+  min-height: 104px;
+  padding: 24px max(32px, calc((100% - 1160px) / 2));
+  border-bottom: 1px solid #e5dcf1;
+  background: #eee7f7;
+}
+
+.news-list-page .news-topbar .official-wordmark {
+  font-size: 42px;
+  color: #7660bf;
+  text-shadow: none;
+}
+
+.news-list-page .news-topbar .official-wordmark > span {
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  filter: none;
+}
+
+.news-list-page .news-topbar .glass {
+  background: #ffffff70;
+  box-shadow: none;
+}
+
+.ritty-site.news-list-page > .news {
+  width: 100%;
+  max-width: 1224px;
+  margin: 0 auto;
+  padding: 64px 32px 96px;
+}
+
+.news-list-page .news-heading {
+  margin-bottom: 36px;
+}
+
+.news-list-page .news-heading .eyebrow {
+  font-size: 12px;
+  color: #8269b7;
+  letter-spacing: .14em;
+}
+
+.news-list-page .news-heading h1 {
+  margin: 12px 0 20px;
+  font-size: clamp(36px, 4vw, 52px);
+  line-height: 1.2;
+  letter-spacing: -.045em;
+}
+
+.news-list-page .news-intro {
+  color: #81738f;
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.news-list-page .news-board { margin-top: 0; }
+
+.news-list-page .news-filters {
+  gap: 8px;
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e3daee;
+}
+
+.news-list-page .news-filters button {
+  padding: 10px 22px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.news-list-page .news-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+}
+
+.news-list-page .news-feature {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 8px 28px #55407706;
+}
+
+.news-list-page .news-feature-art {
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+
+.news-list-page .news-feature-art > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.news-list-page .news-feature-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 24px 26px;
+}
+
+.news-list-page .news-meta { font-size: 12px; }
+
+.news-list-page .news-feature h3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin: 14px 0 24px !important;
+  font-size: 23px;
+  line-height: 1.5;
+  letter-spacing: -.035em;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.news-list-page .news-read {
+  margin-top: auto;
+  font-size: 13px;
+}
+
+.news-list-page .news-more { margin: 32px auto 0; }
+
+@media (max-width: 700px) {
+  .news-list-page .news-topbar { min-height: 84px; padding: 18px 24px; }
+  .news-list-page .news-topbar .official-wordmark { font-size: 34px; }
+  .ritty-site.news-list-page > .news { padding: 40px 24px 64px; }
+  .news-list-page .news-heading { margin-bottom: 28px; }
+  .news-list-page .news-intro { font-size: 14px; }
+  .news-list-page .news-filters { gap: 6px; padding-bottom: 20px; margin-bottom: 24px; }
+  .news-list-page .news-filters button { padding: 9px 14px; font-size: 12px; }
+  .news-list-page .news-card-grid { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .news-list-page .news-feature-copy { padding: 20px; }
+  .news-list-page .news-feature h3 { font-size: 20px; }
+}
