@@ -1,4 +1,5 @@
 import { homeEnglish } from './home-en'
+import { translateMarkupCopy } from './translate-markup'
 
 const chinese: Record<string, string> = {
   'One day, a cat<br>fell from the sky!': '有一天，貓咪<br>突然從天而降！',
@@ -45,8 +46,5 @@ export const homeChineseTraditional: Record<string, string> = Object.fromEntries
   Object.entries(homeEnglish).map(([korean, english]) => [korean, chinese[english] || english]),
 )
 export const translateHomeMarkupChineseTraditional = (markup: string) => {
-  const englishMarkup = Object.entries(homeEnglish).sort(([a], [b]) => b.length - a.length)
-    .reduce((html, [korean, english]) => html.replaceAll(korean, english), markup)
-  return Object.entries(chinese).sort(([a], [b]) => b.length - a.length)
-    .reduce((html, [english, traditionalChinese]) => html.replaceAll(english, traditionalChinese), englishMarkup)
+  return translateMarkupCopy(translateMarkupCopy(markup, homeEnglish), chinese)
 }

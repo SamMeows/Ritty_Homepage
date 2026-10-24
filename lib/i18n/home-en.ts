@@ -1,3 +1,5 @@
+import { translateMarkupCopy } from './translate-markup'
+
 // Shared by the server-rendered homepage and its interactive scene controls.
 export const homeEnglish: Record<string, string> = {
   '어느 날 갑자기<br>하늘에서 고양이가 떨어졌다!': 'One day, a cat<br>fell from the sky!',
@@ -107,6 +109,5 @@ export const homeEnglish: Record<string, string> = {
 
 export function translateHomeMarkup(markup: string) {
   // Longest first keeps full sentences ahead of shared words such as “Ritty”.
-  return Object.entries(homeEnglish).sort(([a], [b]) => b.length - a.length)
-    .reduce((html, [korean, english]) => html.replaceAll(korean, english), markup)
+  return translateMarkupCopy(markup, homeEnglish)
 }

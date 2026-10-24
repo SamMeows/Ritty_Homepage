@@ -67,7 +67,10 @@
   root.querySelectorAll('[data-life-slide]').forEach(button=>button.addEventListener('click',()=>selectLife(Number(button.dataset.lifeSlide))));
   document.getElementById('life-panel').addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();selectLife(lifeIndex+(e.key==='ArrowRight'?1:-1))}});
   // Replace name/concept/story with approved character settings when available.
-  const cats=JSON.parse(document.getElementById('resident-data').textContent);
+  const cats=JSON.parse(document.getElementById('resident-data').textContent).map(cat=>({
+    ...cat,
+    ...Object.fromEntries(['name','role','likes','story','quote'].map(key=>[key,t(cat[key])])),
+  }));
   const catTabs=[...root.querySelectorAll('[data-cat]')];
   let catIndex=0;
   function selectCat(index,focus=false,direction=1){

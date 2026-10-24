@@ -51,7 +51,7 @@ export default function AdLanding({ markup, news, newsPreview = '', dict, locale
     }
     node.addEventListener('click', open)
     const script = document.createElement('script')
-    script.src = '/ritty/site.js?v=20261024-home-languages'
+    script.src = '/ritty/site.js?v=20261025-copy-markup'
     node.appendChild(script)
     return () => {
       disposeMotion()

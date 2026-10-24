@@ -1,4 +1,5 @@
 import { homeEnglish } from './home-en'
+import { translateMarkupCopy } from './translate-markup'
 
 const japanese: Record<string, string> = {
   'One day, a cat<br>fell from the sky!': 'ある日、空から<br>猫が降ってきた！',
@@ -46,8 +47,5 @@ export const homeJapanese: Record<string, string> = Object.fromEntries(
   Object.entries(homeEnglish).map(([korean, english]) => [korean, japanese[english] || english]),
 )
 export const translateHomeMarkupJapanese = (markup: string) => {
-  const englishMarkup = Object.entries(homeEnglish).sort(([a], [b]) => b.length - a.length)
-    .reduce((html, [korean, english]) => html.replaceAll(korean, english), markup)
-  return Object.entries(japanese).sort(([a], [b]) => b.length - a.length)
-    .reduce((html, [english, japaneseText]) => html.replaceAll(english, japaneseText), englishMarkup)
+  return translateMarkupCopy(translateMarkupCopy(markup, homeEnglish), japanese)
 }
