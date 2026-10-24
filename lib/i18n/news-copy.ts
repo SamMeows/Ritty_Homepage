@@ -3,7 +3,7 @@ import type { Locale } from './dictionaries'
 const english: Record<string, string> = {
   '전체': 'All',
   '공지사항': 'Announcements',
-  '패치노트': 'Patch Notes',
+  '개발 소식': 'Development Updates',
   '팀 레터': 'Team Letters',
   '소식 분류': 'News categories',
   '읽어보기 →': 'Read more →',

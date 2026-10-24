@@ -22,7 +22,7 @@ export default function NewsFeed({initial, locale = 'kr'}: {initial:NewsPage; lo
     if(match&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey&&!event.altKey){event.preventDefault();setActiveId(match[1])}
   }}>
     {locale === 'en' && data.items.length > 0 && <p className="news-language-note">News articles are currently available in Korean.</p>}
-    <div className="news-filters" aria-label={t('소식 분류')}>{['전체','공지사항','패치노트','팀 레터'].map(name=><button key={name} type="button" aria-pressed={category===name} onClick={()=>setCategory(name)}>{t(name)}</button>)}</div>
+    <div className="news-filters" aria-label={t('소식 분류')}>{['전체','공지사항','개발 소식','팀 레터'].map(name=><button key={name} type="button" aria-pressed={category===name} onClick={()=>setCategory(name)}>{t(name)}</button>)}</div>
     {featured ? <div className="news-grid"><a className="news-feature" href={'/news/'+featured.id}>
       <div className="news-feature-art">{featured.cover ? <img src={featured.cover} alt=""/> : <><span className="official-wordmark"><span>Ritty</span><img src="/images/logo-sparkle.svg" alt="" width="27" height="28"/></span><span aria-hidden="true">NEWS</span></>}</div>
       <div className="news-feature-copy"><div className="news-meta"><span>{t(featured.category)}</span><time dateTime={featured.date}>{featured.date.replaceAll('-','.')}</time></div><h3>{featured.title}</h3><span className="news-read">{t('읽어보기 →')}</span></div>
