@@ -1,8 +1,26 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { isAdVariant } from './lib/ad-variants'
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  // Randomize landing copy independently of advertising delivery.
+  if (pathname === '/ad' || pathname === '/ad/') {
+    const saved = request.cookies.get('ritty-copy-v1')?.value
+    const variant = saved && isAdVariant(saved) ? saved
+      : crypto.getRandomValues(new Uint32Array(1))[0] < 0x80000000 ? 'talking-cat' : 'cozy-life'
+    const url = request.nextUrl.clone()
+    url.pathname = '/ad/' + variant
+    const response = NextResponse.redirect(url, 307)
+    response.headers.set('Cache-Control', 'private, no-store')
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow')
+    response.cookies.set('ritty-copy-v1', variant, {
+      maxAge: 60 * 60 * 24 * 30, httpOnly: true, sameSite: 'lax', path: '/',
+      secure: request.nextUrl.protocol === 'https:',
+    })
+    return response
+  }
 
   // Skip for static files and api routes
   if (

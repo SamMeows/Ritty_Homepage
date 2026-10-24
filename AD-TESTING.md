@@ -1,3 +1,32 @@
+# Active experiment: copy-v1 (2026-10-24)
+
+This section supersedes the older manual traffic-split instructions below.
+
+- Paid destination after deployment: https://ritty.sam-meows.com/ad?utm_source=meta&utm_medium=paid_social&utm_campaign=preregister_copy_v1&utm_content=creative_01
+- /ad assigns a random 50/50 arm and redirects without dropping UTM or fbclid parameters. A first-party HttpOnly cookie keeps the arm for 30 days. Redirect responses must never be cached.
+- talking-cat: new friendship headline. cozy-life: existing story headline (control). Images, form, CTA, and the rest of the homepage stay identical. The ordinary homepage stays on the existing control.
+- Direct variant URLs are for QA; use the single /ad destination in the same ad to avoid confusing ad delivery differences with landing effects.
+- This is a headline experiment, not an image/whole-design experiment. Do not change either arm during measurement. A later experiment needs a new cookie key and campaign name.
+
+## Measurement
+
+GA4 events: landing_view, pre_register_open, pre_register_start (first form focus), pre_register_submit (valid attempt), pre_register_error (email/platform/consent/server only), pre_register_duplicate, generate_lead (API-confirmed new registration only).
+All include sanitized landing and UTM attribution. No email or field values are added. The inline form has start/submit events even without a modal open event. Early funnel events queue until GA loads.
+
+Compare GA4 sessions with landing_view against sessions with generate_lead, segmented by landing_variant and this campaign. Do not divide raw form events by page views: retries, refreshes, and reopening a form can repeat events. Use stored new Notion registrations as the business count; browser analytics may be blocked. A Notion count alone cannot provide a visitor denominator. Define the custom GA4 dimensions before running and verify events in DebugView/Realtime.
+
+## Budget and release gates
+
+Goal: 500 new registrations within KRW 200,000 total cash spend (including any applicable charges). Required all-in acquisition cost: KRW 400. This is a goal, not a forecast. Set the actual media cap only after checking billing currency and tax treatment. No campaign has been launched by this code change.
+
+Use a small initial tranche (at most KRW 40,000 all-in), check the form, landing conversion and acquisition cost before spending the remainder. Avoid selecting a winner from a handful of leads; report arm sample counts and uncertainty, and retain the control if results are inconclusive. A low CPA does not prove registrations are valid or engaged.
+
+Before paid traffic: deploy, check both arms on mobile, verify Notion writes and duplicate exclusion with a clearly labeled test registration, verify GA4 events, and configure/verify the correct Meta conversion data source. This repository currently contains GA4 but no Meta Pixel implementation. Local mock tests do not establish production delivery or Meta conversion tracking. Do not send paid traffic to an unverified form.
+
+Checks: node scripts/check-ad-registration.cjs; npx tsc --noEmit; npm run build.
+
+---
+
 # 리티 광고 랜딩 운영
 
 ## 주소

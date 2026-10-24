@@ -1,6 +1,7 @@
 import { captureAttribution } from './attribution'
 declare global {
   interface Window {
+    dataLayer?: unknown[]
     gtag: (
       command: 'event' | 'config' | 'js',
       targetId: string | Date,
@@ -64,4 +65,19 @@ export const trackPreRegisterComplete = (
     ...getUtmParams(),
     language,
   })
+}
+
+// Queue events even when the afterInteractive GA bootstrap has not run yet.
+// Only fixed funnel labels and sanitized attribution are sent; never form values.
+export function trackRegistrationFunnel(
+  event: 'landing_view' | 'pre_register_start' | 'pre_register_submit' | 'pre_register_error' | 'pre_register_duplicate',
+  language: string,
+  details: { form?: 'inline' | 'modal'; reason?: 'email' | 'platform' | 'consent' | 'server' } = {}
+) {
+  if (typeof window === 'undefined') return
+  if (!window.gtag) {
+    window.dataLayer = window.dataLayer || []
+    window.gtag = function () { window.dataLayer!.push(arguments) }
+  }
+  window.gtag('event', event, { ...getUtmParams(), language, ...details })
 }

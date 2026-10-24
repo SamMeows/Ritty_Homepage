@@ -23,6 +23,35 @@ assert.equal(cleanAttribution({landingPath:'//evil.test',variant:'forged'}).land
 assert.equal(cleanAttribution({landingPath:'/ad/unknown',variant:'talking-cat'}).variant,'main');
 assert.equal(cleanAttribution({landingPath:'/ad/talking-cat?email=private'}).landingPath,'/ad/talking-cat');
 
+// Verify stable experiment assignment and preserve paid click identifiers.
+const {middleware}=load('middleware.ts');
+const {NextRequest}=require('next/server');
+for(const arm of ['talking-cat','cozy-life']) {
+  const response=middleware(new NextRequest('https://example.com/ad?utm_content=same-ad&fbclid=test-click', {headers:{cookie:'ritty-copy-v1='+arm}}));
+  const destination=new URL(response.headers.get('location'));
+  assert.equal(destination.pathname,'/ad/'+arm);
+  assert.equal(destination.searchParams.get('utm_content'),'same-ad');
+  assert.equal(destination.searchParams.get('fbclid'),'test-click');
+  assert.equal(response.headers.get('cache-control'),'private, no-store');
+  assert.equal(response.cookies.get('ritty-copy-v1').value,arm);
+}
+const randomResponse=middleware(new NextRequest('https://example.com/ad', {headers:{cookie:'ritty-copy-v1=invalid'}}));
+assert.match(randomResponse.headers.get('location'), /\/ad\/(talking-cat|cozy-life)$/);
+assert.equal(middleware(new NextRequest('https://example.com/')).headers.get('location'),null);
+const {adVariants}=load('lib/ad-variants.ts');
+assert.notEqual(adVariants['talking-cat'].title,adVariants['cozy-life'].title);
+// Early events must survive loading GA after hydration, without form values.
+global.window={location:{href:'https://example.com/ad/talking-cat'}};
+global.document={referrer:''};
+const {trackRegistrationFunnel,trackPreRegisterComplete}=load('lib/analytics.ts');
+trackRegistrationFunnel('landing_view','kr');
+trackPreRegisterComplete('ios','kr');
+assert.equal(window.dataLayer.length,2);
+assert.equal(window.dataLayer[0][1],'landing_view');
+assert.equal(window.dataLayer[1][1],'generate_lead');
+assert.equal(window.dataLayer[0][2].landing_variant,'talking-cat');
+delete global.window;delete global.document;
+
 process.env.NOTION_TOKEN='mock-only';process.env.NOTION_PRE_REGISTER_DB_ID='mock-db';
 const {POST}=load('app/api/pre-register/route.ts');
 const originalFetch=global.fetch;

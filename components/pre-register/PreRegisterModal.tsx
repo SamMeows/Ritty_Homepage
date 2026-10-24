@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import Image from 'next/image'
 import './pre-register.css'
-import { trackPreRegisterComplete } from '@/lib/analytics'
+import { trackPreRegisterComplete, trackRegistrationFunnel } from '@/lib/analytics'
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, type Platform, type PreRegisterResult } from '@/lib/pre-register'
 import type { Dictionary, Locale } from '@/lib/i18n/dictionaries'
 import { captureAttribution } from '@/lib/attribution'
@@ -46,6 +46,9 @@ function ConsentCheckbox({
 
 export default function PreRegisterModal({ dict, locale, onClose, inline = false }: PreRegisterModalProps) {
   const t = dict.preRegister
+  const started = useRef(false)
+  const funnel = (event: Parameters<typeof trackRegistrationFunnel>[0], reason?: 'email' | 'platform' | 'consent' | 'server') =>
+    trackRegistrationFunnel(event, locale, { form: inline ? 'inline' : 'modal', ...(reason ? { reason } : {}) })
   const overlayRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
@@ -144,20 +147,24 @@ export default function PreRegisterModal({ dict, locale, onClose, inline = false
     const trimmedEmail = email.trim()
 
     if (trimmedEmail.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(trimmedEmail)) {
+      funnel('pre_register_error', 'email')
       setError(t.errors.email)
       return
     }
     if (!platform) {
+      funnel('pre_register_error', 'platform')
       setError(t.errors.platform)
       return
     }
     if (!allAgreed) {
+      funnel('pre_register_error', 'consent')
       setError(t.errors.consent)
       return
     }
 
     setError(null)
     setIsSubmitting(true)
+    funnel('pre_register_submit')
     try {
       const attribution = captureAttribution()
       const response = await fetch('/api/pre-register', {
@@ -180,9 +187,12 @@ export default function PreRegisterModal({ dict, locale, onClose, inline = false
       if (!response.ok) throw new Error(`Pre-registration failed with ${response.status}`)
 
       const data: { status: PreRegisterResult } = await response.json()
-      if (data.status === 'created') trackPreRegisterComplete(platform, locale)
+      if (data.status !== 'created' && data.status !== 'duplicate') throw new Error('Unexpected registration response')
+      if (data.status === 'created' && !honeypot) trackPreRegisterComplete(platform, locale)
+      if (data.status === 'duplicate') funnel('pre_register_duplicate')
       setResult(data.status)
     } catch {
+      funnel('pre_register_error', 'server')
       setError(t.errors.server)
     } finally {
       setIsSubmitting(false)
@@ -259,7 +269,9 @@ export default function PreRegisterModal({ dict, locale, onClose, inline = false
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+          <form onSubmit={handleSubmit} onFocusCapture={() => {
+            if (!started.current) { started.current = true; funnel('pre_register_start') }
+          }} noValidate className="flex flex-col gap-5">
             <div className="px-8 text-center">
               <p className="font-paperlogy text-sm font-bold text-[#fffbc0]">{t.releaseNote}</p>
               <h2 id={inline ? "inline-register-title" : "pre-register-title"} className="mt-1 font-paperlogy text-2xl font-extrabold">

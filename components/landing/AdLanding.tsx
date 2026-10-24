@@ -13,11 +13,13 @@ import type { Dictionary, Locale } from '@/lib/i18n/dictionaries'
 import NewsFeed from '@/components/news/NewsFeed'
 import type { NewsPage } from '@/lib/news'
 import { usePreRegister } from '@/lib/contexts/PreRegisterContext'
+import { trackRegistrationFunnel } from '@/lib/analytics'
 import { captureAttribution } from '@/lib/attribution'
 import { decorateLandingMarkup, mountLandingMotion } from '@/lib/landing-art'
 
 export default function AdLanding({ markup, news, newsPreview = '', dict, locale = 'kr' }: { markup: string; news:NewsPage; newsPreview?:string; dict:Dictionary; locale?: Locale }) {
   const ref = useRef<HTMLDivElement>(null)
+  const measuredPath = useRef<string | null>(null)
   const [newsTarget,setNewsTarget]=useState<Element|null>(null)
   const [toolsTarget,setToolsTarget]=useState<Element|null>(null)
   const [formTarget,setFormTarget]=useState<Element|null>(null)
@@ -33,6 +35,10 @@ export default function AdLanding({ markup, news, newsPreview = '', dict, locale
   }, [markup, locale, newsPreview])
   useEffect(() => {
     captureAttribution()
+    if (measuredPath.current !== window.location.pathname) {
+      trackRegistrationFunnel('landing_view', locale)
+      measuredPath.current = window.location.pathname
+    }
     const node = ref.current!
     setToolsTarget(node.querySelector('#header-tools'))
     setFormTarget(node.querySelector('#registration-form'))
