@@ -17,9 +17,11 @@ const attributes = html => [...html
   .matchAll(/\s(class|id|src|srcset|href|style|role|data-[\w-]+|aria-controls|aria-labelledby)="([^"]*)"/g)]
   .map(match => `${match[1]}=${match[2]}`);
 const residents = html => html.match(/<script type="application\/json" id="resident-data">([\s\S]*?)<\/script>/)[1];
+const logo = html => html.match(/<span class="official-wordmark"><span>[\s\S]*?<\/span><img[^>]*><\/span>/)[0];
 
 for (const locale of ['en', 'ja', 'zh-tw']) {
   const html = decorateLandingMarkup(homeMarkup, locale);
+  assert.equal(logo(html), logo(base), `${locale}: brand logo differs from Korean`);
   assert.deepEqual(attributes(html), attributes(base), `${locale}: technical attributes changed`);
   assert(html.includes('class="cat-portrait-crop resident-illustration"'), `${locale}: portrait CSS hook lost`);
   assert.equal(residents(html), residents(base), `${locale}: resident runtime data changed`);
