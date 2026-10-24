@@ -4,9 +4,11 @@ import { getDictionary, type Locale } from '@/lib/i18n/dictionaries'
 import { PreRegisterProvider } from '@/lib/contexts/PreRegisterContext'
 import AdLanding from '@/components/landing/AdLanding'
 import { getNews } from '@/lib/news'
+import { newsPreviewMarkup } from '@/lib/news-preview'
 
 export default async function RittyLanding({ variant = 'cozy-life', locale = 'kr' }: { variant?: AdVariant; locale?: Locale }) {
   const config = adVariants[variant]
+  const news = await getNews()
   const original = await getDictionary(locale)
   const dict = {...original, preRegister:{...original.preRegister,title:locale === 'en' ? 'Ritty Pre-registration' : '리티 사전등록',releaseNote:locale === 'en' ? 'Be the first to hear about the launch' : '출시 소식을 가장 먼저 받아보세요'}}
   const markup = homeMarkup
@@ -26,5 +28,5 @@ export default async function RittyLanding({ variant = 'cozy-life', locale = 'kr
     .replaceAll('https://project-meow.notion.site/1bd423ba89b680cc9c4ffaa284da0d85?pvs=74', dict.links.terms)
     .replaceAll('https://www.instagram.com/ritty_kr/', 'https://www.instagram.com/ritty_meow/')
     .replaceAll('https://www.tiktok.com/@ritty_kr', 'https://www.tiktok.com/@rittymeow') : markup
-  return <PreRegisterProvider dict={dict} locale={locale}><AdLanding markup={localizedMarkup} news={await getNews()} dict={dict} locale={locale} /></PreRegisterProvider>
+  return <PreRegisterProvider dict={dict} locale={locale}><AdLanding markup={localizedMarkup} news={news} newsPreview={newsPreviewMarkup(news, locale)} dict={dict} locale={locale} /></PreRegisterProvider>
 }

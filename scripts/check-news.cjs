@@ -7,12 +7,14 @@ const {getNews,getNewsArticle,safeNewsUrl}=mod.exports;
 process.env.NOTION_NEWS_TOKEN='mock';process.env.NEWS_PREVIEW_SNAPSHOT='0';
 const source='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',id='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 let published=true,calls=[],parent=source,date='2026-01-01',archived=false,missing=false;
-const page=()=>({id,parent:{data_source_id:parent},archived,properties:{'공개':{checkbox:published},'제목':{title:[{plain_text:'실제 제목'}]},'분류':{select:{name:'공지사항 Notice'}},'게시일':{date:{start:date}}}});
+const page=()=>({id,parent:{data_source_id:parent},archived,last_edited_time:'2026-10-24T07:00:00.000Z',properties:{'공개':{checkbox:published},'제목':{title:[{plain_text:'실제 제목'}]},'분류':{select:{name:'공지사항 Notice'}},'게시일':{date:{start:date}}}});
 global.fetch=async(url,opts)=>{calls.push(url);if(missing)return new Response('',{status:404});if(url.includes('/query'))return Response.json({results:[page()],has_more:true,next_cursor:'cursor2'});if(url.includes('/pages/'))return Response.json(page());return Response.json({results:[{type:'paragraph',paragraph:{rich_text:[{plain_text:'본문'}]},has_children:false}],has_more:false})};
 (async()=>{
  assert.equal(safeNewsUrl('javascript:alert(1)'),undefined);
  assert.equal((await getNews()).cursor,'cursor2');
  assert.equal((await getNewsArticle(id)).blocks[0].text,'본문');
+ assert.equal((await getNews()).items[0].modifiedAt,'2026-10-24T07:00:00.000Z');
+ assert.equal((await getNewsArticle(id)).modifiedAt,'2026-10-24T07:00:00.000Z');
  calls=[];parent='other';assert.equal(await getNewsArticle(id),null);assert.equal(calls.length,1);
  parent=source;published=false;assert.equal(await getNewsArticle(id),null);assert.equal((await getNews()).items.length,0);published=true;date='2999-01-01';assert.equal(await getNewsArticle(id),null);assert.equal((await getNews()).items.length,0);
  date='2026-01-01';archived=true;assert.equal(await getNewsArticle(id),null);

@@ -29,7 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const article of news.items) {
       if (seenArticles.has(article.id)) continue
       seenArticles.add(article.id)
-      entries.push({ url: `${baseUrl}/news/${article.id}`, priority: 0.6 })
+      entries.push({ url: `${baseUrl}/news/${article.id}`, ...(article.modifiedAt ? { lastModified: article.modifiedAt } : {}), priority: 0.6 })
     }
     if (!news.cursor || seenCursors.has(news.cursor)) break
     seenCursors.add(news.cursor)

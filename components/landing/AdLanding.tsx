@@ -3,7 +3,7 @@
 import '@/components/landing/ad-site.css'
 import '@/components/landing/world-patterns.css'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import MusicToggle from '@/components/ui/MusicToggle'
@@ -16,17 +16,24 @@ import { usePreRegister } from '@/lib/contexts/PreRegisterContext'
 import { captureAttribution } from '@/lib/attribution'
 import { decorateLandingMarkup, mountLandingMotion } from '@/lib/landing-art'
 
-export default function AdLanding({ markup, news, dict, locale = 'kr' }: { markup: string; news:NewsPage; dict:Dictionary; locale?: Locale }) {
+export default function AdLanding({ markup, news, newsPreview = '', dict, locale = 'kr' }: { markup: string; news:NewsPage; newsPreview?:string; dict:Dictionary; locale?: Locale }) {
   const ref = useRef<HTMLDivElement>(null)
   const [newsTarget,setNewsTarget]=useState<Element|null>(null)
   const [toolsTarget,setToolsTarget]=useState<Element|null>(null)
   const [formTarget,setFormTarget]=useState<Element|null>(null)
-  const staticMarkup=useMemo(()=><div ref={ref} dangerouslySetInnerHTML={{__html:decorateLandingMarkup(markup, locale)}}/>,[markup, locale])
+  const staticMarkup=useMemo(()=><div ref={ref} dangerouslySetInnerHTML={{__html:decorateLandingMarkup(markup, locale).replace('<div id="news-feed"></div>', () => `<div id="news-feed">${newsPreview}</div>`)}}/>,[markup, locale, newsPreview])
   const { openPreRegister } = usePreRegister()
+  // Replace the server preview with the identical interactive component before
+  // painting. Without JavaScript, the real article links remain available.
+  useLayoutEffect(() => {
+    const target = ref.current?.querySelector('#news-feed')
+    if (!target) return
+    target.replaceChildren()
+    setNewsTarget(target)
+  }, [markup, locale, newsPreview])
   useEffect(() => {
     captureAttribution()
     const node = ref.current!
-    setNewsTarget(node.querySelector('#news-feed'))
     setToolsTarget(node.querySelector('#header-tools'))
     setFormTarget(node.querySelector('#registration-form'))
     const disposeMotion = mountLandingMotion(node)

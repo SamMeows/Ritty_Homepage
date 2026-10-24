@@ -1,6 +1,7 @@
 import { residentChapter } from './ritty-residents'
 import { homeEnglish, translateHomeMarkup } from './i18n/home-en'
 import type { Locale } from './i18n/dictionaries'
+import { lifePanelsMarkup } from './life-scenes'
 
 const icon = (name: string) => `<span class="world-icon icon-${name}" aria-hidden="true"></span>`
 
@@ -16,7 +17,7 @@ export function decorateLandingMarkup(markup: string, locale: Locale = 'kr') {
   result = result.replace('<div class="hero-shade"></div>', '<div class="hero-shade"></div><div class="hero-meteors" aria-hidden="true"><span class="shooting-star"></span><span class="shooting-star"></span><span class="shooting-star"></span></div>')
   result = result.replace('<div class="cat-world-heading">', '<img class="raster-charm resident-planet" src="/ritty/art/cat-planet-v2.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><div class="cat-world-heading">')
   // Keep the life scene itself as the focus; the unrelated floating cottage is omitted.
-  result = result.replace('<div class="life-panel-copy"', '<div class="life-speech" id="life-speech" aria-live="polite"><span>리티</span><p id="life-dialogue">우와, 이거 네가 키운 거야?</p></div><div class="life-panel-copy"')
+  result = result.replace(/<div class="life-panel-copy"[^>]*>[\s\S]*?<\/div>/, '<div class="life-speech" id="life-speech" aria-live="polite"><span>리티</span><p id="life-dialogue">우와, 이거 네가 키운 거야?</p></div>' + lifePanelsMarkup())
   result = result.replace(/<div class="life-controls">[\s\S]*?<\/div>/, `<div class="life-controls"><button type="button" class="life-arrow" data-life-step="-1" aria-label="이전 생활 장면">‹</button><div class="life-dots" role="group" aria-label="생활 장면 선택">${['텃밭', '요리', '집 꾸미기', '낚시'].map((name, i) => `<button type="button" data-life-slide="${i}" aria-label="${name} 장면 보기" aria-pressed="${i === 0}"><span></span></button>`).join('')}</div><button type="button" class="life-arrow" data-life-step="1" aria-label="다음 생활 장면">›</button></div>`)
   result = result.replace('<div class="news-heading">', '<img class="world-decoration news-island" src="/ritty/art/cat-planet-v2.webp" alt="" width="320" height="320" loading="lazy" aria-hidden="true"><div class="news-heading">')
   result = result.replace('<h2 id="life-heading">', `<h2 id="life-heading">${icon('garden')}`)

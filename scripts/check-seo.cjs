@@ -51,13 +51,14 @@ async function main() {
   const sitemap = load('app/sitemap.ts', {
     '@/lib/news': { getNews: async cursor => {
       calls++
-      return cursor ? { items: [{ id: 'a' }, { id: 'b' }], cursor: 'next' } : { items: [{ id: 'a' }], cursor: 'next' }
+      return cursor ? { items: [{ id: 'a' }, { id: 'b', modifiedAt: '2026-10-24T07:00:00.000Z' }], cursor: 'next' } : { items: [{ id: 'a' }], cursor: 'next' }
     } },
   })
   const entries = await sitemap.default()
   assert.equal(calls, 2, 'Repeated cursors must not loop forever')
   assert.equal(new Set(entries.map(entry => entry.url)).size, entries.length)
   assert(entries.some(entry => entry.url.endsWith('/news/b')), 'Older news must be discoverable')
+  assert.equal(entries.find(entry => entry.url.endsWith('/news/b')).lastModified, '2026-10-24T07:00:00.000Z')
   assert(!entries.some(entry => entry.url.includes('/en/news') || entry.url.includes('/ad/')))
   assert.equal(entries[0].alternates.languages['x-default'], 'https://ritty.sam-meows.com')
 

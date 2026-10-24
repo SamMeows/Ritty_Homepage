@@ -18,7 +18,7 @@ export async function generateMetadata({params}:Props):Promise<Metadata> {
   return {
     title,description,robots:searchRobots,
     alternates:{canonical:url,languages:{}},
-    openGraph:{type:'article',url,title,description,siteName:'리티 Ritty',locale:'ko_KR',publishedTime:article.date,images:article.cover?[{url:article.cover}]:[{url:'/og-ritty-island-v2.png'}]},
+    openGraph:{type:'article',url,title,description,siteName:'리티 Ritty',locale:'ko_KR',publishedTime:article.date,...(article.modifiedAt?{modifiedTime:article.modifiedAt}:{}),images:article.cover?[{url:article.cover}]:[{url:'/og-ritty-island-v2.png'}]},
     twitter:{card:'summary_large_image',title,description,images:[article.cover||'/og-ritty-island-v2.png']},
   }
 }

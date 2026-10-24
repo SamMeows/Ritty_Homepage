@@ -34,6 +34,7 @@
     ['fishing','04 / OUTSIDE',t('낚시도 하고, 마을도 가고'),t('바다에서 낚시를 즐기고, 돌아오는 길엔 마을 상점에도 들러요.'),t('낚시 찌를 살피는 회색 리티'),'#outside'],
   ];
   const lifeDialogue = [t('우와, 이거 네가 키운 거야?'), t('한 입만! 지금 먹어도 돼?'), t('새 가구야? 나도 구경할래!'), t('방금 움직였어! 물고기 아니야?')];
+  const lifeCopies = [...root.querySelectorAll('[data-life-copy]')];
   let lifeIndex=0;
   function animateSwap(element, direction=1){
     if(matchMedia('(prefers-reduced-motion: reduce)').matches || root.classList.contains('motion-paused'))return;
@@ -43,6 +44,16 @@
   function selectLife(index){
     const direction=index>=lifeIndex?1:-1;
     lifeIndex=(index+scenes.length)%scenes.length;const scene=scenes[lifeIndex];
+    // Real carousel panels are present in the initial HTML. Only the selected
+    // panel is displayed, using the existing layout and animation.
+    if(lifeCopies.length){
+      lifeCopies.forEach((panel,i)=>{
+        panel.hidden=i!==lifeIndex;
+        ['span','h3','p'].forEach(tag=>panel.querySelector(tag).removeAttribute('id'));
+      });
+      const panel=lifeCopies[lifeIndex];
+      panel.querySelector('span').id='life-number';panel.querySelector('h3').id='life-title';panel.querySelector('p').id='life-description';
+    }
     const art=document.getElementById('life-preview-art');art.src='/ritty/'+scene[0]+'.webp';art.alt=scene[4];
     document.getElementById('life-number').textContent=scene[1];document.getElementById('life-title').textContent=scene[2];document.getElementById('life-description').textContent=scene[3];
     document.getElementById('life-dialogue').textContent=lifeDialogue[lifeIndex];
@@ -50,7 +61,7 @@
     document.getElementById('life-panel').dataset.scene=scene[0];
     animateSwap(art,direction);
     animateSwap(document.getElementById('life-speech'),direction);
-    animateSwap(root.querySelector('.life-panel-copy'),direction);
+    animateSwap(lifeCopies[lifeIndex]||root.querySelector('.life-panel-copy'),direction);
   }
   root.querySelectorAll('[data-life-step]').forEach(button=>button.addEventListener('click',()=>selectLife(lifeIndex+Number(button.dataset.lifeStep))));
   root.querySelectorAll('[data-life-slide]').forEach(button=>button.addEventListener('click',()=>selectLife(Number(button.dataset.lifeSlide))));

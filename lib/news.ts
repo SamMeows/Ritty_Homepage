@@ -1,7 +1,7 @@
 import 'server-only'
 
 
-export type NewsItem = { id: string; title: string; category: string; date: string; cover?: string }
+export type NewsItem = { id: string; title: string; category: string; date: string; cover?: string; modifiedAt?: string }
 export type NewsBlock = { type: string; text: string; href?: string; children?: NewsBlock[] }
 export type NewsArticle = NewsItem & { blocks?: NewsBlock[]; markdown?: string }
 export type NewsPage = { items: NewsItem[]; cursor: string | null; unavailable?: boolean }
@@ -29,7 +29,7 @@ function item(page: any): NewsItem | null {
   const date = page.properties?.['게시일']?.date?.start
   const title = plain(page.properties?.['제목']?.title)
   if (page.properties?.['공개']?.checkbox !== true || page.archived || page.in_trash || !date || date.slice(0,10) > today() || !title) return null
-  return { id: normalized(page.id), title, date: date.slice(0,10), category: (page.properties?.['분류']?.select?.name || '공지사항'), cover: safeNewsUrl(page.cover?.external?.url || page.cover?.file?.url || '') }
+  return { id: normalized(page.id), title, date: date.slice(0,10), category: (page.properties?.['분류']?.select?.name || '공지사항'), cover: safeNewsUrl(page.cover?.external?.url || page.cover?.file?.url || ''), ...(page.last_edited_time && Number.isFinite(Date.parse(page.last_edited_time)) ? {modifiedAt: page.last_edited_time} : {}) }
 }
 export async function getNews(cursor?: string): Promise<NewsPage> {
   if (!source) return {items:[],cursor:null}
