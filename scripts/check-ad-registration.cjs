@@ -70,7 +70,7 @@ let calls=[],duplicate=false,withColumns=false,schemaFailure=false;
 global.fetch=async (url,options)=>{
   calls.push({url,options});
   if(url.endsWith('/query'))return Response.json({results:duplicate?[{id:'existing'}]:[]});
-  if(options.method!=='POST')return schemaFailure?new Response('',{status:403}):Response.json({properties:withColumns?{'Landing Variant':{type:'rich_text'}}:{}});
+  if(options.method!=='POST')return schemaFailure?new Response('',{status:403}):Response.json({properties:withColumns?{'Landing Variant':{type:'rich_text'},'Marketing Consent':{type:'checkbox'}}:{}});
   return Response.json({id:'new'});
 };
 const send=body=>POST(new Request('https://example.com/api/pre-register',{method:'POST',body:JSON.stringify(body)}));
@@ -79,7 +79,7 @@ const send=body=>POST(new Request('https://example.com/api/pre-register',{method
   let payload=JSON.parse(calls.at(-1).options.body);
   assert.equal(payload.properties['UTM Source'].rich_text[0].text.content,'instagram');
   assert.match(payload.children.flatMap(block=>block.paragraph?.rich_text || []).map(text=>text.text.content).join('\n'),/talking-cat/);
-  assert.equal(payload.properties['Landing Variant'],undefined);
+  assert.equal(payload.properties['Landing Variant'],undefined);assert.equal(payload.properties['Marketing Consent'],undefined);
   calls=[];withColumns=true;await send(valid);
   payload=JSON.parse(calls.at(-1).options.body);assert.equal(payload.properties['Landing Variant'].rich_text[0].text.content,'talking-cat');
   calls=[];schemaFailure=true;assert.equal((await (await send(valid)).json()).status,'created');

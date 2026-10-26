@@ -2,7 +2,9 @@ import { MetadataRoute } from 'next'
 import { getNews, getNewsAlternates, type NewsItem } from '@/lib/news'
 import { newsArticlePath, newsListPath } from '@/lib/news-languages'
 import type { Locale } from '@/lib/i18n/dictionaries'
-export const revalidate=3600
+// Query Notion at request time so an upstream outage cannot block deployment.
+// Failed queries remain errors rather than publishing an incomplete sitemap.
+export const dynamic = 'force-dynamic'
 export default async function sitemap():Promise<MetadataRoute.Sitemap> {
   const base='https://ritty.sam-meows.com'
   const homeLanguages={ko:base,en:base+'/en',ja:base+'/ja','zh-TW':base+'/zh-tw','x-default':base}

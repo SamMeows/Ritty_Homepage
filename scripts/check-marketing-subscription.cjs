@@ -3,12 +3,14 @@ const ts = require('typescript');
 const assert = require('node:assert/strict');
 const id = '123456781234123412341234567890ab', database = 'abcdefabcdefabcdefabcdefabcdefab';
 const mod = { exports: {} };
+let hasConsentColumn = false, consentValue = true;
 let blocks = [], patches = 0, requests = 0, fail = false, archived = false, wrongDatabase = false, paginate = false;
 const source = ts.transpileModule(fs.readFileSync('lib/marketing-subscription.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
 async function mockFetch(url, options) {
  requests++;
  if(fail) return {ok:false};
- if(url.includes('/pages/')) return {ok:true,json:async()=>({archived,parent:{database_id:wrongDatabase?'other':database}})};
+ if(url.includes('/pages/') && options.method === 'PATCH') { consentValue=JSON.parse(options.body).properties['Marketing Consent'].checkbox;return {ok:true,json:async()=>({})}; }
+ if(url.includes('/pages/')) return {ok:true,json:async()=>({properties:hasConsentColumn?{'Marketing Consent':{type:'checkbox',checkbox:consentValue}}:{},archived,parent:{database_id:wrongDatabase?'other':database}})};
  if(options.method === 'PATCH') { patches++; const body = JSON.parse(options.body); blocks[0].paragraph = body.paragraph; return {ok:true,json:async()=>({})}; }
  if(paginate && !url.includes('start_cursor=')) return {ok:true,json:async()=>({results:[],has_more:true,next_cursor:'next'})};
  return {ok:true,json:async()=>({results:blocks,has_more:false})};
@@ -29,6 +31,7 @@ const reset=(subscribed=true,isTest=false)=>{blocks=[{id:'state-block',...m.mark
  assert.equal((await m.deliverMarketingEmail(id,'en',async()=>{sends++;})).sent,false); assert.equal(sends,1);
  assert.equal(await m.unsubscribeMarketing(token),true); assert.equal(patches,1);
  const state=JSON.parse(blocks[0].paragraph.rich_text[0].text.content.split('ritty_marketing_subscription_v1:')[1]); assert.equal(state.subscribed,false); assert(state.withdrawnAt);
+ hasConsentColumn=true;consentValue=true;assert.equal(await m.unsubscribeMarketing(token),true);assert.equal(consentValue,false);hasConsentColumn=false;
  reset(false); assert.equal(await m.canReceiveMarketing(id),false);
  reset(true,true); assert.equal(await m.canReceiveMarketing(id),false);
  blocks=[]; assert.equal(await m.canReceiveMarketing(id),false); assert.equal(await m.unsubscribeMarketing(token),false);

@@ -36,7 +36,7 @@ function verify(token: string) {
  const [id, signed] = token.split('.')
  return timingSafeEqual(Buffer.from(signed), Buffer.from(signature(id))) ? id : null
 }
-async function subscription(id: string): Promise<{ blockId: string; state: State } | null> {
+async function subscription(id: string): Promise<{ blockId: string; state: State; hasConsentColumn: boolean } | null> {
  const page = await notion('/pages/' + id)
  if (page.archived || page.in_trash || page.parent?.database_id?.replace(/-/g, '') !== config().database.replace(/-/g, '')) return null
  let cursor: string | undefined
@@ -47,7 +47,7 @@ async function subscription(id: string): Promise<{ blockId: string; state: State
    if (!value.startsWith(MARKER)) continue
    const state = JSON.parse(value.slice(MARKER.length)) as State
    if (typeof state.subscribed !== 'boolean' || typeof state.isTest !== 'boolean') throw new Error('Invalid subscription state')
-   return { blockId: block.id, state }
+   return { blockId: block.id, state, hasConsentColumn: page.properties?.['Marketing Consent']?.type === 'checkbox' }
   }
   cursor = data.has_more ? data.next_cursor : undefined
  } while (cursor)
@@ -62,9 +62,9 @@ export async function unsubscribeMarketing(token: string) {
  if (!id) return false
  const record = await subscription(id)
  if (!record) return false
- if (!record.state.subscribed) return true
  const now = new Date().toISOString()
- await notion('/blocks/' + record.blockId, 'PATCH', { paragraph: paragraph({ ...record.state, subscribed: false, updatedAt: now, withdrawnAt: now }) })
+ if (record.state.subscribed) await notion('/blocks/' + record.blockId, 'PATCH', { paragraph: paragraph({ ...record.state, subscribed: false, updatedAt: now, withdrawnAt: now }) })
+ if (record.hasConsentColumn) await notion('/pages/' + id, 'PATCH', { properties: { 'Marketing Consent': { checkbox: false } } })
  return true
 }
 

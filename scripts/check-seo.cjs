@@ -63,6 +63,13 @@ async function main() {
     } },
   })
   const entries = await sitemap.default()
+  assert.equal(sitemap.dynamic, 'force-dynamic', 'Notion must not be queried during static build')
+  const unavailableSitemap = load('app/sitemap.ts', {
+    '@/lib/news-languages': load('lib/news-languages.ts'),
+    '@/lib/news': { getNews: async () => ({ items: [], cursor: null, unavailable: true }) },
+  })
+  await assert.rejects(unavailableSitemap.default(), /News sitemap source unavailable/)
+
   assert.equal(calls, 6, 'Repeated cursors must not loop forever')
   assert.equal(new Set(entries.map(entry => entry.url)).size, entries.length)
   assert(entries.some(entry => entry.url.endsWith('/news/b')), 'Older news must be discoverable')

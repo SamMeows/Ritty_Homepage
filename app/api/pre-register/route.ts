@@ -98,7 +98,7 @@ const richText = (content: string) => ({ rich_text: content ? [{ text: { content
 
 // Always keep attribution in the record body: older DB schemas need no migration.
 // If these rich-text columns exist, also populate them for filtering/grouping.
-async function attributionProperties(databaseId: string, token: string, entry: Attribution) {
+async function attributionProperties(databaseId: string, token: string, entry: Attribution, marketing: boolean) {
   const values: Record<string, string> = {
     'Landing Variant': entry.variant, 'Landing Path': entry.landingPath,
     'UTM Content': entry.content, 'UTM Term': entry.term, 'Referrer': entry.referrer,
@@ -109,7 +109,11 @@ async function attributionProperties(databaseId: string, token: string, entry: A
     })
     if (!response.ok) return {}
     const schema = await response.json()
-    return Object.fromEntries(Object.entries(values).filter(([name]) => schema.properties?.[name]?.type === 'rich_text').map(([name, value]) => [name, richText(value)]))
+    return {
+      ...Object.fromEntries(Object.entries(values).filter(([name]) => schema.properties?.[name]?.type === 'rich_text').map(([name, value]) => [name, richText(value)])),
+      ...(schema.properties?.['Marketing Consent']?.type === 'checkbox'
+        ? { 'Marketing Consent': { checkbox: marketing } } : {}),
+    }
   } catch { return {} }
 }
 
@@ -143,7 +147,7 @@ export async function POST(request: Request) {
     }
 
     const entry = registration.attribution
-    const extraProperties = await attributionProperties(databaseId, token, entry)
+    const extraProperties = await attributionProperties(databaseId, token, entry, registration.marketing)
     const details = Object.entries({ ...entry, marketing_consent: String(registration.marketing), marketing_consent_version: CONSENT_VERSION, registration_test: registration.isTest ? 'true' : 'false' }).map(([key, value]) => `${key}: ${value || '(none)'}`).join('\n')
     await notionRequest(
       '/pages',
