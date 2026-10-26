@@ -23,7 +23,7 @@ const japanese: Record<string, string> = {
   'Previous life scene': '前の暮らしのシーン', 'Next life scene': '次の暮らしのシーン', 'Choose a life scene': '暮らしのシーンを選択',
   'View gardening scene': '畑のシーンを見る', 'View cooking scene': '料理のシーンを見る', 'View home decorating scene': '部屋づくりのシーンを見る', 'View fishing scene': '釣りのシーンを見る', 'Life scene': '暮らしのシーン', 'carousel': 'カルーセル',
   'We’re getting ready<br>to meet you.': 'あなたに会う<br>準備をしています。', 'Coming to iOS and Android.<br>Stay tuned for the release date.': 'iOS・Android向けに配信予定。<br>配信日のお知らせをお待ちください。',
-  'All development news and announcements (Korean) →': 'お知らせ・開発便り（韓国語）一覧 →', 'All Ritty news (Korean) →': 'Rittyのお知らせ（韓国語）一覧 →', 'Ritty News': 'Rittyのお知らせ',
+  'All development news and announcements →': 'お知らせ・開発便り一覧 →', 'All Ritty news →': 'リティのお知らせ一覧 →', 'Ritty News': 'Rittyのお知らせ',
   'Privacy Policy': 'プライバシーポリシー', 'Terms of Service': '利用規約', 'About Us': '会社概要', 'Contact Us': 'お問い合わせ',
   'Communications Officer': '通信士', 'Astronomer': '天文学者', 'Repair Shop Owner': '修理店の店主', 'Florist': '花屋さん', 'Former Star Athlete': '元トップアスリート', 'Fashion Designer': 'ファッションデザイナー', 'Lyricist': '作詞家', 'A New Friend': '新しい仲間',
   'A communications officer who once hosted a radio show for faraway explorers, sharing their stories and song requests. Ritty hopes to turn everything they see, taste, and experience on Earth into a broadcast for the Cat Planet.': '遠く離れた探検隊員の便りやリクエスト曲を届けるラジオ番組を担当していた通信士。地球で見たこと、食べたもの、体験したことをねこ惑星へ伝える放送を作りたいと思っています。',

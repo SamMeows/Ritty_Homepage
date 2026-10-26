@@ -23,7 +23,7 @@ const chinese: Record<string, string> = {
   'Previous life scene': '上一個生活場景', 'Next life scene': '下一個生活場景', 'Choose a life scene': '選擇生活場景',
   'View gardening scene': '查看種菜場景', 'View cooking scene': '查看料理場景', 'View home decorating scene': '查看居家佈置場景', 'View fishing scene': '查看釣魚場景', 'Life scene': '生活場景', 'carousel': '輪播',
   'We’re getting ready<br>to meet you.': '正在準備<br>和你相遇。', 'Coming to iOS and Android.<br>Stay tuned for the release date.': '預計於 iOS 和 Android 推出。<br>敬請期待正式上線日期。',
-  'All development news and announcements (Korean) →': '開發消息與公告（韓文）一覽 →', 'All Ritty news (Korean) →': 'Ritty 最新消息（韓文）一覽 →', 'Ritty News': 'Ritty 最新消息',
+  'All development news and announcements →': '開發消息與公告（韓文）一覽 →', 'All Ritty news →': 'Ritty 最新消息（韓文）一覽 →', 'Ritty News': 'Ritty 最新消息',
   'Privacy Policy': '隱私權政策', 'Terms of Service': '服務條款', 'About Us': '關於我們', 'Contact Us': '聯絡我們',
   'Communications Officer': '通訊官', 'Astronomer': '天文學家', 'Repair Shop Owner': '修理店老闆', 'Florist': '花店老闆', 'Former Star Athlete': '前職業運動員', 'Fashion Designer': '服裝設計師', 'Lyricist': '作詞家', 'A New Friend': '新朋友',
   'A communications officer who once hosted a radio show for faraway explorers, sharing their stories and song requests. Ritty hopes to turn everything they see, taste, and experience on Earth into a broadcast for the Cat Planet.': '曾經負責廣播節目的通訊官，會分享遠方探險隊員的故事和點播歌曲。Ritty 想把在地球上看見、吃到和體驗的一切，製作成節目帶回貓咪星球。',
