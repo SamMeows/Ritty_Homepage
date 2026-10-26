@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const ts = require('typescript')
+const path = require('node:path')
 const { NextRequest } = require('next/server')
 
 function load(file, imports = {}) {
@@ -8,7 +9,7 @@ function load(file, imports = {}) {
   const code = ts.transpileModule(fs.readFileSync(file, 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX },
   }).outputText
-  new Function('require', 'module', 'exports', code)(name => name in imports ? imports[name] : require(name), module, module.exports)
+  new Function('require', 'module', 'exports', code)(name => name in imports ? imports[name] : name.startsWith('.') ? load(path.resolve(path.dirname(file),name)+'.ts') : require(name), module, module.exports)
   return module.exports
 }
 
@@ -28,11 +29,13 @@ async function main() {
   assert.equal(middleware(request('/')).headers.get('x-middleware-request-x-ritty-language'), 'ko')
   const spoofed = new NextRequest('https://ritty.sam-meows.com/', { headers: { 'x-ritty-language': 'en' } })
   assert.equal(middleware(spoofed).headers.get('x-middleware-request-x-ritty-language'), 'ko')
-  for (const [from, to] of [['/kr', '/'], ['/kr/news?utm_source=test', '/news?utm_source=test'], ['/en/news', '/news'], ['/en/news/abc', '/news/abc']]) {
+  for (const [from, to] of [['/kr', '/'], ['/kr/news?utm_source=test', '/news?utm_source=test']]) {
     const response = middleware(request(from))
     assert.equal(response.status, 301)
     assert.equal(response.headers.get('location'), `https://ritty.sam-meows.com${to}`)
   }
+
+  for(const url of ['/en/news','/ja/news','/en/news/abc','/ja/news/abc']) assert.equal(middleware(request(url)).headers.get('location'),null)
 
   const article = {
     id: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', title: '새로운 섬 이야기', date: '2026-10-24',
@@ -52,17 +55,21 @@ async function main() {
 
   let calls = 0
   const sitemap = load('app/sitemap.ts', {
-    '@/lib/news': { getNews: async cursor => {
+    '@/lib/news-languages': load('lib/news-languages.ts'),
+    '@/lib/news': { getNewsAlternates: async () => ({}), getNews: async (cursor, locale) => {
       calls++
-      return cursor ? { items: [{ id: 'a' }, { id: 'b', modifiedAt: '2026-10-24T07:00:00.000Z' }], cursor: 'next' } : { items: [{ id: 'a' }], cursor: 'next' }
+      const prefix=locale==='kr'?'':locale+'-'; const language=locale==='en'?'EN':locale==='ja'?'JA':'KO';
+      return cursor ? { items: [{id:prefix+'a',language}, {id:prefix+'b',language,modifiedAt:'2026-10-24T07:00:00.000Z'}],cursor:'next'} : {items:[{id:prefix+'a',language}],cursor:'next'}
     } },
   })
   const entries = await sitemap.default()
-  assert.equal(calls, 2, 'Repeated cursors must not loop forever')
+  assert.equal(calls, 6, 'Repeated cursors must not loop forever')
   assert.equal(new Set(entries.map(entry => entry.url)).size, entries.length)
   assert(entries.some(entry => entry.url.endsWith('/news/b')), 'Older news must be discoverable')
   assert.equal(entries.find(entry => entry.url.endsWith('/news/b')).lastModified, '2026-10-24T07:00:00.000Z')
-  assert(!entries.some(entry => entry.url.includes('/en/news') || entry.url.includes('/ad/')))
+  assert(entries.some(entry => entry.url.includes('/en/news/en-b')))
+  assert(entries.some(entry => entry.url.includes('/ja/news/ja-b')))
+  assert(!entries.some(entry => entry.url.includes('/ad/')))
   assert.equal(entries[0].alternates.languages['x-default'], 'https://ritty.sam-meows.com')
 
   for (const language of ['kr', 'en']) {
@@ -111,7 +118,7 @@ async function main() {
       assert(game.sameAs.includes('https://play.google.com/store/apps/details?id=com.sammeows.ritty'))
       assert(blocks.some(block => block['@type'] === 'WebPage'))
     }
-    assert.equal((await fetch(`${base}/en/news`, { redirect: 'manual' })).status, 301)
+    assert.equal((await fetch(`${base}/en/news`, { redirect: 'manual' })).status, 200)
     assert.equal((await fetch(`${base}/not-a-real-page`)).status, 404)
     const ad = await fetch(`${base}/ad/cozy-life`)
     assert.equal(ad.status, 200)

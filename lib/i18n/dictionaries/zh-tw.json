@@ -7,15 +7,15 @@
     "cta": "事前登錄",
     "releaseNote": "預計於 2027 年推出",
     "title": "Ritty 事前登錄",
-    "description": "搶先收到 Ritty 上線通知。",
+    "description": "透過電子郵件接收 Ritty 上線通知。",
     "emailLabel": "電子郵件",
     "emailPlaceholder": "ritty@example.com",
     "platformLabel": "裝置",
-    "agreeAll": "同意全部",
+    "agreeAll": "同意全部（包含選填項目）",
     "consents": {
       "age": "【必填】我已年滿 14 歲",
       "privacy": "【必填】我同意個人資料的蒐集與使用",
-      "marketing": "【必填】我同意接收行銷電子郵件"
+      "marketing": "【選填】我同意接收行銷電子郵件"
     },
     "privacyTable": [
       {
@@ -24,7 +24,7 @@
       },
       {
         "label": "使用目的",
-        "value": "通知 Ritty 上線及事前登錄獎勵資訊，並分析各活動的登錄成效"
+        "value": "寄送一次 Ritty 上線通知、管理事前登錄及分析各活動的登錄成效。經選填同意後，寄送開發消息、更新及活動電子郵件。"
       },
       {
         "label": "保存期限",
@@ -32,11 +32,12 @@
       }
     ],
     "privacyRefusal": "您可以選擇不同意；但若不同意，將無法完成事前登錄。",
-    "marketingDetail": "我們會透過電子郵件寄送 Ritty 上線消息及事前登錄獎勵資訊，您可以隨時撤回同意。",
+    "marketingDetail": "透過電子郵件接收 Ritty 的開發消息、更新及活動資訊。您可以隨時撤回同意。",
+    "marketingWithdrawal": "申請取消訂閱",
     "showDetail": "查看詳情",
     "hideDetail": "收合",
     "privacyPolicyLink": "查看隱私權政策",
-    "submit": "送出事前登錄",
+    "submit": "事前登錄並接收上線通知",
     "submitting": "送出中…",
     "errors": {
       "email": "請輸入有效的電子郵件地址。",
@@ -45,13 +46,15 @@
       "server": "發生錯誤，請稍後再試。"
     },
     "successTitle": "事前登錄完成！",
-    "successBody": "Ritty 上線時，我們會寄送電子郵件通知您。",
+    "successBody": "已完成上線通知申請。Ritty 上線時，我們會寄送一次通知至您登錄的電子郵件。",
     "duplicateTitle": "您已完成事前登錄",
     "duplicateBody": "Ritty 上線時，我們會寄信通知您。",
     "copyLink": "複製連結並分享給朋友",
     "copied": "已複製連結！",
     "joinDiscord": "前往 Discord 查看最新消息",
-    "close": "關閉"
+    "close": "關閉",
+    "launchNotice": "完成事前登錄後，Ritty 上線時將寄送一次電子郵件通知。",
+    "marketingOptional": "不同意接收行銷郵件，也可以完成事前登錄並申請上線通知。"
   },
   "nav": {
     "home": "首頁",

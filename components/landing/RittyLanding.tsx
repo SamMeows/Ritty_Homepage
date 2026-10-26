@@ -10,7 +10,7 @@ import { translateHomeMarkupChineseTraditional } from '@/lib/i18n/home-zh-tw'
 
 export default async function RittyLanding({ variant = 'cozy-life', locale = 'kr' }: { variant?: AdVariant; locale?: Locale }) {
   const config = adVariants[variant]
-  const news = await getNews()
+  const news = await getNews(undefined, locale)
   const original = await getDictionary(locale)
   const dict = {...original, preRegister:{...original.preRegister,title:locale === 'kr' ? '리티 사전등록' : locale === 'ja' ? 'Rittyの事前登録' : locale === 'zh-tw' ? 'Ritty 事前登錄' : 'Ritty Pre-registration',releaseNote:locale === 'kr' ? '출시 소식을 가장 먼저 받아보세요' : locale === 'ja' ? '配信情報をいち早くお届け' : locale === 'zh-tw' ? '搶先收到上線消息' : 'Be the first to hear about the launch'}}
   const markup = homeMarkup
@@ -33,5 +33,9 @@ export default async function RittyLanding({ variant = 'cozy-life', locale = 'kr
     .replaceAll('https://project-meow.notion.site/1bd423ba89b680cc9c4ffaa284da0d85?pvs=74', dict.links.terms)
     .replaceAll('https://www.instagram.com/ritty_kr/', 'https://www.instagram.com/ritty_meow/')
     .replaceAll('https://www.tiktok.com/@ritty_kr', 'https://www.tiktok.com/@rittymeow') : markup
-  return <PreRegisterProvider dict={dict} locale={locale}><AdLanding markup={localizedMarkup} news={news} newsPreview={newsPreviewMarkup(news, locale)} dict={dict} locale={locale} /></PreRegisterProvider>
+  const policyMarkup = localizedMarkup.replaceAll('href="/news"', 'href="' + (locale === 'kr' ? '/news' : '/' + locale + '/news') + '"')
+    .replaceAll('https://project-meow.notion.site/1bd423ba89b680f4b37dcb1ec02aa36c?pvs=74', dict.links.privacy)
+    .replaceAll('https://project-meow.notion.site/Privacy-Policy-1be423ba89b680218e81d5956212eade?pvs=74', dict.links.privacy)
+    .replace(/(<a[^>]*href="(?:\/(?:kr|en|ja)\/privacy)"[^>]*>)[\s\S]*?<\/a>/g, '$1' + dict.footer.privacy + '</a>')
+  return <PreRegisterProvider dict={dict} locale={locale}><AdLanding markup={policyMarkup} news={news} newsPreview={newsPreviewMarkup(news, locale)} dict={dict} locale={locale} /></PreRegisterProvider>
 }

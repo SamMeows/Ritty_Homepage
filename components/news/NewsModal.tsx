@@ -1,5 +1,8 @@
 'use client'
 
+import { trackRegistrationFunnel } from '@/lib/analytics'
+
+import NewsLanguageLinks from './NewsLanguageLinks'
 import { useEffect, useRef, useState } from 'react'
 import type { NewsArticle as Article } from '@/lib/news'
 import NewsArticle from './NewsArticle'
@@ -34,13 +37,13 @@ export default function NewsModal({id, onClose, locale = 'kr'}: {id: string; onC
     const controller = new AbortController()
     setArticle(null); setError('')
     viewport.current?.scrollTo(0, 0)
-    fetch('/api/news/' + encodeURIComponent(currentId), {signal: controller.signal})
+    fetch('/api/news/' + encodeURIComponent(currentId) + '?locale=' + locale, {signal: controller.signal})
       .then(async response => {
         if (!response.ok) throw new Error(response.status === 404 ? newsCopy(locale, '이 소식은 공개되지 않았거나 삭제되었어요.') : newsCopy(locale, '소식을 불러오지 못했어요.'))
         return response.json() as Promise<Article>
       })
-      .then(setArticle)
-      .catch(reason => { if (!controller.signal.aborted) setError(reason.message || newsCopy(locale, '소식을 불러오지 못했어요.')) })
+      .then(article => { if (!controller.signal.aborted) { setArticle(article); trackRegistrationFunnel('news_load_success', locale, { article_id: currentId }) } })
+      .catch(reason => { if (!controller.signal.aborted) { trackRegistrationFunnel('news_load_error', locale, { article_id: currentId }); setError(reason.message || newsCopy(locale, '소식을 불러오지 못했어요.')) } })
     return () => controller.abort()
   }, [currentId, retry, locale])
 
@@ -52,10 +55,12 @@ export default function NewsModal({id, onClose, locale = 'kr'}: {id: string; onC
       }
     }}>
     <div className="news-modal-bar"><span>{t('Ritty 소식')}</span><button type="button" aria-label={t('소식 닫기')} onClick={() => dialog.current?.close()}>×</button></div>
+    {article && <NewsLanguageLinks locale={locale} alternatePaths={article.alternatePaths}/>}
     <div ref={viewport} className="news-modal-scroll" onClick={event => {
       const link = (event.target as Element).closest<HTMLAnchorElement>('a[href]')
-      const next = link?.getAttribute('href')?.match(/^\/news\/([a-f\d-]+)$/i)
-      if (next && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { event.preventDefault(); setCurrentId(next[1]) }
+      const next = link?.getAttribute('href')?.match(/^\/(?:en\/|ja\/|zh-tw\/)?news\/([a-f\d-]+)$/i)
+      const destinationLocale = link?.getAttribute('href')?.startsWith('/en/') ? 'en' : link?.getAttribute('href')?.startsWith('/ja/') ? 'ja' : 'kr'
+      if (next && (destinationLocale === locale || (locale === 'zh-tw' && destinationLocale === 'kr')) && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { event.preventDefault(); setCurrentId(next[1]) }
     }}>
       {article ? <NewsArticle article={article}/> : error ? <div className="news-modal-state" role="alert"><p>{error}</p><button type="button" onClick={() => setRetry(value => value + 1)}>{t('다시 불러오기')}</button></div> : <p className="news-modal-state" role="status">{t('소식을 불러오는 중이에요…')}</p>}
     </div>

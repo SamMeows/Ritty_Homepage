@@ -47,6 +47,9 @@ export default async function RootLayout({
         />
         <Script id="google-analytics" strategy="afterInteractive">
           {`
+            var qa = location.pathname === '/unsubscribe' || new URLSearchParams(location.search).get('registration_test') === '1';
+            try { qa = qa || sessionStorage.getItem('ritty-registration-test') === '1'; if (qa) sessionStorage.setItem('ritty-registration-test', '1'); } catch {}
+            if (qa || location.pathname.startsWith('/admin/')) window['ga-disable-G-RSYNTB8CZV'] = true;
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());

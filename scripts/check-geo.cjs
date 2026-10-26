@@ -30,7 +30,7 @@ const items = [
   { id: 'a'.repeat(32), title: '리티 소개 <script>alert(1)</script> & "고양이" $&', category: '팀 레터', date: '2026-10-24', cover: 'https://example.com/cover.png?a=1&b=2' },
   { id: 'b'.repeat(32), title: '개발 소식', category: '개발 소식', date: '2026-10-23' },
 ]
-for (const locale of ['kr', 'en']) for (const initial of [
+for (const locale of ['kr', 'en', 'ja', 'zh-tw']) for (const initial of [
   { items: [], cursor: null }, { items: [], cursor: null, unavailable: true },
   { items: items.slice(0, 1), cursor: null }, { items, cursor: 'next' },
   { items: [{ ...items[0], cover: undefined }], cursor: null },

@@ -1,45 +1,35 @@
 import { MetadataRoute } from 'next'
-import { getNews } from '@/lib/news'
-
-export const revalidate = 3600
-
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://ritty.sam-meows.com'
-
-  const entries: MetadataRoute.Sitemap = [
-    {
-      url: baseUrl,
-      alternates: { languages: { ko: baseUrl, en: `${baseUrl}/en`, ja: `${baseUrl}/ja`, 'zh-TW': `${baseUrl}/zh-tw`, 'x-default': baseUrl } },
-      changeFrequency: 'weekly',
-      priority: 1.0,
-    },
-    {
-      url: `${baseUrl}/en`,
-      alternates: { languages: { ko: baseUrl, en: `${baseUrl}/en`, ja: `${baseUrl}/ja`, 'zh-TW': `${baseUrl}/zh-tw`, 'x-default': baseUrl } },
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/ja`,
-      alternates: { languages: { ko: baseUrl, en: `${baseUrl}/en`, ja: `${baseUrl}/ja`, 'zh-TW': `${baseUrl}/zh-tw`, 'x-default': baseUrl } },
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    },
-    { url: `${baseUrl}/news`, changeFrequency: 'weekly', priority: 0.7 },
-  ]
-  const seenCursors = new Set<string>()
-  const seenArticles = new Set<string>()
-  let cursor: string | undefined
-  do {
-    const news = await getNews(cursor)
-    for (const article of news.items) {
-      if (seenArticles.has(article.id)) continue
-      seenArticles.add(article.id)
-      entries.push({ url: `${baseUrl}/news/${article.id}`, ...(article.modifiedAt ? { lastModified: article.modifiedAt } : {}), priority: 0.6 })
-    }
-    if (!news.cursor || seenCursors.has(news.cursor)) break
-    seenCursors.add(news.cursor)
-    cursor = news.cursor
-  } while (cursor)
+import { getNews, getNewsAlternates, type NewsItem } from '@/lib/news'
+import { newsArticlePath, newsListPath } from '@/lib/news-languages'
+import type { Locale } from '@/lib/i18n/dictionaries'
+export const revalidate=3600
+export default async function sitemap():Promise<MetadataRoute.Sitemap> {
+  const base='https://ritty.sam-meows.com'
+  const homeLanguages={ko:base,en:base+'/en',ja:base+'/ja','zh-TW':base+'/zh-tw','x-default':base}
+  const entries:MetadataRoute.Sitemap=(['','/en','/ja','/zh-tw']).map(path=>({url:base+path,alternates:{languages:homeLanguages},changeFrequency:'weekly',priority:path?0.9:1}))
+  const listLanguages={ko:base+'/news',en:base+'/en/news',ja:base+'/ja/news'}
+  const articles:NewsItem[]=[]
+  for(const locale of ['kr','en','ja'] as const){
+    entries.push({url:base+newsListPath(locale),alternates:{languages:listLanguages},changeFrequency:'weekly',priority:0.7})
+    const seen=new Set<string>();let cursor:string|undefined
+    do {
+      const page=await getNews(cursor,locale)
+      if(page.unavailable)throw new Error('News sitemap source unavailable')
+      articles.push(...page.items)
+      if(!page.cursor || seen.has(page.cursor))break
+      seen.add(page.cursor);cursor=page.cursor
+    }while(cursor)
+  }
+  const seen=new Set<string>()
+  const families=new Map<string,Partial<Record<Locale,string>>>()
+  for(const article of articles){
+    if(seen.has(article.id))continue
+    seen.add(article.id)
+    const family=article.language==='KO'?article.id:article.originalId || article.id
+    let paths=families.get(family)
+    if(!paths){paths=await getNewsAlternates(article);families.set(family,paths)}
+    const languages=Object.fromEntries(Object.entries(paths).filter(([locale])=>locale!=='zh-tw').map(([locale,path])=>[locale==='kr'?'ko':locale,base+path]))
+    entries.push({url:base+newsArticlePath(article.language || 'KO',article.id),alternates:{languages},...(article.modifiedAt?{lastModified:article.modifiedAt}:{}),priority:0.6})
+  }
   return entries
 }

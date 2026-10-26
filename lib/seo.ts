@@ -1,3 +1,4 @@
+import { newsArticlePath, newsListPath, newsLocale } from './news-languages'
 import type { NewsArticle, NewsBlock } from '@/lib/news'
 
 export const SITE_URL = 'https://ritty.sam-meows.com'
@@ -32,7 +33,8 @@ export function newsDescription(article: NewsArticle): string {
 }
 
 export function newsStructuredData(article: NewsArticle, description: string) {
-  const url = `${SITE_URL}/news/${article.id}`
+  const locale = newsLocale(article.language || 'KO')
+  const url = SITE_URL + newsArticlePath(article.language || 'KO',article.id)
   return {
     '@context': 'https://schema.org',
     '@graph': [
@@ -52,7 +54,7 @@ export function newsStructuredData(article: NewsArticle, description: string) {
           url: 'https://sam-meows.com',
         },
         about: { '@type': ['VideoGame', 'MobileApplication'], '@id': `${SITE_URL}/#game`, name: '리티 Ritty' },
-        inLanguage: 'ko-KR',
+        inLanguage: article.language === 'EN' ? 'en-US' : article.language === 'JA' ? 'ja-JP' : 'ko-KR',
         image: [article.cover || `${SITE_URL}/og-ritty-island-v2.png`],
         mainEntityOfPage: { '@type': 'WebPage', '@id': url },
         isPartOf: { '@type': 'WebSite', '@id': `${SITE_URL}/#website`, name: '리티 Ritty', url: SITE_URL },
@@ -60,8 +62,8 @@ export function newsStructuredData(article: NewsArticle, description: string) {
       {
         '@type': 'BreadcrumbList',
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: '리티', item: SITE_URL },
-          { '@type': 'ListItem', position: 2, name: '리티 소식', item: `${SITE_URL}/news` },
+          { '@type': 'ListItem', position: 1, name: 'Ritty', item: SITE_URL + (locale === 'kr' ? '' : '/' + locale) },
+          { '@type': 'ListItem', position: 2, name: locale === 'en' ? 'Ritty News' : locale === 'ja' ? 'Rittyのお知らせ' : '리티 소식', item: SITE_URL + newsListPath(locale) },
           { '@type': 'ListItem', position: 3, name: article.title, item: url },
         ],
       },

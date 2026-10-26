@@ -7,15 +7,15 @@
     "cta": "事前登録",
     "releaseNote": "2027年配信予定",
     "title": "Rittyの事前登録",
-    "description": "Rittyの配信情報をいち早くお届けします。",
+    "description": "Rittyの配信開始をメールでお知らせします。",
     "emailLabel": "メールアドレス",
     "emailPlaceholder": "ritty@example.com",
     "platformLabel": "ご利用の端末",
-    "agreeAll": "すべてに同意する",
+    "agreeAll": "すべてに同意する（任意項目を含む）",
     "consents": {
       "age": "【必須】14歳以上です",
       "privacy": "【必須】個人情報の収集・利用に同意します",
-      "marketing": "【必須】お知らせ・キャンペーンメールの受信に同意します"
+      "marketing": "【任意】広告・お知らせメールの受信に同意します"
     },
     "privacyTable": [
       {
@@ -24,7 +24,7 @@
       },
       {
         "label": "利用目的",
-        "value": "Rittyの配信および事前登録特典のお知らせ、キャンペーンごとの登録状況の分析"
+        "value": "配信開始のお知らせメール1回の送信、事前登録の管理、キャンペーンごとの登録状況の分析。任意で同意した場合、開発情報・アップデート・イベントの案内メールを配信。"
       },
       {
         "label": "保管期間",
@@ -32,11 +32,12 @@
       }
     ],
     "privacyRefusal": "同意は任意ですが、同意いただけない場合は事前登録をご利用いただけません。",
-    "marketingDetail": "Rittyの配信情報や事前登録特典をメールでお届けします。同意はいつでも撤回できます。",
+    "marketingDetail": "Rittyの開発情報、アップデート、イベントのお知らせをメールで受け取ります。同意はいつでも撤回できます。",
+    "marketingWithdrawal": "メール配信停止を依頼する",
     "showDetail": "詳細を見る",
     "hideDetail": "閉じる",
-    "privacyPolicyLink": "プライバシーポリシーを見る",
-    "submit": "事前登録する",
+    "privacyPolicyLink": "事前登録に関する個人情報の取り扱い",
+    "submit": "事前登録して配信開始のお知らせを受け取る",
     "submitting": "送信中...",
     "errors": {
       "email": "有効なメールアドレスを入力してください。",
@@ -45,13 +46,15 @@
       "server": "エラーが発生しました。しばらくしてからもう一度お試しください。"
     },
     "successTitle": "事前登録が完了しました！",
-    "successBody": "Rittyの配信開始時にメールでお知らせします。",
+    "successBody": "配信開始のお知らせの申し込みが完了しました。配信開始時に、ご登録のメールアドレスへ1回お知らせします。",
     "duplicateTitle": "事前登録済みです",
     "duplicateBody": "ご登録のメールアドレスに配信開始をお知らせします。",
     "copyLink": "友だちにシェアする",
     "copied": "リンクをコピーしました！",
     "joinDiscord": "Discordで最新情報を見る",
-    "close": "閉じる"
+    "close": "閉じる",
+    "launchNotice": "事前登録すると、配信開始時にお知らせメールを1回お送りします。",
+    "marketingOptional": "広告メールの受信に同意しなくても、事前登録と配信開始のお知らせを申し込めます。"
   },
   "nav": {
     "home": "ホーム",
@@ -95,7 +98,7 @@
   "footer": {
     "copyright": "© 2026 Sam-Meows Inc. All Rights Reserved.",
     "terms": "利用規約",
-    "privacy": "プライバシーポリシー",
+    "privacy": "事前登録に関する個人情報の取り扱い",
     "officialSite": "Ritty公式サイト",
     "developer": "SamMeows"
   },
@@ -121,7 +124,7 @@
     "appStore": "https://apps.apple.com/jp/app/id6743311040",
     "googlePlay": "https://play.google.com/store/apps/details?id=com.sammeows.ritty&hl=ja",
     "terms": "https://project-meow.notion.site/Terms-of-Service-24c423ba89b680949493ee55f2990bb0?pvs=74",
-    "privacy": "https://project-meow.notion.site/Privacy-Policy-1be423ba89b680218e81d5956212eade?pvs=74"
+    "privacy": "/ja/privacy"
   },
   "social": [
     {

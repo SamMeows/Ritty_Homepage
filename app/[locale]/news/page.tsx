@@ -1,29 +1,34 @@
+import NewsLanguageLinks from '@/components/news/NewsLanguageLinks'
+import type { Locale } from '@/lib/i18n/dictionaries'
+import { newsCopy } from '@/lib/i18n/news-copy'
 import '@/components/landing/ad-site.css'
 import '@/components/news/news-page.css'
 import { getNews } from '@/lib/news'
 import NewsFeed from '@/components/news/NewsFeed'
 import type { Metadata } from 'next'
 export const dynamic='force-dynamic'
-export const metadata: Metadata={
-  title:'리티 소식 | 개발 이야기와 공지',
-  description:'말하는 고양이와 함께하는 힐링 게임 리티의 개발 이야기, 업데이트와 출시 소식을 확인하세요.',
-  alternates:{canonical:'/news',languages:{}},
-  openGraph:{type:'website',url:'/news',siteName:'리티 Ritty',locale:'ko_KR',title:'리티 소식 | 개발 이야기와 공지',description:'리티의 개발 이야기, 업데이트와 출시 소식을 확인하세요.',images:[{url:'/og-ritty-island-v2.png',width:1200,height:630}]},
-  twitter:{card:'summary_large_image',title:'리티 소식 | 개발 이야기와 공지',description:'리티의 개발 이야기, 업데이트와 출시 소식을 확인하세요.',images:['/og-ritty-island-v2.png']},
+export async function generateMetadata({params}:{params:Promise<{locale:Locale}>}):Promise<Metadata> {
+  const {locale}=await params
+  const title=newsCopy(locale,'리티 소식')+' | Ritty'
+  const path=locale==='kr'?'/news':'/'+locale+'/news'
+  return {title,alternates:{canonical:path,languages:{ko:'/news',en:'/en/news',ja:'/ja/news'}},openGraph:{title,url:path,type:'website',locale:locale==='en'?'en_US':locale==='ja'?'ja_JP':'ko_KR'}}
 }
-export default async function Page() {
+export default async function Page({params}:{params:Promise<{locale:Locale}>}) {
+  const {locale}=await params
+  const home=locale==='kr'?'/':'/'+locale
+  const homeLabel=locale==='ja'?'ホームへ':locale==='en'?'Home':'홈으로'
   return <div className="ritty-site news-shell news-list-page">
     <header className="news-topbar">
-      <a href="/" aria-label="리티 홈"><span className="official-wordmark"><span>Ritty</span><img src="/images/logo-sparkle.svg" alt="" width="27" height="28"/></span></a>
-      <a className="glass" href="/">홈으로 ↗</a>
+      <a href={home} aria-label="리티 홈"><span className="official-wordmark"><span>Ritty</span><img src="/images/logo-sparkle.svg" alt="" width="27" height="28"/></span></a>
+      <a className="glass" href={home}>{homeLabel} ←</a>
     </header>
-    <main className="news">
+    <main className="news"><NewsLanguageLinks locale={locale}/>
       <div className="news-heading"><div>
         <p className="eyebrow">NEWS FROM RITTY</p>
-        <h1>리티 소식</h1>
-        <p className="news-intro">고양이들과 함께 만들어가는 리티의 이야기.<br/>개발 이야기부터 새로운 소식까지, 이곳에서 전해드려요.</p>
+        <h1>{newsCopy(locale,'리티 소식')}</h1>
+        <p className="news-intro">{locale==='ja'?'リティの開発ニュースをお届けします。':locale==='en'?'Development news and stories from the Ritty team.':'리티의 개발 이야기와 새로운 소식을 전해드려요.'}</p>
       </div></div>
-      <NewsFeed initial={await getNews()} layout="cards"/>
+      <NewsFeed locale={locale} initial={await getNews(undefined,locale)} layout="cards"/>
     </main>
   </div>
 }

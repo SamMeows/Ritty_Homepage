@@ -36,7 +36,7 @@ export function PreRegisterProvider({ dict, locale, children, previewOnly = fals
 
   // Links like /?pre-register open the form directly (SNS bios, ads, shared links)
   useEffect(() => {
-    captureAttribution()
+    try { captureAttribution() } catch { /* Optional attribution. */ }
     if (LAUNCH_PHASE !== 'pre-register') return
     if (new URLSearchParams(window.location.search).has('pre-register')) {
       openPreRegister('link')

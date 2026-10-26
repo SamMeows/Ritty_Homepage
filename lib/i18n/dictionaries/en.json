@@ -7,15 +7,15 @@
     "cta": "Pre-register",
     "releaseNote": "Coming in 2027",
     "title": "Ritty Pre-registration",
-    "description": "Be the first to know when Ritty launches.",
+    "description": "Get an email when Ritty launches.",
     "emailLabel": "Email",
     "emailPlaceholder": "ritty@example.com",
     "platformLabel": "Device",
-    "agreeAll": "Agree to all",
+    "agreeAll": "Agree to all (including optional consent)",
     "consents": {
       "age": "[Required] I am 14 years of age or older",
       "privacy": "[Required] Consent to the collection and use of personal information",
-      "marketing": "[Required] Consent to receive promotional emails"
+      "marketing": "[Optional] Consent to receive promotional emails"
     },
     "privacyTable": [
       {
@@ -24,7 +24,7 @@
       },
       {
         "label": "Purpose",
-        "value": "Ritty launch notifications and pre-registration reward information, analysis of pre-registration performance by campaign"
+        "value": "Send a one-time Ritty launch email, manage pre-registration and analyze registration performance by campaign. With optional consent, send development news, updates and event emails."
       },
       {
         "label": "Retention",
@@ -32,11 +32,12 @@
       }
     ],
     "privacyRefusal": "You may refuse, but you won't be able to pre-register without this consent.",
-    "marketingDetail": "Receive Ritty launch news and pre-registration reward information by email. You can withdraw your consent at any time.",
+    "marketingDetail": "Receive Ritty development news, updates and event information by email. You can withdraw your consent at any time.",
+    "marketingWithdrawal": "Request email unsubscribe",
     "showDetail": "Details",
     "hideDetail": "Hide",
-    "privacyPolicyLink": "View privacy policy",
-    "submit": "Pre-register now",
+    "privacyPolicyLink": "Pre-registration privacy notice",
+    "submit": "Pre-register for the launch email",
     "submitting": "Submitting...",
     "errors": {
       "email": "Please enter a valid email address.",
@@ -45,13 +46,15 @@
       "server": "Something went wrong. Please try again in a moment."
     },
     "successTitle": "You're pre-registered!",
-    "successBody": "We'll email you as soon as Ritty launches.",
+    "successBody": "Your launch email request is confirmed. We’ll send one email to your registered address when Ritty launches.",
     "duplicateTitle": "You’re already registered",
     "duplicateBody": "We’ll send a launch update to your registered email address.",
     "copyLink": "Copy link to tell your friends",
     "copied": "Link copied!",
     "joinDiscord": "Get news on Discord",
-    "close": "Close"
+    "close": "Close",
+    "launchNotice": "Pre-register to request a one-time email when Ritty launches.",
+    "marketingOptional": "Promotional emails are optional. You can pre-register and request the launch email without opting in."
   },
   "nav": {
     "home": "Home",
@@ -95,7 +98,7 @@
   "footer": {
     "copyright": "© 2026 Sam-Meows Inc. All Rights Reserved.",
     "terms": "Terms of service",
-    "privacy": "Privacy policy",
+    "privacy": "Pre-registration privacy notice",
     "officialSite": "Ritty Official Website",
     "developer": "SamMeows"
   },
@@ -121,7 +124,7 @@
     "appStore": "https://apps.apple.com/us/app/id6743311040",
     "googlePlay": "https://play.google.com/store/apps/details?id=com.sammeows.ritty&hl=en",
     "terms": "https://project-meow.notion.site/Terms-of-Service-24c423ba89b680949493ee55f2990bb0?pvs=74",
-    "privacy": "https://project-meow.notion.site/Privacy-Policy-1be423ba89b680218e81d5956212eade?pvs=74"
+    "privacy": "/en/privacy"
   },
   "social": [
     {

@@ -1,3 +1,4 @@
+import { formatNewsDate } from '@/lib/news-languages'
 import type { NewsArticle as Article, NewsBlock } from '@/lib/news'
 import type { ReactNode } from 'react'
 
@@ -29,5 +30,5 @@ function blockView(block:NewsBlock,index:number):ReactNode {
 export default function NewsArticle({article}:{article:Article}) {
   // Connector snapshot is preview-only. Render text safely without injecting Notion HTML.
   const markdown=article.markdown?.replace(/<br\s*\/?\s*>/g,'\n').replace(/<[^>]*>/g,'').replace(/\\([\[\]~*_])/g,'$1')
-  return <article className="news-article"><div className="news-meta"><span>{article.category}</span><time dateTime={article.date}>{article.date.replaceAll('-','.')}</time></div><h1>{article.title}</h1><div className="news-body">{article.blocks?.map(blockView)}{markdown?.split(/\n\s*\n/).map((part,i)=>part.startsWith('#')?<h3 key={i}>{links(part.replace(/^#+\s*/,''))}</h3>:<p key={i}>{links(part)}</p>)}</div></article>
+  return <article className="news-article" lang={article.contentLanguage === 'kr' ? 'ko' : article.contentLanguage}>{article.languageLabel && <p className="news-language-note">{article.languageLabel}</p>}<div className="news-meta"><span>{article.category}</span><time dateTime={article.date}>{formatNewsDate(article.date,article.displayLocale || (article.contentLanguage === 'en' ? 'en' : article.contentLanguage === 'ja' ? 'ja' : 'kr'))}</time></div><h1>{article.title}</h1><div className="news-body">{article.blocks?.map(blockView)}{markdown?.split(/\n\s*\n/).map((part,i)=>part.startsWith('#')?<h3 key={i}>{links(part.replace(/^#+\s*/,''))}</h3>:<p key={i}>{links(part)}</p>)}</div></article>
 }

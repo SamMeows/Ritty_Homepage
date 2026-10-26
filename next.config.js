@@ -6,6 +6,7 @@ const nextConfig = {
   async rewrites() {
     return { beforeFiles: [
       { source: '/', destination: '/kr' },
+      { source: '/privacy', destination: '/kr/privacy' },
       { source: '/news/:path*', destination: '/kr/news/:path*' },
       { source: '/ad/:path*', destination: '/kr/ad/:path*' },
     ] }

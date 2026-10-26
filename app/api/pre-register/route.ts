@@ -1,3 +1,4 @@
+import { marketingSubscriptionBlock } from '@/lib/marketing-subscription'
 import { NextResponse } from 'next/server'
 import { cleanAttribution, type Attribution } from '@/lib/attribution'
 import {
@@ -16,13 +17,15 @@ const NOTION_VERSION = '2022-06-28'
 const MAX_NOTION_RETRIES = 2
 
 // Bump whenever the consent wording in the dictionaries changes, so each row records what was agreed to
-const CONSENT_VERSION = '2026-10-new-launch'
+const CONSENT_VERSION = '2026-10-26-registration-v2-optional-marketing'
 
 type PreRegistration = {
   email: string
   platform: Platform
   locale: 'kr' | 'en' | 'ja' | 'zh-tw'
+  marketing: boolean
   isBot: boolean
+  isTest: boolean
   utm: { source: string; medium: string; campaign: string }
   attribution: Attribution
 }
@@ -40,10 +43,13 @@ function parseRequest(body: unknown): PreRegistration | null {
   if (email.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(email)) return null
   if (!PLATFORMS.includes(data.platform as Platform)) return null
   if (data.locale !== 'kr' && data.locale !== 'en' && data.locale !== 'ja' && data.locale !== 'zh-tw') return null
-  if (consents.age !== true || consents.privacy !== true || consents.marketing !== true) return null
+  if (consents.age !== true || consents.privacy !== true) return null
+  if (typeof consents.marketing !== 'boolean') return null
 
   return {
     email,
+    marketing: consents.marketing,
+    isTest: data.isTest === true,
     platform: data.platform as Platform,
     locale: data.locale,
     // Hidden field that only bots fill in
@@ -72,6 +78,7 @@ async function notionRequest(
     },
     body: JSON.stringify(payload),
     cache: 'no-store',
+    signal: AbortSignal.timeout(15000),
   })
 
   // Notion allows about 3 requests per second, so back off and retry when a burst hits the limit
@@ -98,7 +105,7 @@ async function attributionProperties(databaseId: string, token: string, entry: A
   }
   try {
     const response = await fetch(`${NOTION_API}/databases/${databaseId}`, {
-      headers: { Authorization: `Bearer ${token}`, 'Notion-Version': NOTION_VERSION }, cache: 'no-store',
+      headers: { Authorization: `Bearer ${token}`, 'Notion-Version': NOTION_VERSION }, cache: 'no-store', signal: AbortSignal.timeout(5000),
     })
     if (!response.ok) return {}
     const schema = await response.json()
@@ -137,7 +144,7 @@ export async function POST(request: Request) {
 
     const entry = registration.attribution
     const extraProperties = await attributionProperties(databaseId, token, entry)
-    const details = Object.entries(entry).map(([key, value]) => `${key}: ${value || '(none)'}`).join('\n')
+    const details = Object.entries({ ...entry, marketing_consent: String(registration.marketing), marketing_consent_version: CONSENT_VERSION, registration_test: registration.isTest ? 'true' : 'false' }).map(([key, value]) => `${key}: ${value || '(none)'}`).join('\n')
     await notionRequest(
       '/pages',
       {
@@ -148,12 +155,12 @@ export async function POST(request: Request) {
           Locale: { select: { name: registration.locale } },
           'Consented At': { date: { start: new Date().toISOString() } },
           'Consent Version': richText(CONSENT_VERSION),
-          'UTM Source': richText(entry.source),
+          'UTM Source': richText(registration.isTest ? 'internal_test' : entry.source),
           'UTM Medium': richText(entry.medium),
-          'UTM Campaign': richText(entry.campaign),
+          'UTM Campaign': richText(registration.isTest ? 'registration_qa' : entry.campaign),
           ...extraProperties,
         },
-        children: [{ object: 'block', type: 'paragraph', paragraph: { rich_text: (`광고 유입 정보\n${details}`.match(/[\s\S]{1,1800}/g) || []).map(content => ({ type: 'text', text: { content } })) } }],
+        children: [marketingSubscriptionBlock(registration.marketing, registration.isTest), { object: 'block', type: 'paragraph', paragraph: { rich_text: (`광고 유입 정보\n${details}`.match(/[\s\S]{1,1800}/g) || []).map(content => ({ type: 'text', text: { content } })) } }],
       },
       token
     )

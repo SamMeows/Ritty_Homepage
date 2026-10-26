@@ -15,7 +15,7 @@ const limit = (value: unknown, max = 200) => typeof value === 'string' ? value.t
 export function cleanAttribution(input: unknown): Attribution {
   const data = input && typeof input === 'object' ? input as Record<string, unknown> : {}
   const path = limit(data.landingPath, 300).split(/[?#]/)[0]
-  const match = path.match(/^\/(?:kr\/)?ad\/([^/]+)\/?$/)
+  const match = path.match(/^\/(?:(?:kr|en|ja|zh-tw)\/)?ad\/([^/]+)\/?$/)
   const variant = match && isAdVariant(match[1]) ? match[1] : 'main'
   let referrer = ''
   try { const url = new URL(limit(data.referrer, 1000)); if (['http:', 'https:'].includes(url.protocol)) referrer = url.origin } catch {}

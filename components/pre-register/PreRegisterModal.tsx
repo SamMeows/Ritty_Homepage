@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import Image from 'next/image'
 import './pre-register.css'
-import { trackPreRegisterComplete, trackRegistrationFunnel } from '@/lib/analytics'
+import { isRegistrationTest, trackPreRegisterComplete, trackRegistrationFunnel } from '@/lib/analytics'
 import { EMAIL_PATTERN, MAX_EMAIL_LENGTH, type Platform, type PreRegisterResult } from '@/lib/pre-register'
 import type { Dictionary, Locale } from '@/lib/i18n/dictionaries'
 import { captureAttribution } from '@/lib/attribution'
@@ -47,6 +47,7 @@ function ConsentCheckbox({
 export default function PreRegisterModal({ dict, locale, onClose, inline = false }: PreRegisterModalProps) {
   const t = dict.preRegister
   const started = useRef(false)
+  const submitting = useRef(false)
   const funnel = (event: Parameters<typeof trackRegistrationFunnel>[0], reason?: 'email' | 'platform' | 'consent' | 'server') =>
     trackRegistrationFunnel(event, locale, { form: inline ? 'inline' : 'modal', ...(reason ? { reason } : {}) })
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -134,8 +135,11 @@ export default function PreRegisterModal({ dict, locale, onClose, inline = false
   }, [onClose, inline])
 
   useEffect(() => {
-    if (result) closeRef.current?.focus()
-  }, [result])
+    if (result) {
+      closeRef.current?.focus()
+      trackRegistrationFunnel('pre_register_complete_view', locale, { form: inline ? 'inline' : 'modal', status: result })
+    }
+  }, [result, locale, inline])
 
   // A validation message goes stale as soon as the user edits the form
   useEffect(() => {
@@ -144,6 +148,7 @@ export default function PreRegisterModal({ dict, locale, onClose, inline = false
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submitting.current) return
     const trimmedEmail = email.trim()
 
     if (trimmedEmail.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(trimmedEmail)) {
@@ -156,19 +161,22 @@ export default function PreRegisterModal({ dict, locale, onClose, inline = false
       setError(t.errors.platform)
       return
     }
-    if (!allAgreed) {
+    if (!consents.age || !consents.privacy) {
       funnel('pre_register_error', 'consent')
       setError(t.errors.consent)
       return
     }
 
     setError(null)
+    submitting.current = true
     setIsSubmitting(true)
     funnel('pre_register_submit')
     try {
-      const attribution = captureAttribution()
+      let attribution
+      try { attribution = captureAttribution() } catch { /* Optional attribution cannot block registration. */ }
       const response = await fetch('/api/pre-register', {
         method: 'POST',
+        signal: AbortSignal.timeout(30000),
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: trimmedEmail,
@@ -177,10 +185,11 @@ export default function PreRegisterModal({ dict, locale, onClose, inline = false
           consents,
           website: honeypot,
           attribution,
+          isTest: isRegistrationTest(),
           utm: {
-            source: attribution.source,
-            medium: attribution.medium,
-            campaign: attribution.campaign,
+            source: attribution?.source,
+            medium: attribution?.medium,
+            campaign: attribution?.campaign,
           },
         }),
       })
@@ -188,13 +197,16 @@ export default function PreRegisterModal({ dict, locale, onClose, inline = false
 
       const data: { status: PreRegisterResult } = await response.json()
       if (data.status !== 'created' && data.status !== 'duplicate') throw new Error('Unexpected registration response')
+      setResult(data.status)
+      trackRegistrationFunnel('pre_register_result', locale, { form: inline ? 'inline' : 'modal', status: data.status })
       if (data.status === 'created' && !honeypot) trackPreRegisterComplete(platform, locale)
       if (data.status === 'duplicate') funnel('pre_register_duplicate')
-      setResult(data.status)
     } catch {
+      trackRegistrationFunnel('pre_register_result', locale, { form: inline ? 'inline' : 'modal', status: 'error' })
       funnel('pre_register_error', 'server')
       setError(t.errors.server)
     } finally {
+      submitting.current = false
       setIsSubmitting(false)
     }
   }
@@ -269,7 +281,7 @@ export default function PreRegisterModal({ dict, locale, onClose, inline = false
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} onFocusCapture={() => {
+          <form onSubmit={handleSubmit} onChangeCapture={() => {
             if (!started.current) { started.current = true; funnel('pre_register_start') }
           }} noValidate className="flex flex-col gap-5">
             <div className="px-8 text-center">
@@ -374,6 +386,8 @@ export default function PreRegisterModal({ dict, locale, onClose, inline = false
                   {t.consents.marketing}
                 </ConsentCheckbox>
                 <p className="mt-1 ml-8 text-xs text-gray-400">{t.marketingDetail}</p>
+                <p className="mt-2 ml-8 text-xs leading-relaxed text-gray-300">{t.marketingOptional}</p>
+                <a href="mailto:contact@sam-meows.com?subject=Ritty%20marketing%20email%20unsubscribe" className="mt-1 ml-8 inline-block text-xs text-gray-400 underline hover:text-white">{t.marketingWithdrawal}</a>
               </div>
               <a
                 href={dict.links.privacy}
@@ -403,10 +417,11 @@ export default function PreRegisterModal({ dict, locale, onClose, inline = false
               </p>
             )}
 
+            <p className="text-center text-sm leading-relaxed text-gray-300">{t.launchNotice}</p>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="h-14 rounded-2xl bg-gradient-to-r from-purple-start via-purple-mid to-purple-end font-paperlogy text-lg font-extrabold transition hover:brightness-110 disabled:opacity-60"
+              className="min-h-14 rounded-2xl bg-gradient-to-r from-purple-start via-purple-mid to-purple-end px-3 py-3 font-paperlogy text-base leading-snug font-extrabold transition hover:brightness-110 disabled:opacity-60"
             >
               {isSubmitting ? t.submitting : t.submit}
             </button>

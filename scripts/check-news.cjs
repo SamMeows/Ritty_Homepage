@@ -1,9 +1,6 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
 process.env.NOTION_NEWS_DATA_SOURCE_ID='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
-const file=path.resolve('lib/news.ts'),mod={exports:{}};
-const js=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText;
-new Function('require','module','exports',js)(name=>name==='server-only'?{}:require(path.resolve('lib',name)),mod,mod.exports);
-const {getNews,getNewsArticle,safeNewsUrl}=mod.exports;
+const {getNews,getNewsArticle,safeNewsUrl}=require('./load-typescript.cjs').load('lib/news.ts');
 process.env.NOTION_NEWS_TOKEN='mock';process.env.NEWS_PREVIEW_SNAPSHOT='0';
 const source='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',id='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 let published=true,calls=[],parent=source,date='2026-01-01',archived=false,missing=false;

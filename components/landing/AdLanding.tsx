@@ -34,12 +34,26 @@ export default function AdLanding({ markup, news, newsPreview = '', dict, locale
     setNewsTarget(target)
   }, [markup, locale, newsPreview])
   useEffect(() => {
-    captureAttribution()
+    try { captureAttribution() } catch { /* Optional attribution. */ }
     if (measuredPath.current !== window.location.pathname) {
       trackRegistrationFunnel('landing_view', locale)
       measuredPath.current = window.location.pathname
     }
     const node = ref.current!
+    const cta = locale === 'ja' ? '事前登録して、配信のお知らせを受け取る' : locale === 'en' ? 'Pre-register for launch emails' : ''
+    const detail = locale === 'ja' ? 'メールで配信・ソフトローンチや事前登録に関するお知らせをお届けします。' : 'Receive launch, soft-launch and pre-registration updates by email.'
+    const experiment = new URLSearchParams(window.location.search).get('cta_copy') === 'launch-email-v1'
+    if (cta && experiment) node.querySelectorAll<HTMLElement>('[data-register]').forEach(button => {
+      button.textContent = button.closest('header') ? (locale === 'ja' ? '配信通知を受け取る' : 'Get launch emails') : cta
+      button.setAttribute('aria-label', cta)
+      button.classList.add('register-purpose-cta')
+      if (!button.closest('header') && !button.nextElementSibling?.classList.contains('register-purpose-note')) {
+        const note = document.createElement('p')
+        note.className = 'register-purpose-note'
+        note.textContent = detail
+        button.after(note)
+      }
+    })
     setToolsTarget(node.querySelector('#header-tools'))
     setFormTarget(node.querySelector('#registration-form'))
     const disposeMotion = mountLandingMotion(node)

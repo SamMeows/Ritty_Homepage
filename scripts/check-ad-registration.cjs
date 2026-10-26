@@ -9,7 +9,7 @@ function load(relative) {
   if (cache.has(file)) return cache.get(file).exports;
   const module = {exports:{}}; cache.set(file,module);
   const js = ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
-  const localRequire = name => name.startsWith('@/') ? load(name.slice(2)+'.ts') : name.startsWith('.') ? load(path.resolve(path.dirname(file),name)+'.ts') : require(name);
+  const localRequire = name => name === 'server-only' ? {} : name.startsWith('@/') ? load(name.slice(2)+'.ts') : name.startsWith('.') ? load(path.resolve(path.dirname(file),name)+'.ts') : require(name);
   new Function('require','module','exports',js)(localRequire,module,module.exports);
   return module.exports;
 }
@@ -50,6 +50,16 @@ assert.equal(window.dataLayer.length,2);
 assert.equal(window.dataLayer[0][1],'landing_view');
 assert.equal(window.dataLayer[1][1],'generate_lead');
 assert.equal(window.dataLayer[0][2].landing_variant,'talking-cat');
+// Third-party failures and blocked storage cannot escape analytics.
+window.gtag=()=>{throw Error('injected')};
+assert.doesNotThrow(()=>trackRegistrationFunnel('pre_register_submit','ja'));
+const {isRegistrationTest}=load('lib/analytics.ts');
+window.location.href='https://example.com/ja?registration_test=1';
+assert.equal(isRegistrationTest(),true); // sessionStorage is unavailable in this mock.
+window.gtag=()=>{throw Error('QA must suppress this call')};
+assert.doesNotThrow(()=>trackPreRegisterComplete('ios','ja'));
+assert.equal(cleanAttribution({landingPath:'/ja/ad/cozy-life'}).variant,'cozy-life');
+assert.equal(cleanAttribution({landingPath:'/en/ad/talking-cat'}).variant,'talking-cat');
 delete global.window;delete global.document;
 
 process.env.NOTION_TOKEN='mock-only';process.env.NOTION_PRE_REGISTER_DB_ID='mock-db';
@@ -68,7 +78,7 @@ const send=body=>POST(new Request('https://example.com/api/pre-register',{method
   let result=await send(valid);assert.equal((await result.json()).status,'created');
   let payload=JSON.parse(calls.at(-1).options.body);
   assert.equal(payload.properties['UTM Source'].rich_text[0].text.content,'instagram');
-  assert.match(payload.children[0].paragraph.rich_text[0].text.content,/talking-cat/);
+  assert.match(payload.children.flatMap(block=>block.paragraph?.rich_text || []).map(text=>text.text.content).join('\n'),/talking-cat/);
   assert.equal(payload.properties['Landing Variant'],undefined);
   calls=[];withColumns=true;await send(valid);
   payload=JSON.parse(calls.at(-1).options.body);assert.equal(payload.properties['Landing Variant'].rich_text[0].text.content,'talking-cat');
@@ -77,5 +87,10 @@ const send=body=>POST(new Request('https://example.com/api/pre-register',{method
   calls=[];result=await send({...valid,consents:{}});assert.equal(result.status,400);assert.equal(calls.length,0);
   calls=[];duplicate=false;await send({...valid,attribution:undefined,utm:{source:'legacy'}});
   payload=JSON.parse(calls.at(-1).options.body);assert.equal(payload.properties['UTM Source'].rich_text[0].text.content,'legacy');
+  calls=[];await send({...valid,isTest:true});
+  payload=JSON.parse(calls.at(-1).options.body);
+  assert.equal(payload.properties['UTM Source'].rich_text[0].text.content,'internal_test');
+  assert.equal(payload.properties['UTM Campaign'].rich_text[0].text.content,'registration_qa');
+  assert.match(payload.children.flatMap(block=>block.paragraph?.rich_text || []).map(text=>text.text.content).join('\n'),/registration_test: true/);
   console.log('Passed: attribution, navigation persistence, variant changes, Notion old/new schemas, duplicate and consent handling. No live rows created.');
 })().catch(error=>{console.error(error);process.exitCode=1}).finally(()=>{global.fetch=originalFetch});
