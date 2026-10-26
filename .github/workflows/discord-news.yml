@@ -1,0 +1,35 @@
+name: Discord development news
+on:
+  schedule:
+    - cron: '7-57/10 * * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'First initialize existing posts, then preview, then enable sending'
+        type: choice
+        default: preview
+        options: [preview, initialize, send]
+permissions:
+  contents: read
+concurrency:
+  group: discord-development-news
+  cancel-in-progress: false
+jobs:
+  notify:
+    if: github.event_name == 'workflow_dispatch' || vars.DISCORD_NEWS_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Sync development news
+        env:
+          NOTION_NEWS_TOKEN: ${{ secrets.NOTION_NEWS_TOKEN }}
+          NOTION_NEWS_DATA_SOURCE_ID: ${{ vars.NOTION_NEWS_DATA_SOURCE_ID || '83793ee8-a696-468d-85ef-9d41e880b692' }}
+          DISCORD_WEBHOOK_URL_KO: ${{ secrets.DISCORD_WEBHOOK_URL_KO }}
+          DISCORD_WEBHOOK_URL_EN: ${{ secrets.DISCORD_WEBHOOK_URL_EN }}
+          DISCORD_NEWS_ENABLED: ${{ vars.DISCORD_NEWS_ENABLED }}
+          SYNC_MODE: ${{ inputs.mode || 'send' }}
+        run: node scripts/discord-news.mjs "$SYNC_MODE"
