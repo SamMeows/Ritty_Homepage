@@ -386,8 +386,6 @@ export default function PreRegisterModal({ dict, locale, onClose, inline = false
                   {t.consents.marketing}
                 </ConsentCheckbox>
                 <p className="mt-1 ml-8 text-xs text-gray-400">{t.marketingDetail}</p>
-                <p className="mt-2 ml-8 text-xs leading-relaxed text-gray-300">{t.marketingOptional}</p>
-                <a href="mailto:contact@sam-meows.com?subject=Ritty%20marketing%20email%20unsubscribe" className="mt-1 ml-8 inline-block text-xs text-gray-400 underline hover:text-white">{t.marketingWithdrawal}</a>
               </div>
               <a
                 href={dict.links.privacy}
