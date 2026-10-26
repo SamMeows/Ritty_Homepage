@@ -1,5 +1,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { createRequire } from 'node:module'
+const require = createRequire(import.meta.url)
+const { localizeNewsArticle } = require('./load-typescript.cjs').load('lib/i18n/news-articles.ts')
 import { run, eligible, payload, STATE, CATEGORY } from './discord-news.mjs'
 const source = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
 const makePage = (id = 'a'.repeat(32)) => ({ id, parent: { data_source_id: source }, properties: {
@@ -27,7 +30,7 @@ function fixture(pages = [makePage()], options = {}) {
       if (options.websiteStatus) return new Response('', { status: options.websiteStatus })
       if (!url.includes('/api/')) return new Response('article')
       const p = pages.find(p => url.includes(p.id))
-      return Response.json({ id: p.id, title: p.properties['제목'].title[0].plain_text, category: CATEGORY, language: options.responseLanguage || p.properties['언어'].select?.name || 'KO', blocks: [{ type: 'paragraph', text: '소식' }] })
+      return Response.json(localizeNewsArticle({ id: p.id, title: p.properties['제목'].title[0].plain_text, category: options.responseCategory || CATEGORY, language: options.responseLanguage || p.properties['언어'].select?.name || 'KO', blocks: [{ type: 'paragraph', text: '소식' }] }, new URL(url).searchParams.get('locale') || 'kr'))
     }
     if (url.endsWith(`/data_sources/${source}`)) return Response.json({ properties: Object.fromEntries([
       ['공개', 'checkbox'], ['분류', 'select'], ['언어', 'select'], ['게시일', 'date'], ['제목', 'title'], [STATE, 'rich_text'],
@@ -155,3 +158,12 @@ test('English card fallback and footer are localized', () => {
   assert.equal(card.footer.text, 'Ritty · Development Updates')
   assert.throws(() => payload({ language: 'JA' }), /Unsupported/)
 })
+for (const language of ['KO', 'EN']) {
+  test(`rejects a localized announcement instead of a development post: ${language}`, async () => {
+    const p = makePage(); p.properties['언어'].select.name = language
+    const f = fixture([p], { responseCategory: '공지사항' })
+    await assert.rejects(f.execute('send'), /does not match/)
+    assert.equal(f.stats().posts, 0)
+    assert.equal(f.stats().patches, 0)
+  })
+}

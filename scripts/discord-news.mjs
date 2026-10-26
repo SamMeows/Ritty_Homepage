@@ -5,8 +5,8 @@ const plain = (values = []) => values.map(v => v.plain_text || v.text?.content |
 const normalized = id => String(id || '').replaceAll('-', '')
 const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
 const languages = {
-  KO: { locale: 'kr', prefix: '', secret: 'DISCORD_WEBHOOK_URL_KO', username: '리티 소식', fallback: '리티의 새로운 개발 소식을 만나보세요!', link: '개발일지 읽기 →', footer: '리티 · 개발 소식' },
-  EN: { locale: 'en', prefix: '/en', secret: 'DISCORD_WEBHOOK_URL_EN', username: 'Ritty News', fallback: 'Discover the latest Ritty development updates!', link: 'Read the devlog →', footer: 'Ritty · Development Updates' },
+  KO: { category: CATEGORY, locale: 'kr', prefix: '', secret: 'DISCORD_WEBHOOK_URL_KO', username: '리티 소식', fallback: '리티의 새로운 개발 소식을 만나보세요!', link: '개발일지 읽기 →', footer: '리티 · 개발 소식' },
+  EN: { category: 'Development Updates', locale: 'en', prefix: '/en', secret: 'DISCORD_WEBHOOK_URL_EN', username: 'Ritty News', fallback: 'Discover the latest Ritty development updates!', link: 'Read the devlog →', footer: 'Ritty · Development Updates' },
 }
 const pageLanguage = p => p.properties?.['언어']?.select?.name || 'KO'
 const record = p => plain(p.properties?.[STATE]?.rich_text)
@@ -112,7 +112,7 @@ export async function run({ mode = 'preview', env = process.env, fetcher = fetch
       const live = await request(`https://ritty.sam-meows.com/api/news/${id}?locale=${config.locale}`, { cache: 'no-store' })
       if (!live.ok) throw new Error(`Website article HTTP ${live.status}; will retry`)
       const article = await live.json()
-      if (article.id !== id || article.category !== CATEGORY || article.language !== language) throw new Error('Website article does not match the public development post')
+      if (article.id !== id || article.category !== config.category || article.language !== language) throw new Error('Website article does not match the public development post')
       const html = await request(`https://ritty.sam-meows.com${articlePath}`, { cache: 'no-store' })
       if (!html.ok) throw new Error(`Website page HTTP ${html.status}; will retry`)
       await html.body?.cancel()
