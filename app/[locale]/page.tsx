@@ -38,12 +38,14 @@ export default async function LandingPage({ params }: Props) {
 
   const jsonLdApp = {
     '@context': 'https://schema.org',
-    '@type': 'MobileApplication',
+    '@type': ['VideoGame', 'MobileApplication'],
     '@id': 'https://ritty.sam-meows.com/#game',
     name: '리티 Ritty',
     alternateName: ['리티', 'Ritty', 'Ritty App', '리티 앱'],
     applicationCategory: 'GameApplication',
     operatingSystem: 'iOS, Android',
+    genre: ['Life simulation', 'Cozy game'],
+    image: 'https://ritty.sam-meows.com/og-ritty-island-v2.png',
     description: dict.meta.description,
     inLanguage: locale === 'kr' ? 'ko-KR' : locale === 'ja' ? 'ja-JP' : locale === 'zh-tw' ? 'zh-Hant-TW' : 'en-US',
     url: 'https://ritty.sam-meows.com',
@@ -51,6 +53,10 @@ export default async function LandingPage({ params }: Props) {
       '@id': 'https://ritty.sam-meows.com/#organization',
     },
     sameAs: [
+      // Existing store listings identify Ritty even while the next version is in pre-registration.
+      // They are identity references, not promises that this version is available to install.
+      'https://apps.apple.com/app/id6743311040',
+      'https://play.google.com/store/apps/details?id=com.sammeows.ritty',
       'https://www.instagram.com/ritty_kr/',
       'https://www.instagram.com/ritty_meow/',
       'https://www.youtube.com/@Ritty_meow',

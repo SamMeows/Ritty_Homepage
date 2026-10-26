@@ -20,7 +20,9 @@ async function main() {
   })
   await assert.rejects(dictionaries.getDictionary('not-a-real-page'), /not-found/)
   await assert.rejects(dictionaries.getDictionary('toString'), /not-found/)
-  const { middleware } = load('middleware.ts')
+  const { middleware } = load('middleware.ts', {
+    './lib/ad-variants': load('lib/ad-variants.ts'),
+  })
   const request = path => new NextRequest(`https://ritty.sam-meows.com${path}`)
   assert.equal(middleware(request('/en')).headers.get('x-middleware-request-x-ritty-language'), 'en')
   assert.equal(middleware(request('/')).headers.get('x-middleware-request-x-ritty-language'), 'ko')
@@ -41,6 +43,7 @@ async function main() {
   const structured = seo.newsStructuredData(article, description)
   assert.equal(structured['@graph'][0].url, `https://ritty.sam-meows.com/news/${article.id}`)
   assert.equal(structured['@graph'][1].itemListElement[2].item, structured['@graph'][0].url)
+  assert.deepEqual(structured['@graph'][0].about['@type'], ['VideoGame', 'MobileApplication'])
   const hostile = { title: '</script><script>alert(1)</script>' }
   const encoded = seo.serializeJsonLd(hostile)
   assert(!encoded.includes('</script>'))
@@ -68,6 +71,27 @@ async function main() {
     assert(!/삼냥이즈|SamMeows|Sam-Meows/.test(meta.title + meta.description))
   }
 
+  for (const phase of ['pre-register', 'store']) {
+    const landing = load('app/[locale]/page.tsx', {
+      '@/components/landing/RittyLanding': { default: () => null },
+      '@/lib/i18n/dictionaries': { getDictionary: async locale => JSON.parse(fs.readFileSync(`lib/i18n/dictionaries/${locale}.json`, 'utf8')) },
+      '@/lib/launch': { LAUNCH_PHASE: phase },
+      '@/lib/seo': seo,
+    })
+    for (const locale of ['kr', 'en', 'ja', 'zh-tw']) {
+      const page = await landing.default({ params: Promise.resolve({ locale }) })
+      const blocks = page.props.children.filter(node => node.type === 'script').map(node => JSON.parse(node.props.dangerouslySetInnerHTML.__html))
+      const game = blocks.find(block => [].concat(block['@type']).includes('MobileApplication'))
+      assert.deepEqual(game['@type'], ['VideoGame', 'MobileApplication'])
+      assert(game.sameAs.includes('https://apps.apple.com/app/id6743311040'))
+      assert(game.sameAs.includes('https://play.google.com/store/apps/details?id=com.sammeows.ritty'))
+      assert.equal('downloadUrl' in game, phase === 'store', 'Identity links must not advertise pre-registration as an available download')
+      assert.equal('installUrl' in game, phase === 'store')
+      assert.equal(blocks.find(block => block['@type'] === 'WebPage').mainEntity['@id'], game['@id'])
+      assert.equal(blocks.find(block => block['@type'] === 'WebSite').about['@id'], game['@id'])
+    }
+  }
+
   const base = process.argv[2]
   if (base) {
     for (const [path, lang] of [['/', 'ko'], ['/en', 'en']]) {
@@ -80,7 +104,11 @@ async function main() {
       const expected = JSON.parse(fs.readFileSync(`lib/i18n/dictionaries/${lang === 'ko' ? 'kr' : 'en'}.json`, 'utf8')).meta
       assert(html.includes(`<title>${expected.title}</title>`))
       const blocks = [...html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)].map(match => JSON.parse(match[1]))
-      assert(blocks.some(block => block['@type'] === 'MobileApplication' && block.description === expected.description))
+      const game = blocks.find(block => [].concat(block['@type']).includes('MobileApplication'))
+      assert(game && game.description === expected.description)
+      assert([].concat(game['@type']).includes('VideoGame'))
+      assert(game.sameAs.includes('https://apps.apple.com/app/id6743311040'))
+      assert(game.sameAs.includes('https://play.google.com/store/apps/details?id=com.sammeows.ritty'))
       assert(blocks.some(block => block['@type'] === 'WebPage'))
     }
     assert.equal((await fetch(`${base}/en/news`, { redirect: 'manual' })).status, 301)

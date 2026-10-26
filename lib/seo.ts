@@ -51,7 +51,7 @@ export function newsStructuredData(article: NewsArticle, description: string) {
           alternateName: 'SamMeows Inc.',
           url: 'https://sam-meows.com',
         },
-        about: { '@type': 'MobileApplication', '@id': `${SITE_URL}/#game`, name: '리티 Ritty' },
+        about: { '@type': ['VideoGame', 'MobileApplication'], '@id': `${SITE_URL}/#game`, name: '리티 Ritty' },
         inLanguage: 'ko-KR',
         image: [article.cover || `${SITE_URL}/og-ritty-island-v2.png`],
         mainEntityOfPage: { '@type': 'WebPage', '@id': url },
