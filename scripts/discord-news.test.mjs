@@ -125,6 +125,8 @@ test('routes Korean and English posts to their own webhooks, URLs and card langu
   assert.match(koCard.description, /개발일지 읽기/)
   assert.match(enCard.description, /Read the devlog/)
   assert.equal(f.deliveries[1].body.username, 'Ritty News')
+  assert.equal(f.deliveries[0].body.content, '집사님들! 새로운 개발로그가 올라왔어요! 🐾')
+  assert.equal(f.deliveries[1].body.content, 'Hey, Ritty parents! A new devlog is here! 🐾')
   assert.ok(f.websiteCalls.includes(`https://ritty.sam-meows.com/api/news/${en.id}?locale=en`))
   assert.ok(f.websiteCalls.includes(enCard.url))
   assert.equal(await f.execute('send'), 0)

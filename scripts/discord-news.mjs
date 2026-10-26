@@ -5,8 +5,8 @@ const plain = (values = []) => values.map(v => v.plain_text || v.text?.content |
 const normalized = id => String(id || '').replaceAll('-', '')
 const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
 const languages = {
-  KO: { category: CATEGORY, locale: 'kr', prefix: '', secret: 'DISCORD_WEBHOOK_URL_KO', username: '리티 소식', fallback: '리티의 새로운 개발 소식을 만나보세요!', link: '개발일지 읽기 →', footer: '리티 · 개발 소식' },
-  EN: { category: 'Development Updates', locale: 'en', prefix: '/en', secret: 'DISCORD_WEBHOOK_URL_EN', username: 'Ritty News', fallback: 'Discover the latest Ritty development updates!', link: 'Read the devlog →', footer: 'Ritty · Development Updates' },
+  KO: { greeting: '집사님들! 새로운 개발로그가 올라왔어요! 🐾', category: CATEGORY, locale: 'kr', prefix: '', secret: 'DISCORD_WEBHOOK_URL_KO', username: '리티 소식', fallback: '리티의 새로운 개발 소식을 만나보세요!', link: '개발일지 읽기 →', footer: '리티 · 개발 소식' },
+  EN: { greeting: 'Hey, Ritty parents! A new devlog is here! 🐾', category: 'Development Updates', locale: 'en', prefix: '/en', secret: 'DISCORD_WEBHOOK_URL_EN', username: 'Ritty News', fallback: 'Discover the latest Ritty development updates!', link: 'Read the devlog →', footer: 'Ritty · Development Updates' },
 }
 const pageLanguage = p => p.properties?.['언어']?.select?.name || 'KO'
 const record = p => plain(p.properties?.[STATE]?.rich_text)
@@ -29,7 +29,7 @@ export function payload(article) {
   const url = `https://ritty.sam-meows.com${copy.prefix}/news/${normalized(article.id)}`
   let cover
   try { const u = new URL(article.cover); if (u.protocol === 'https:') cover = u.href } catch {}
-  return { username: copy.username, allowed_mentions: { parse: [] }, embeds: [{
+  return { content: copy.greeting, username: copy.username, allowed_mentions: { parse: [] }, embeds: [{
     title: article.title.slice(0, 256), url, color: 0xFF7979,
     description: `${texts.join(' ').replace(/\s+/g, ' ').trim().slice(0, 400) || copy.fallback}\n\n[${copy.link}](${url})`,
     ...(cover ? { image: { url: cover } } : {}), footer: { text: copy.footer },
