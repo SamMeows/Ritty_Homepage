@@ -60,6 +60,7 @@ function view(details) {
 }
 const mocks = {
   'lib/news.ts': {
+    validNewsId: value => /^[a-f\d]{32}$/i.test(value.replaceAll('-', '')),
     async getNews(cursor, locale) { seen.news.push({ cursor, locale }); return pages[Number(cursor || 0)] || { items: [], cursor: null } },
     async getNewsArticle(id, locale) { seen.news.push({ id, locale }); return article },
   },
@@ -100,6 +101,7 @@ function load(relative) {
 const service = load('lib/newsletter-service.ts')
 const approval = load('lib/newsletter-approval.ts')
 const routes = {
+  image: load('app/api/news/[id]/image/route.ts'),
   overview: load('app/api/admin/newsletter/route.ts'),
   preview: load('app/api/admin/newsletter/preview/route.ts'),
   send: load('app/api/admin/newsletter/send/route.ts'),
@@ -153,7 +155,7 @@ async function main() {
   const preview = await makePreview()
   assert.equal(preview.candidateCount, 2)
   assert.equal(preview.draft.articleUrl, SITE + '/news/' + ARTICLE)
-  assert.equal(preview.draft.coverUrl, undefined)
+  assert.equal(preview.draft.coverUrl, SITE + '/api/news/' + ARTICLE + '/image?locale=kr&path=cover')
   assert.ok(preview.draft.subject.startsWith('(광고) '))
   assert.equal((preview.draft.subject.match(/\(광고\)/g) || []).length, 1)
   assert.ok(preview.html.includes('&lt;script&gt;'))
@@ -166,6 +168,52 @@ async function main() {
   assert.deepEqual(frozen.draft, JSON.parse(JSON.stringify(preview.draft)))
   assert.equal(new Date(preview.expiresAt).getTime() - frozen.issuedAt, 30 * 60_000)
   assert.equal(seen.dispatch.length, 0)
+
+  article.blocks = [
+    { type: 'heading_1', text: '전체 개발일지' },
+    { type: 'paragraph', text: '가'.repeat(1200) },
+    { type: 'image', text: '사진 설명 <script>', href: 'https://prod-files-secure.s3.us-west-2.amazonaws.com/body.png?X-Amz-Signature=temporary' },
+    { type: 'bulleted_list_item', text: '목록', children: [{ type: 'image', text: '안쪽 사진', href: 'https://cdn.example.test/nested.png' }] },
+    { type: 'paragraph', text: '글의 마지막 문장입니다.' },
+  ]
+  const full = await makePreview({ summary: '메일 앞 인사' })
+  assert.ok(full.html.includes('가'.repeat(1200)))
+  assert.ok(full.html.includes('글의 마지막 문장입니다.'))
+  assert.ok(full.html.includes('메일 앞 인사'))
+  assert.ok(full.html.includes('<h2'))
+  assert.ok(full.html.includes('path=2'))
+  assert.ok(full.html.includes('path=3.0'))
+  assert.ok(full.html.indexOf('가'.repeat(1200)) < full.html.indexOf('path=2'))
+  assert.ok(full.html.indexOf('path=2') < full.html.indexOf('글의 마지막 문장입니다.'))
+  assert.ok(!full.html.includes('X-Amz-Signature'))
+  assert.deepEqual(approval.verifyNewsletterApproval(full.approvalToken).draft.blocks, full.draft.blocks)
+  const imageRequest = path => new Request(SITE + '/api/news/' + ARTICLE + '/image?locale=kr&path=' + path)
+  const imageContext = { params: Promise.resolve({ id: ARTICLE }) }
+  let imageResponse = await routes.image.GET(imageRequest('2'), imageContext)
+  assert.equal(imageResponse.status, 307)
+  assert.equal(imageResponse.headers.get('location'), article.blocks[2].href)
+  assert.equal(imageResponse.headers.get('cache-control'), 'no-store')
+  article.blocks[2].href = 'https://cdn.example.test/refreshed.png?sig=new'
+  imageResponse = await routes.image.GET(imageRequest('2'), imageContext)
+  assert.equal(imageResponse.headers.get('location'), article.blocks[2].href, 'image URL is refreshed when opened')
+  assert.equal((await routes.image.GET(imageRequest('3.0'), imageContext)).status, 307)
+  article.blocks[3].children[0].id = PAGE(44)
+  assert.ok((await makePreview()).html.includes('path=block-' + PAGE(44)))
+  article.blocks.unshift({ type: 'paragraph', text: '추가된 문장' })
+  const stableImage = await routes.image.GET(imageRequest('block-' + PAGE(44)), imageContext)
+  assert.equal(stableImage.headers.get('location'), 'https://cdn.example.test/nested.png', 'block IDs preserve the image after content is reordered')
+  article.blocks.shift()
+  assert.equal((await routes.image.GET(imageRequest('0'), imageContext)).status, 404)
+  assert.equal((await routes.image.GET(imageRequest('99'), imageContext)).status, 404)
+  assert.equal((await routes.image.GET(imageRequest('../secret'), imageContext)).status, 404)
+  article.blocks[2].href = 'javascript:alert(1)'
+  assert.equal((await routes.image.GET(imageRequest('2'), imageContext)).status, 404)
+  article = null
+  assert.equal((await routes.image.GET(imageRequest('cover'), imageContext)).status, 404)
+  fixture()
+  article.blocks = [{ type: 'paragraph', text: '가'.repeat(20000) }]
+  await fails(makePreview(), 'content_too_large')
+  fixture()
 
   for (const unsafe of ['http://cdn.example.test/cover.png', 'javascript:alert(1)', 'https://user:password@cdn.example.test/a.png', 'https://cdn.example.test/a.png?X-Amz-Signature=secret',
     'https://cdn.example.test/a.png?Expires=123', 'https://cdn.example.test/a.png?token=secret', 'https://secure.notion-static.com/a.png', 'https://www.notion.so/image/a.png', 'https://file.notionusercontent.com/a.png',

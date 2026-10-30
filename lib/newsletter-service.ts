@@ -1,11 +1,12 @@
 import 'server-only'
-import { getNews, getNewsArticle, type NewsArticle, type NewsBlock, type NewsItem } from './news'
+import { getNews, getNewsArticle, type NewsItem } from './news'
 import { newsArticlePath, newsLanguage } from './news-languages'
 import { listMarketingCandidates } from './marketing-subscription'
 import { approveNewsletter, newsletterEmailHash, newsletterJobKey, verifyNewsletterApproval } from './newsletter-approval'
 import { newsletterAuthResponse } from './newsletter-auth'
 import { newsletterConfiguration, newsletterId, newsletterOrigin, NEWSLETTER_MAX_RECIPIENTS, NEWSLETTER_WORKFLOW } from './newsletter-config'
 import { renderNewsletterEmail } from './newsletter-email'
+import { newsletterContent, newsletterImagePath } from './newsletter-content'
 import { createNewsletterJob, listNewsletterJobIds, newsletterJobView, readNewsletterJob, requestNewsletterRetry, type JobDetails } from './newsletter-store'
 import { NEWSLETTER_LOCALES, type NewsletterDraft, type NewsletterLocale, type NewsletterPreview } from './newsletter-types'
 
@@ -116,22 +117,6 @@ export function persistentNewsletterCover(value: string): string | undefined {
   } catch { return undefined }
 }
 
-function articleSummary(article: NewsArticle) {
-  const paragraphs: string[] = []
-  const prose = new Set(['paragraph', 'bulleted_list_item', 'numbered_list_item', 'quote', 'callout'])
-  function visit(blocks: NewsBlock[]) {
-    for (const block of blocks) {
-      if (paragraphs.join('\n\n').length >= 800) return
-      const text = block.text?.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim()
-      if (prose.has(block.type) && text) paragraphs.push(text)
-      if (block.children) visit(block.children)
-    }
-  }
-  visit(article.blocks || [])
-  const text = paragraphs.join('\n\n') || plainTitle(article.title)
-  return Array.from(text).length > 800 ? Array.from(text).slice(0, 799).join('') + '…' : text
-}
-
 async function publishedArticle(articleId: string, locale: NewsletterLocale) {
   const article = await getNewsArticle(articleId, locale)
   if (!article || article.category !== CATEGORY || (article.language || 'KO') !== newsLanguage(locale) || id(article.id) !== articleId) {
@@ -191,9 +176,10 @@ export async function previewNewsletter(input: Record<string, unknown>): Promise
   const article = await publishedArticle(articleId, locale)
   const draft: NewsletterDraft = {
     articleId, locale, title: plainTitle(article.title), subject: subject(customSubject || plainTitle(article.title)),
-    summary: customSummary || articleSummary(article),
+    summary: customSummary || '',
+    blocks: newsletterContent(article.blocks || [], articleId, locale, newsletterOrigin()),
     articleUrl: new URL(newsArticlePath(newsLanguage(locale), articleId), newsletterOrigin()).href,
-    coverUrl: cover || (article.cover ? persistentNewsletterCover(article.cover) : undefined), articleModifiedAt: article.modifiedAt,
+    coverUrl: cover || (article.cover ? new URL(newsletterImagePath(articleId, locale, 'cover'), newsletterOrigin()).href : undefined), articleModifiedAt: article.modifiedAt,
   }
   const candidates = await listMarketingCandidates(locale)
   const uniquePages = new Map<string, { pageId: string; emailHash: string }>()
@@ -210,11 +196,18 @@ export async function previewNewsletter(input: Record<string, unknown>): Promise
   // Candidate estimates intentionally exclude addresses from the browser response.
   // The worker reconciles duplicate records and rechecks authoritative withdrawals.
   const approval = approveNewsletter(draft, [...uniquePages.values()])
+  // Preserve the entire article. Reject oversized campaigns instead of truncating
+  // content or creating an approval the send endpoint cannot verify/store.
+  const draftBytes = Buffer.byteLength(JSON.stringify(draft), 'utf8')
+  if (approval.token.length + draftBytes > 160_000 || draftBytes > 50_000) {
+    throw new NewsletterServiceError(413, 'content_too_large')
+  }
   const rendered = renderNewsletterEmail(draft, {
     unsubscribeUrl: new URL('/unsubscribe?lang=' + locale, newsletterOrigin()).href,
     companyName: process.env.NEWSLETTER_COMPANY_NAME, contactEmail: process.env.NEWSLETTER_CONTACT_EMAIL || process.env.NEWSLETTER_FROM_EMAIL,
     companyAddress: process.env.NEWSLETTER_COMPANY_ADDRESS,
   })
+  if (Buffer.byteLength(rendered.html, 'utf8') > 95_000) throw new NewsletterServiceError(413, 'content_too_large')
   return { draft, html: rendered.html, candidateCount: emails.size, approvalToken: approval.token, expiresAt: approval.expiresAt }
 }
 

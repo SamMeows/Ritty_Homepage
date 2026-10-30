@@ -1,12 +1,15 @@
 export const NEWSLETTER_LOCALES = ['kr', 'en', 'ja', 'zh-tw'] as const
 export type NewsletterLocale = (typeof NEWSLETTER_LOCALES)[number]
 
+export type NewsletterBlock = { type: string; text: string; url?: string; children?: NewsletterBlock[] }
+
 export type NewsletterDraft = {
   articleId: string
   locale: NewsletterLocale
   title: string
   subject: string
   summary: string
+  blocks?: NewsletterBlock[]
   articleUrl: string
   coverUrl?: string
   articleModifiedAt?: string

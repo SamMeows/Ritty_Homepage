@@ -4,7 +4,7 @@ import { newsLanguage, newsLocale, newsArticlePath, type NewsLanguage } from './
 
 
 export type NewsItem = { id: string; title: string; category: string; date: string; cover?: string; modifiedAt?: string; language?: NewsLanguage; originalId?: string; translationIds?: string[] }
-export type NewsBlock = { type: string; text: string; href?: string; children?: NewsBlock[] }
+export type NewsBlock = { id?: string; type: string; text: string; href?: string; children?: NewsBlock[] }
 export type NewsArticle = NewsItem & { contentLanguage?: string; languageLabel?: string; blocks?: NewsBlock[]; markdown?: string; displayLocale?: Locale; alternatePaths?: Partial<Record<Locale,string>> }
 export type NewsPage = { items: NewsItem[]; cursor: string | null; unavailable?: boolean }
 const source = process.env.NOTION_NEWS_DATA_SOURCE_ID || '83793ee8-a696-468d-85ef-9d41e880b692'
@@ -58,7 +58,7 @@ async function blocks(id: string, depth = 0): Promise<NewsBlock[]> {
       if (['child_page','child_database','synced_block','unsupported'].includes(b.type)) continue
       const children = b.has_children ? await blocks(b.id, depth+1) : undefined
       const links: NewsBlock[] = (value.rich_text || []).filter((r:any)=>r.href || r.text?.link?.url).map((r:any)=>({type:'link',text:r.plain_text||r.text.content,href:safeNewsUrl(r.href||r.text.link.url)})).filter((r:NewsBlock)=>r.href)
-      result.push({type:b.type,text: b.type==='table_row' ? value.cells.map(plain).join(' | ') : text,href,children:[...(children||[]),...links]})
+      result.push({...(b.id ? {id:normalized(b.id)} : {}),type:b.type,text: b.type==='table_row' ? value.cells.map(plain).join(' | ') : text,href,children:[...(children||[]),...links]})
     }
     cursor = data.has_more ? data.next_cursor : undefined
   } while(cursor)

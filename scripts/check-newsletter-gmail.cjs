@@ -91,6 +91,18 @@ async function run() {
   for (const invalid of ['javascript:alert(1)', 'http://example.com', 'https://user:password@example.com', 'https://example.com/\nattack']) {
     assert.throws(() => renderNewsletterEmail({ ...draft, articleUrl: invalid }, { unsubscribeUrl: input.unsubscribeUrl }))
   }
+  const fullDraft = { ...draft, summary: '', blocks: [
+    { type: 'paragraph', text: '전체 본문 '.repeat(250) },
+    { type: 'image', text: '사진 <설명>', url: 'https://example.com/news-image' },
+    { type: 'paragraph', text: '마지막 문장' },
+  ] }
+  const fullEmail = renderNewsletterEmail(fullDraft, { unsubscribeUrl: input.unsubscribeUrl })
+  assert(fullEmail.html.includes('전체 본문 '.repeat(250)))
+  assert(fullEmail.html.includes('<img src="https://example.com/news-image"'))
+  assert(fullEmail.html.includes('사진 &lt;설명&gt;'))
+  assert(fullEmail.text.includes('https://example.com/news-image') && fullEmail.text.includes('마지막 문장'))
+  assert(!fullEmail.html.includes('이어서 읽기') && !fullEmail.html.includes('이어 읽기'))
+  assert.throws(() => renderNewsletterEmail({ ...fullDraft, blocks: [{ type: 'image', text: '', url: 'javascript:alert(1)' }] }, { unsubscribeUrl: input.unsubscribeUrl }))
   assert.throws(() => renderNewsletterEmail({ ...draft, coverUrl: 'data:image/svg+xml,<svg/>' }, { unsubscribeUrl: input.unsubscribeUrl }))
   assert.throws(() => renderNewsletterEmail(draft, { unsubscribeUrl: input.unsubscribeUrl, contactEmail: 'x@example.com\nBcc: other@example.com' }))
 

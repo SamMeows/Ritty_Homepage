@@ -18,6 +18,7 @@ const messages: Record<string, string> = {
   invalid_approval_token: '미리보기를 다시 만든 뒤 발송해 주세요.', newsletter_disabled: '아직 실제 발송이 활성화되지 않았어요.',
   invalid_locale: '메일 언어를 다시 선택해 주세요.', invalid_id: '개발일지를 다시 선택해 주세요.', invalid_text: '제목과 소개의 길이와 내용을 확인해 주세요.',
   invalid_cover_url: '대표 이미지에는 계속 열리는 공개 HTTPS 주소를 사용해 주세요. 노션 임시 주소는 사용할 수 없어요.',
+  content_too_large: '본문이 메일 처리 한도를 초과했어요. 글을 나누거나 본문을 줄인 뒤 다시 미리보기를 만들어 주세요.',
   article_not_available: '이 글을 불러올 수 없어요. 노션 공개 상태와 선택한 언어를 확인해 주세요.',
   article_revision_unavailable: '글의 최신 수정 정보를 확인할 수 없어요. 잠시 후 다시 미리보기를 만들어 주세요.',
   articles_unavailable: '개발일지 목록을 불러오지 못했어요. 잠시 후 새로고침해 주세요.',
@@ -207,9 +208,10 @@ export default function NewsletterAdmin() {
                 {!overview.articles.length && <p className="newsletter-admin__hint">이 언어로 공개된 개발일지가 아직 없어요.</p>}
                 {selected && <p className="newsletter-admin__hint">{selected.date} · {selected.category}</p>}
                 <label htmlFor="newsletter-subject">메일 제목</label><input id="newsletter-subject" value={subject} maxLength={200} placeholder="비워 두면 개발일지 제목으로 만들어요" disabled={activity !== null || !articleId} onChange={event => { setSubject(event.target.value); invalidatePreview() }} />
-                <label htmlFor="newsletter-summary">짧은 소개</label><textarea id="newsletter-summary" rows={7} value={summary} maxLength={4000} placeholder="비워 두면 글의 내용에서 소개를 준비해요" disabled={activity !== null || !articleId} onChange={event => { setSummary(event.target.value); invalidatePreview() }} />
+                <label htmlFor="newsletter-summary">메일 앞 인사 <span className="newsletter-admin__optional">선택</span></label><textarea id="newsletter-summary" rows={4} value={summary} maxLength={4000} placeholder="원문 앞에 덧붙일 인사가 있으면 적어 주세요" disabled={activity !== null || !articleId} onChange={event => { setSummary(event.target.value); invalidatePreview() }} />
+                <p className="newsletter-admin__hint">선택한 글의 전체 본문과 사진이 순서대로 메일에 포함됩니다.</p>
                 <label htmlFor="newsletter-cover">대표 이미지 주소 <span className="newsletter-admin__optional">선택</span></label><input id="newsletter-cover" type="url" value={coverUrl} maxLength={2048} placeholder="https://…" disabled={activity !== null || !articleId} onChange={event => { setCoverUrl(event.target.value); invalidatePreview() }} />
-                <p className="newsletter-admin__hint">메일에서도 계속 열리는 공개 HTTPS 이미지를 사용해 주세요. 노션 임시 이미지 주소는 사용할 수 없어요.</p>
+                <p className="newsletter-admin__hint">원문의 대표 이미지와 본문 사진은 자동으로 포함돼요. 대표 이미지를 바꾸려면 계속 열리는 공개 HTTPS 주소를 입력해 주세요.</p>
                 <button className="newsletter-admin__secondary" disabled={!articleId || activity !== null} onClick={() => void makePreview()}>{activity === 'preview' ? '미리보기 만드는 중…' : '미리보기 만들기'}</button>
               </section>
               <section className="newsletter-admin__card newsletter-admin__preview"><div className="newsletter-admin__section-heading"><span>02</span><h2>확인하고 보내기</h2></div>
