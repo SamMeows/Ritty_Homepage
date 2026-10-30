@@ -1,14 +1,14 @@
 import 'server-only'
 import { getNews, getNewsArticle, type NewsItem } from './news'
 import { newsArticlePath, newsLanguage } from './news-languages'
-import { listMarketingCandidates } from './marketing-subscription'
+import { addNewsletterContact, getNewsletterContact, listMarketingCandidates, type MarketingRecipient } from './marketing-subscription'
 import { approveNewsletter, newsletterEmailHash, newsletterJobKey, verifyNewsletterApproval } from './newsletter-approval'
 import { newsletterAuthResponse } from './newsletter-auth'
 import { newsletterConfiguration, newsletterId, newsletterOrigin, NEWSLETTER_MAX_RECIPIENTS, NEWSLETTER_WORKFLOW } from './newsletter-config'
 import { renderNewsletterEmail } from './newsletter-email'
 import { newsletterContent, newsletterImagePath } from './newsletter-content'
 import { createNewsletterJob, listNewsletterJobIds, newsletterJobView, readNewsletterJob, requestNewsletterRetry, type JobDetails } from './newsletter-store'
-import { NEWSLETTER_LOCALES, type NewsletterDraft, type NewsletterLocale, type NewsletterPreview } from './newsletter-types'
+import { NEWSLETTER_LOCALES, type NewsletterDraft, type NewsletterLocale, type NewsletterPreview, type NewsletterRecipient } from './newsletter-types'
 
 const CATEGORY = '개발 소식'
 const HISTORY_LIMIT = 10
@@ -157,8 +157,30 @@ export async function listNewsletterJobs() {
 
 export async function getNewsletterOverview(locale: NewsletterLocale) {
   const configuration = newsletterConfiguration()
-  const [articles, jobs] = await Promise.all([listNewsletterArticles(locale), listNewsletterJobs()])
-  return { configuration, articles, jobs }
+  const [articles, jobs, candidates] = await Promise.all([listNewsletterArticles(locale), listNewsletterJobs(), listMarketingCandidates(locale)])
+  return { configuration, articles, jobs, recipients: groupedRecipients(candidates.filter(row => row.locale === locale), 'notion') }
+}
+
+function groupedRecipients(candidates: MarketingRecipient[], source: NewsletterRecipient['source']): NewsletterRecipient[] {
+  const result = new Map<string, NewsletterRecipient>()
+  for (const candidate of candidates) {
+    const email = candidate.email.trim().toLowerCase()
+    const row = result.get(email) || { email, pageIds: [], source }
+    const pageId = id(candidate.pageId)
+    if (!row.pageIds.includes(pageId)) row.pageIds.push(pageId)
+    result.set(email, row)
+  }
+  return [...result.values()].sort((a, b) => a.email.localeCompare(b.email))
+}
+
+export async function addNewsletterRecipient(input: Record<string, unknown>) {
+  fields(input, ['email', 'locale'])
+  const locale = newsletterLocale(input.locale)
+  if (typeof input.email !== 'string' || input.email.length > 254 || /[\u0000-\u0020\u007f]/.test(input.email)
+    || !/^[^@]+@[^@]+\.[^@]+$/.test(input.email)) throw new NewsletterServiceError(400, 'invalid_email')
+  const contacts = await addNewsletterContact(input.email, locale)
+  if (!contacts?.length) throw new NewsletterServiceError(409, 'recipient_unavailable')
+  return { recipient: groupedRecipients(contacts, 'manual')[0] }
 }
 
 export async function getNewsletterJob(value: unknown) {
@@ -166,7 +188,7 @@ export async function getNewsletterJob(value: unknown) {
 }
 
 export async function previewNewsletter(input: Record<string, unknown>): Promise<NewsletterPreview> {
-  fields(input, ['articleId', 'locale', 'subject', 'summary', 'coverUrl'])
+  fields(input, ['articleId', 'locale', 'subject', 'summary', 'coverUrl', 'recipientIds'])
   const articleId = id(input.articleId), locale = newsletterLocale(input.locale)
   const customSubject = boundedText(input.subject, 200)
   const customSummary = boundedText(input.summary, 4000, true)
@@ -182,9 +204,30 @@ export async function previewNewsletter(input: Record<string, unknown>): Promise
     coverUrl: cover || (article.cover ? new URL(newsletterImagePath(articleId, locale, 'cover'), newsletterOrigin()).href : undefined), articleModifiedAt: article.modifiedAt,
   }
   const candidates = await listMarketingCandidates(locale)
+  let selected = candidates.filter(candidate => candidate.locale === locale)
+  if (input.recipientIds !== undefined) {
+    if (!Array.isArray(input.recipientIds) || input.recipientIds.length > NEWSLETTER_MAX_RECIPIENTS) throw new NewsletterServiceError(400, 'invalid_recipients')
+    const selectedIds = new Set(input.recipientIds.map(id))
+    const available = new Map<string, MarketingRecipient>()
+    for (const candidate of selected) {
+      const pageId = id(candidate.pageId), previous = available.get(pageId)
+      if (previous && newsletterEmailHash(previous.email) !== newsletterEmailHash(candidate.email)) throw new NewsletterServiceError(409, 'recipients_changed')
+      available.set(pageId, candidate)
+    }
+    for (const pageId of selectedIds) {
+      if (available.has(pageId)) continue
+      const contact = await getNewsletterContact(pageId)
+      if (!contact || contact.locale !== locale) throw new NewsletterServiceError(409, 'recipient_unavailable')
+      available.set(pageId, contact)
+    }
+    // Keep every duplicate registration for selected email addresses so a
+    // withdrawal on an unchecked duplicate cannot be bypassed by its sibling.
+    const selectedEmails = new Set([...selectedIds].map(pageId => available.get(pageId)!.email.trim().toLowerCase()))
+    selected = [...available.values()].filter(candidate => selectedEmails.has(candidate.email.trim().toLowerCase()))
+  }
   const uniquePages = new Map<string, { pageId: string; emailHash: string }>()
   const emails = new Set<string>()
-  for (const candidate of candidates) {
+  for (const candidate of selected) {
     if (candidate.locale !== locale) continue
     const pageId = id(candidate.pageId), emailHash = newsletterEmailHash(candidate.email)
     const previous = uniquePages.get(pageId)

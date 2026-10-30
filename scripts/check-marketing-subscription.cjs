@@ -45,6 +45,15 @@ async function mockFetch(input, options) {
  const body = options.body ? JSON.parse(options.body) : undefined;
  calls.push({ path: url.pathname, method, body, cursor: url.searchParams.get('start_cursor') });
  if (fail) return json({}, 503);
+ if (url.pathname === '/v1/pages' && method === 'POST') {
+  assert(body.parent.page_id, 'manual contacts are separate pages, never database registrations');
+  const pageId = otherId(800 + pages.size);
+  const contact = { id: pageId, parent: body.parent, properties: body.properties };
+  pages.set(pageId, contact);
+  blockLists.set(pageId, body.children.map(block => ({ ...block, id: 'mock-block-' + (++nextBlock) })));
+  blockLists.get(body.parent.page_id).push({ id: pageId, type: 'child_page', child_page: { title: body.properties.title.title[0].text.content } });
+  return json(contact);
+ }
  let match = url.pathname.match(/^\/v1\/pages\/([a-f0-9]{32})$/);
  if (match) {
   const value = pages.get(match[1]);
@@ -88,17 +97,44 @@ async function mockFetch(input, options) {
  throw new Error('Unexpected mock request: ' + method + ' ' + url.pathname);
 }
 const mod = { exports: {} };
+const mockProcess = { env: { NOTION_TOKEN: 'test-token', NOTION_PRE_REGISTER_DB_ID: database, MARKETING_UNSUBSCRIBE_SECRET: 'test-secret', NODE_ENV: 'test' } };
 const source = ts.transpileModule(fs.readFileSync('lib/marketing-subscription.ts', 'utf8'), {
  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
 }).outputText;
 new Function('require', 'module', 'exports', 'fetch', 'process', source)(
  name => name === 'server-only' ? {} : require(name), mod, mod.exports, mockFetch,
- { env: { NOTION_TOKEN: 'test-token', NOTION_PRE_REGISTER_DB_ID: database, MARKETING_UNSUBSCRIBE_SECRET: 'test-secret', NODE_ENV: 'test' } },
+ mockProcess,
 );
 const m = mod.exports;
 const recipient = { pageId: id, email: 'person@example.com', locale: 'kr' };
 
 (async () => {
+ reset({}, [stateBlock(true)]);
+ const queueId = otherId(700);
+ mockProcess.env.NEWSLETTER_QUEUE_PAGE_ID = queueId;
+ pages.set(queueId, { id: queueId, properties: {}, parent: {} }); blockLists.set(queueId, []);
+ const contacts = await m.addNewsletterContact('Manual@Example.com', 'zh-tw');
+ assert.equal(contacts.length, 1);
+ const manual = contacts[0];
+ assert.equal(manual.email, 'manual@example.com');
+ assert.equal((await m.getNewsletterContact(manual.pageId)).locale, 'zh-tw');
+ assert.equal((await m.getMarketingRecipient(manual.pageId)).email, manual.email);
+ assert.deepEqual(await m.addNewsletterContact(manual.email, 'zh-tw'), contacts, 'adding again reuses contact');
+ const duplicateManualId = otherId(600);
+ pages.set(duplicateManualId, page({ pageId: duplicateManualId, email: manual.email, locale: 'zh-tw' }));
+ blockLists.set(duplicateManualId, [stateBlock(true)]);
+ assert.equal(await m.getNewsletterContact(id), null, 'arbitrary preregistration IDs cannot be added as manual contacts');
+ const manualToken = new URL(m.marketingUnsubscribeUrl(manual.pageId, 'zh-tw')).hash.slice(1);
+ assert.equal(await m.unsubscribeMarketing(manualToken), true);
+ assert.equal(await m.getMarketingRecipient(manual.pageId), null);
+ assert.equal(await m.getMarketingRecipient(duplicateManualId), null, 'manual unsubscribe also withdraws matching database contacts');
+ assert.equal(await m.addNewsletterContact(manual.email, 'zh-tw'), null, 'manual entry cannot restore withdrawal');
+ assert.equal(await m.addNewsletterContact('bad\r\nBcc:x@example.com', 'kr'), null);
+ assert.equal(await m.addNewsletterContact('person@example.com', 'zh-tw'), null, 'a different locale cannot be bypassed by manual entry');
+ pages.get(queueId).public_url = 'https://example.com/public';
+ await assert.rejects(m.addNewsletterContact('new@example.com', 'kr'), /scope/);
+ delete mockProcess.env.NEWSLETTER_QUEUE_PAGE_ID;
+
  // Exact required-consent versions are eligible without a modern state/checkbox.
  for (const version of ['2026-10', '2026-10-new-launch']) {
   reset({ version, consent: false });

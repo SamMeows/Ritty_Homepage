@@ -64,7 +64,11 @@ const mocks = {
     async getNews(cursor, locale) { seen.news.push({ cursor, locale }); return pages[Number(cursor || 0)] || { items: [], cursor: null } },
     async getNewsArticle(id, locale) { seen.news.push({ id, locale }); return article },
   },
-  'lib/marketing-subscription.ts': { async listMarketingCandidates() { return candidates } },
+  'lib/marketing-subscription.ts': {
+    async listMarketingCandidates() { return candidates },
+    async getNewsletterContact(pageId) { return pageId === PAGE(90) ? { pageId, email: 'manual@example.test', locale: 'kr' } : null },
+    async addNewsletterContact(email, locale) { return email === 'blocked@example.test' ? null : [{ pageId: PAGE(90), email: email.toLowerCase(), locale }] },
+  },
   'lib/newsletter-auth.ts': mockedAuth,
   'lib/newsletter-store.ts': {
     async listNewsletterJobIds(key) { seen.lookup.push(key); return [...jobs].filter(([, details]) => !key || details.job.key === key).map(([id]) => id) },
@@ -101,6 +105,7 @@ function load(relative) {
 const service = load('lib/newsletter-service.ts')
 const approval = load('lib/newsletter-approval.ts')
 const routes = {
+  recipients: load('app/api/admin/newsletter/recipients/route.ts'),
   image: load('app/api/news/[id]/image/route.ts'),
   overview: load('app/api/admin/newsletter/route.ts'),
   preview: load('app/api/admin/newsletter/preview/route.ts'),
@@ -132,6 +137,33 @@ async function createJob() {
 function delivery(status, retryable) { return { blockId: PAGE(300), value: { key: 'one', pageIds: [PAGE(1)], email: 'person@example.test', locale: 'kr', status, updatedAt: new Date().toISOString(), retryable } } }
 
 async function main() {
+  fixture()
+  const recipientOverview = await service.getNewsletterOverview('kr')
+  assert.equal(recipientOverview.recipients.length, 2, 'duplicate emails appear once')
+  assert.deepEqual(recipientOverview.recipients.find(row => row.email === 'person@example.test').pageIds, [PAGE(1), PAGE(2)])
+  const chosen = await makePreview({ recipientIds: [PAGE(3)] })
+  assert.equal(chosen.candidateCount, 1)
+  assert.deepEqual(approval.verifyNewsletterApproval(chosen.approvalToken).recipients.map(row => row.pageId), [PAGE(3)])
+  const duplicateSelected = await makePreview({ recipientIds: [PAGE(1)] })
+  assert.equal(approval.verifyNewsletterApproval(duplicateSelected.approvalToken).recipients.length, 2, 'all duplicate states are checked before delivery')
+  const manualSelected = await makePreview({ recipientIds: [PAGE(3), PAGE(90)] })
+  assert.equal(manualSelected.candidateCount, 2)
+  assert.deepEqual(approval.verifyNewsletterApproval(manualSelected.approvalToken).recipients.map(row => row.pageId), [PAGE(3), PAGE(90)])
+  await fails(makePreview({ recipientIds: [] }), 'no_recipients')
+  await fails(makePreview({ recipientIds: 'everyone' }), 'invalid_recipients')
+  await fails(makePreview({ recipientIds: [PAGE(91)] }), 'recipient_unavailable')
+  await fails(makePreview({ recipientIds: Array(501).fill(PAGE(1)) }), 'invalid_recipients')
+  await fails(makePreview({ locale: 'zh-tw', recipientIds: [PAGE(90)] }), 'article_not_available')
+  await fails(service.addNewsletterRecipient({ email: 'x@example.test\r\nBcc:x@example.test', locale: 'kr' }), 'invalid_email')
+  await fails(service.addNewsletterRecipient({ email: 'blocked@example.test', locale: 'kr' }), 'recipient_unavailable')
+  const added = await routes.recipients.POST(request('/recipients', { email: 'MANUAL@example.test', locale: 'kr' }))
+  assert.equal(added.status, 200)
+  assert.deepEqual((await added.json()).recipient, { email: 'manual@example.test', pageIds: [PAGE(90)], source: 'manual' })
+  authenticated = false
+  assert.equal((await routes.recipients.POST(request('/recipients', { email: 'manual@example.test', locale: 'kr' }))).status, 401)
+  authenticated = true
+  assert.equal((await routes.recipients.POST(request('/recipients', { email: 'manual@example.test', locale: 'kr' }, { headers: { origin: 'https://other.example.test' } }))).status, 403)
+
   fixture()
   article.language = 'ZH-TW'
   article.title = 'Ritty 開發消息'

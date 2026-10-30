@@ -2,16 +2,18 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { NewsItem } from '@/lib/news'
-import type { NewsletterConfiguration, NewsletterJobView, NewsletterLocale, NewsletterPreview } from '@/lib/newsletter-types'
+import type { NewsletterConfiguration, NewsletterJobView, NewsletterLocale, NewsletterPreview, NewsletterRecipient } from '@/lib/newsletter-types'
 import './newsletter-admin.css'
 
-type Overview = { configuration: NewsletterConfiguration; articles: NewsItem[]; jobs: NewsletterJobView[] }
+type Overview = { configuration: NewsletterConfiguration; articles: NewsItem[]; jobs: NewsletterJobView[]; recipients: NewsletterRecipient[] }
 type Session = { authenticated: boolean; email?: string }
-type Activity = 'preview' | 'send' | 'retry' | 'logout' | null
+type Activity = 'preview' | 'send' | 'retry' | 'logout' | 'recipient' | null
 const ROOT = '/api/admin/newsletter'
 const localeNames: Record<NewsletterLocale, string> = { kr: '한국어', en: 'English', ja: '日本語', 'zh-tw': '繁體中文 (ZH-TW)' }
 const statusNames = { queued: '발송 대기', sending: '발송 중', completed: '처리 완료', attention: '확인 필요', duplicate: '이미 요청한 글' }
 const messages: Record<string, string> = {
+  invalid_email: '올바른 이메일 주소를 입력해 주세요.', invalid_recipients: '발송 대상 목록을 확인해 주세요.',
+  recipient_unavailable: '이 주소는 수신거부·차단·언어 변경 등으로 추가할 수 없어요. 기존 구독 정보를 확인해 주세요.',
   unauthorized: '로그인이 만료됐어요. 다시 로그인해 주세요.', forbidden: '등록된 관리자 계정으로 로그인해 주세요.',
   auth_not_configured: '관리자 로그인 연결 설정이 필요합니다.', invalid_origin: '요청을 확인할 수 없어요. 이 페이지를 새로고침해 주세요.',
   preview_expired: '미리보기 유효 시간이 지났어요. 다시 만들어 주세요.', invalid_approval: '미리보기를 다시 만든 뒤 발송해 주세요.',
@@ -58,6 +60,9 @@ export default function NewsletterAdmin() {
   const [subject, setSubject] = useState('')
   const [summary, setSummary] = useState('')
   const [coverUrl, setCoverUrl] = useState('')
+  const [recipientIds, setRecipientIds] = useState<string[]>([])
+  const [manualEmail, setManualEmail] = useState('')
+  const [recipientSearch, setRecipientSearch] = useState('')
   const [preview, setPreview] = useState<NewsletterPreview | null>(null)
   const [job, setJob] = useState<NewsletterJobView | null>(null)
   const [activity, setActivity] = useState<Activity>(null)
@@ -93,9 +98,9 @@ export default function NewsletterAdmin() {
   useEffect(() => {
     if (!authenticated) return
     const abort = new AbortController()
-    setLoading(true); setOverview(null); setArticleId(''); setSubject(''); setSummary(''); setCoverUrl(''); setPreview(null)
+    setLoading(true); setOverview(null); setArticleId(''); setSubject(''); setSummary(''); setCoverUrl(''); setPreview(null); setRecipientIds([]); setManualEmail(''); setRecipientSearch('')
     api<Overview>('?locale=' + locale, undefined, abort.signal).then(data => {
-      if (!abort.signal.aborted) setOverview(data)
+      if (!abort.signal.aborted) { setOverview(data); setRecipientIds(data.recipients.flatMap(row => row.pageIds)) }
     }).catch(handleError).finally(() => { if (!abort.signal.aborted) setLoading(false) })
     return () => abort.abort()
   }, [authenticated, locale, handleError])
@@ -138,9 +143,24 @@ export default function NewsletterAdmin() {
   }
   const makePreview = () => act('preview', async () => {
     setPreview(null)
-    const next = await api<NewsletterPreview>('/preview', { articleId, locale, subject: subject.trim() || undefined, summary: summary.trim() || undefined, coverUrl: coverUrl.trim() || undefined })
+    const next = await api<NewsletterPreview>('/preview', { articleId, locale, subject: subject.trim() || undefined, summary: summary.trim() || undefined, coverUrl: coverUrl.trim() || undefined, recipientIds })
     setPreview(next); setSubject(next.draft.subject); setSummary(next.draft.summary); setCoverUrl(next.draft.coverUrl || '')
   })
+  const addRecipient = () => void act('recipient', async () => {
+    const { recipient } = await api<{ recipient: NewsletterRecipient }>('/recipients', { email: manualEmail.trim(), locale })
+    setOverview(current => {
+      if (!current) return current
+      const existing = current.recipients.find(row => row.email === recipient.email)
+      return { ...current, recipients: existing
+        ? current.recipients.map(row => row.email === recipient.email ? { ...row, pageIds: [...new Set([...row.pageIds, ...recipient.pageIds])] } : row)
+        : [...current.recipients, recipient] }
+    })
+    setRecipientIds(current => [...new Set([...current, ...recipient.pageIds])]); setManualEmail(''); invalidatePreview()
+  })
+  function toggleRecipient(row: NewsletterRecipient, checked: boolean) {
+    setRecipientIds(current => checked ? [...new Set([...current, ...row.pageIds])] : current.filter(id => !row.pageIds.includes(id)))
+    invalidatePreview()
+  }
   const send = () => {
     if (!preview) return
     void act('send', async () => {
@@ -161,7 +181,7 @@ export default function NewsletterAdmin() {
   }
   const logout = () => void act('logout', async () => {
     await api<Session>('/auth/logout', {}); setSession({ authenticated: false }); setOverview(null); setPreview(null); setJob(null); selectedJob.current = null
-    setArticleId(''); setSubject(''); setSummary(''); setCoverUrl('')
+    setArticleId(''); setSubject(''); setSummary(''); setCoverUrl(''); setRecipientIds([]); setManualEmail(''); setRecipientSearch('')
   })
   const refreshJob = async (id: string) => {
     selectedJob.current = id; setError('')
@@ -173,6 +193,7 @@ export default function NewsletterAdmin() {
   const expired = preview ? new Date(preview.expiresAt).getTime() <= clock : false
   const canSend = !!preview && !expired && preview.candidateCount > 0 && overview?.configuration.ready && overview.configuration.enabled
   const selected = overview?.articles.find(article => article.id === articleId)
+  const selectedCount = overview?.recipients.filter(row => row.pageIds.some(id => recipientIds.includes(id))).length || 0
   const retryable = job?.status === 'attention' && (!job.prepared || job.counts.pending > 0 || job.failures.some(item => item.status === 'failed' && item.retryable))
 
   return <main className="newsletter-admin">
@@ -212,13 +233,22 @@ export default function NewsletterAdmin() {
                 <p className="newsletter-admin__hint">선택한 글의 전체 본문과 사진이 순서대로 메일에 포함됩니다.</p>
                 <label htmlFor="newsletter-cover">대표 이미지 주소 <span className="newsletter-admin__optional">선택</span></label><input id="newsletter-cover" type="url" value={coverUrl} maxLength={2048} placeholder="https://…" disabled={activity !== null || !articleId} onChange={event => { setCoverUrl(event.target.value); invalidatePreview() }} />
                 <p className="newsletter-admin__hint">원문의 대표 이미지와 본문 사진은 자동으로 포함돼요. 대표 이미지를 바꾸려면 계속 열리는 공개 HTTPS 주소를 입력해 주세요.</p>
-                <button className="newsletter-admin__secondary" disabled={!articleId || activity !== null} onClick={() => void makePreview()}>{activity === 'preview' ? '미리보기 만드는 중…' : '미리보기 만들기'}</button>
+                <fieldset className="newsletter-admin__recipients" disabled={activity !== null}>
+                  <legend>발송 대상 <span>{selectedCount}명 선택</span></legend>
+                  <p className="newsletter-admin__hint">노션 DB의 구독자를 기본으로 선택해요. 체크를 해제하면 이번 발송에서만 제외됩니다.</p>
+                  <div className="newsletter-admin__recipient-actions"><button type="button" className="newsletter-admin__text-button" onClick={() => { setRecipientIds(overview.recipients.flatMap(row => row.pageIds)); invalidatePreview() }}>전체 선택</button><button type="button" className="newsletter-admin__text-button" onClick={() => { setRecipientIds([]); invalidatePreview() }}>전체 해제</button></div>
+                  <label htmlFor="newsletter-recipient-search">목록 검색</label><input id="newsletter-recipient-search" type="search" value={recipientSearch} onChange={event => setRecipientSearch(event.target.value)} placeholder="이메일로 검색" />
+                  <div className="newsletter-admin__recipient-list">{overview.recipients.filter(row => row.email.includes(recipientSearch.trim().toLowerCase())).map(row => <label key={row.email} className="newsletter-admin__recipient"><input type="checkbox" checked={row.pageIds.some(id => recipientIds.includes(id))} onChange={event => toggleRecipient(row, event.target.checked)} /><span>{row.email}<small>{row.source === 'manual' ? '직접 추가' : '노션 DB'}</small></span></label>)}{!overview.recipients.length && <p className="newsletter-admin__hint">이 언어의 구독자가 없어요. 이메일을 직접 추가할 수 있습니다.</p>}</div>
+                  <label htmlFor="newsletter-recipient-email">이메일 직접 추가</label><div className="newsletter-admin__recipient-add"><input id="newsletter-recipient-email" type="email" value={manualEmail} maxLength={254} placeholder="name@example.com" onChange={event => setManualEmail(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); if (manualEmail.trim()) addRecipient() } }} /><button type="button" className="newsletter-admin__secondary" disabled={!manualEmail.trim()} onClick={addRecipient}>{activity === 'recipient' ? '추가 중…' : '추가'}</button></div>
+                  <p className="newsletter-admin__hint">직접 추가한 주소는 이번 목록에만 포함돼요. 사전예약으로 등록되지 않으며, 수신거부한 주소는 추가할 수 없습니다.</p>
+                </fieldset>
+                <button className="newsletter-admin__secondary" disabled={!articleId || !selectedCount || activity !== null} onClick={() => void makePreview()}>{activity === 'preview' ? '미리보기 만드는 중…' : '미리보기 만들기'}</button>
               </section>
               <section className="newsletter-admin__card newsletter-admin__preview"><div className="newsletter-admin__section-heading"><span>02</span><h2>확인하고 보내기</h2></div>
                 {preview ? <>
                   <div className="newsletter-admin__preview-info"><p><span>보내는 주소</span><strong>{overview.configuration.sender || '설정 필요'}</strong></p><p><span>메일 제목</span><strong>{preview.draft.subject}</strong></p></div>
                   <iframe title="개발일지 이메일 미리보기" srcDoc={preview.html} sandbox="" referrerPolicy="no-referrer" />
-                  <div className="newsletter-admin__send-area"><div><strong>발송 후보 {preview.candidateCount.toLocaleString('ko-KR')}명</strong><p className="newsletter-admin__hint">수신거부·차단 상태는 발송 직전에 다시 확인해요.</p></div><button className="newsletter-admin__primary" onClick={send} disabled={!canSend || activity !== null}>{activity === 'send' ? '요청 저장 중…' : '전체 발송'}</button></div>
+                  <div className="newsletter-admin__send-area"><div><strong>선택한 발송 대상 {preview.candidateCount.toLocaleString('ko-KR')}명</strong><p className="newsletter-admin__hint">수신거부·차단 상태는 발송 직전에 다시 확인해요.</p></div><button className="newsletter-admin__primary" onClick={send} disabled={!canSend || activity !== null}>{activity === 'send' ? '요청 저장 중…' : '선택 대상에게 발송'}</button></div>
                   {expired && <p className="newsletter-admin__warning">미리보기 유효 시간이 지났어요. 다시 만든 뒤 발송해 주세요.</p>}
                   <p className="newsletter-admin__hint">버튼을 한 번 누르면 각 수신자에게 개별 메일로 발송해요. 발송은 백그라운드에서 계속됩니다.</p>
                 </> : <div className="newsletter-admin__empty"><span aria-hidden="true">↗</span><h3>먼저 미리보기를 만들어 주세요.</h3><p>메일 내용과 수신 대상을 확인한 뒤<br />한 번에 발송할 수 있어요.</p></div>}

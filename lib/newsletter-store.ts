@@ -72,7 +72,7 @@ export async function listNewsletterJobIds(key?: string) {
   const pages = (await children(root)).filter(item => item.type === 'child_page')
   // A renamed record must never silently disappear from deduplication. This
   // page is reserved for campaigns, so unknown child pages stop the queue.
-  if (pages.some(item => !item.child_page?.title.startsWith('Ritty newsletter · '))) {
+  if (pages.some(item => !item.child_page?.title.startsWith('Ritty newsletter · ') && !item.child_page?.title.startsWith('Ritty newsletter contact · '))) {
     throw new Error('Newsletter queue contains a renamed or unrelated page; restore its original campaign title')
   }
   return pages.filter(item => (key

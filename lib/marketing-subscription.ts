@@ -5,6 +5,7 @@ const MARKER = 'ritty_marketing_subscription_v1:'
 // The operator confirmed that these exact forms required marketing consent.
 const REQUIRED_CONSENT_VERSIONS = new Set(['2026-10', '2026-10-new-launch'])
 const LOCALES = new Set(['kr', 'en', 'ja', 'zh-tw'])
+const CONTACT_TITLE = 'Ritty newsletter contact · '
 type State = { subscribed: boolean; isTest: boolean; updatedAt: string; withdrawnAt?: string }
 type StateRecord = { blockId: string; state: State }
 type SubscriptionRecord = { page: any; states: StateRecord[]; bodyIsTest: boolean }
@@ -75,7 +76,16 @@ function verify(token: string) {
  return timingSafeEqual(Buffer.from(signed), Buffer.from(signature(id))) ? id : null
 }
 function member(page: any) {
- return !page.archived && !page.in_trash && normalizedId(page.parent?.database_id) === config().database
+ return !page.archived && !page.in_trash && (normalizedId(page.parent?.database_id) === config().database || !!manualContact(page))
+}
+function manualContact(page: any): { email: string; locale: string } | null {
+ const queue = normalizedId(process.env.NEWSLETTER_QUEUE_PAGE_ID)
+ if (!queue || normalizedId(page.parent?.page_id) !== queue || page.public_url || page.archived || page.in_trash) return null
+ const title = plain(page.properties?.title?.title)
+ if (!title.startsWith(CONTACT_TITLE)) return null
+ const [locale, ...parts] = title.slice(CONTACT_TITLE.length).split(' · ')
+ const email = emailAddress(parts.join(' · '))
+ return email && LOCALES.has(locale) ? { email, locale } : null
 }
 function emailAddress(value: string): string | null {
  // Reject control characters before trimming; never pass them into a mail header.
@@ -99,8 +109,9 @@ function hasHistoricalConsent(page: any) {
 function recipientFromPage(page: any): MarketingRecipient | null {
  if (!member(page) || propertyIsTest(page) || page.properties?.['Email Suppressed']?.checkbox === true) return null
  const pageId = normalizedId(page.id)
- const email = emailAddress(plain(page.properties?.Email?.title))
- const locale = page.properties?.Locale?.select?.name
+ const manual = manualContact(page)
+ const email = manual?.email || emailAddress(plain(page.properties?.Email?.title))
+ const locale = manual?.locale || page.properties?.Locale?.select?.name
  return pageId && email && typeof locale === 'string' && LOCALES.has(locale) ? { pageId, email, locale } : null
 }
 function nextCursor(data: any, seen: Set<string>): string | undefined {
@@ -209,7 +220,64 @@ async function matchingEmailPageIds(email: string): Promise<string[]> {
   }
   cursor = nextCursor(data, cursors)
  } while (cursor)
+ for (const contact of await newsletterContacts()) {
+  if (contact.email === email) ids.add(contact.pageId)
+ }
  return [...ids]
+}
+
+async function newsletterContacts(): Promise<MarketingRecipient[]> {
+ const queue = normalizedId(process.env.NEWSLETTER_QUEUE_PAGE_ID)
+ if (!queue) return []
+ const root = await notion('/pages/' + queue)
+ if (root.archived || root.in_trash || root.public_url || queue === config().database || queue === normalizedId(process.env.NOTION_NEWS_DATA_SOURCE_ID)) throw new Error('Invalid newsletter contacts scope')
+ const contacts: MarketingRecipient[] = [], seen = new Set<string>()
+ let cursor: string | undefined
+ do {
+  const data = await notion('/blocks/' + queue + '/children?page_size=100' + (cursor ? '&start_cursor=' + encodeURIComponent(cursor) : ''))
+  if (!Array.isArray(data.results)) throw new Error('Invalid newsletter contacts')
+  for (const block of data.results) {
+   const title = block.child_page?.title || ''
+   if (block.type !== 'child_page' || !title.startsWith(CONTACT_TITLE)) continue
+   const contact = manualContact({ parent: { page_id: queue }, properties: { title: { title: [{ text: { content: title } }] } } })
+   const pageId = normalizedId(block.id)
+   if (contact && pageId) contacts.push({ pageId, ...contact })
+  }
+  cursor = nextCursor(data, seen)
+ } while (cursor)
+ return contacts
+}
+
+// A separate newsletter contact supports unsubscribe without creating a launch
+// preregistration. Re-entering an address never restores withdrawn consent.
+export async function addNewsletterContact(value: string, locale: string): Promise<MarketingRecipient[] | null> {
+ const email = emailAddress(value)
+ if (!email || !LOCALES.has(locale)) return null
+ const existing = await matchingEmailPageIds(email)
+ if (existing.length) {
+  const recipients: MarketingRecipient[] = []
+  for (const pageId of existing) {
+   const recipient = await getMarketingRecipient(pageId)
+   if (!recipient || recipient.email !== email || recipient.locale !== locale) return null
+   recipients.push(recipient)
+  }
+  return recipients
+ }
+ const parent = normalizedId(process.env.NEWSLETTER_QUEUE_PAGE_ID)
+ if (!parent) throw new Error('Newsletter contacts storage unavailable')
+ const page = await notion('/pages', 'POST', { parent: { page_id: parent },
+  properties: { title: { title: [{ type: 'text', text: { content: CONTACT_TITLE + locale + ' · ' + email } }] } },
+  children: [marketingSubscriptionBlock(true, false)],
+ })
+ const pageId = normalizedId(page.id)
+ if (!pageId) throw new Error('Invalid newsletter contact')
+ return [{ pageId, email, locale }]
+}
+
+export async function getNewsletterContact(pageId: string): Promise<MarketingRecipient | null> {
+ const id = normalizedId(pageId)
+ if (!id || !manualContact(await notion('/pages/' + id))) return null
+ return getMarketingRecipient(id)
 }
 export async function unsubscribeMarketing(token: string) {
  const id = verify(token)
@@ -220,14 +288,14 @@ export async function unsubscribeMarketing(token: string) {
  await persistWithdrawal(id, record)
  let failed = false
  try { await syncConsentColumn(id, record) } catch { failed = true }
- const email = emailAddress(plain(record.page.properties?.Email?.title))
+ const email = manualContact(record.page)?.email || emailAddress(plain(record.page.properties?.Email?.title))
  if (email) {
   for (const duplicateId of await matchingEmailPageIds(email)) {
    if (duplicateId === id) continue
    try {
     const duplicate = await subscription(duplicateId)
     // Recheck after the query in case this row's address changed meanwhile.
-    if (!duplicate || emailAddress(plain(duplicate.page.properties?.Email?.title)) !== email) continue
+    if (!duplicate || (manualContact(duplicate.page)?.email || emailAddress(plain(duplicate.page.properties?.Email?.title))) !== email) continue
     await persistWithdrawal(duplicateId, duplicate)
     await syncConsentColumn(duplicateId, duplicate)
    } catch { failed = true }

@@ -2,6 +2,7 @@ export const NEWSLETTER_LOCALES = ['kr', 'en', 'ja', 'zh-tw'] as const
 export type NewsletterLocale = (typeof NEWSLETTER_LOCALES)[number]
 
 export type NewsletterBlock = { type: string; text: string; url?: string; children?: NewsletterBlock[] }
+export type NewsletterRecipient = { email: string; pageIds: string[]; source: 'notion' | 'manual' }
 
 export type NewsletterDraft = {
   articleId: string

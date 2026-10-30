@@ -166,7 +166,7 @@ async function main() {
     process.env.NOTION_PRE_REGISTER_DB_ID = id(9000);
     let renamed = true;
     global.fetch = async url => Response.json(String(url).includes('/children')
-      ? { results: [{ id: id(100), type: 'child_page', child_page: { title: renamed ? 'Renamed campaign' : 'Ritty newsletter · ' + newsletterJobKey(draft) } }], has_more: false }
+      ? { results: [{ id: id(100), type: 'child_page', child_page: { title: renamed ? 'Renamed campaign' : 'Ritty newsletter · ' + newsletterJobKey(draft) } }, { id: id(101), type: 'child_page', child_page: { title: 'Ritty newsletter contact · kr · manual@example.com' } }], has_more: false }
       : { id: id(8000), archived: false, public_url: null });
     await assert.rejects(listNewsletterJobIds(), /renamed/, 'renaming must not hide a previous delivery');
     renamed = false;
