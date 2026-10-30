@@ -25,10 +25,10 @@ export async function generateMetadata({params}:Props):Promise<Metadata> {
   const description=newsDescription(article)
   const base='https://ritty.sam-meows.com'
   const url=base+newsArticlePath(article.language || 'KO',article.id)
-  const languages=Object.fromEntries(Object.entries(article.alternatePaths || {}).filter(([key])=>key!=='zh-tw').map(([key,path])=>[key==='kr'?'ko':key,base+path]))
+  const languages=Object.fromEntries(Object.entries(article.alternatePaths || {}).map(([key,path])=>[key==='kr'?'ko':key==='zh-tw'?'zh-TW':key,base+path]))
   return {
     title,description,robots:searchRobots,alternates:{canonical:url,languages},
-    openGraph:{type:'article',url,title,description,siteName:'리티 Ritty',locale:article.language==='JA'?'ja_JP':article.language==='EN'?'en_US':'ko_KR',publishedTime:article.date,...(article.modifiedAt?{modifiedTime:article.modifiedAt}:{}),images:[{url:article.cover||'/og-ritty-island-v2.png'}]},
+    openGraph:{type:'article',url,title,description,siteName:'리티 Ritty',locale:article.language==='ZH-TW'?'zh_TW':article.language==='JA'?'ja_JP':article.language==='EN'?'en_US':'ko_KR',publishedTime:article.date,...(article.modifiedAt?{modifiedTime:article.modifiedAt}:{}),images:[{url:article.cover||'/og-ritty-island-v2.png'}]},
     twitter:{card:'summary_large_image',title,description,images:[article.cover||'/og-ritty-island-v2.png']},
   }
 }

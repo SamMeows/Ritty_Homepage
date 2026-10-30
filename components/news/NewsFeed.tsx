@@ -2,7 +2,7 @@
 import { formatNewsDate, newsListPath } from '@/lib/news-languages'
 import { useEffect, useRef, useState } from 'react'
 import { trackRegistrationFunnel } from '@/lib/analytics'
-import { localizeNewsTitle, newsLanguageNote } from '@/lib/i18n/news-articles'
+import { localizeNewsTitle } from '@/lib/i18n/news-articles'
 import type { NewsPage } from '@/lib/news'
 import NewsModal from './NewsModal'
 import './news-modal.css'
@@ -37,7 +37,6 @@ export default function NewsFeed({initial, locale = 'kr', layout = 'featured'}: 
     const match=link?.getAttribute('href')?.match(/^\/(?:en\/|ja\/|zh-tw\/)?news\/([a-f\d-]+)$/i)
     if(match&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey&&!event.altKey){event.preventDefault();setActiveId(match[1]);trackRegistrationFunnel('news_card_click',locale,{article_id:match[1]})}
   }}>
-    {locale === 'zh-tw' && data.items.length > 0 && <p className="news-language-note">{newsLanguageNote(locale)}</p>}
     <div className="news-filters" aria-label={t('소식 분류')}>{['전체','공지사항','개발 소식','팀 레터'].map(name=><button key={name} type="button" aria-pressed={category===name} onClick={()=>setCategory(name)}>{t(name)}</button>)}</div>
     {featured ? layout === 'cards' ? <div className="news-card-grid">{filtered.map(item=><a key={item.id} className="news-feature" href={(newsListPath(locale)+'/')+item.id}>
       <div className="news-feature-art">{item.cover ? <img src={item.cover} alt=""/> : <><span className="official-wordmark"><span>Ritty</span><img src="/images/logo-sparkle.svg" alt="" width="27" height="28"/></span><span aria-hidden="true">NEWS</span></>}</div>

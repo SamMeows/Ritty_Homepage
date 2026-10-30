@@ -4,10 +4,11 @@ const {renderToStaticMarkup}=require('react-dom/server');
 const React=require('react');
 process.env.NOTION_NEWS_DATA_SOURCE_ID='b'.repeat(32);process.env.NOTION_NEWS_TOKEN='mock-read-only';
 const source=process.env.NOTION_NEWS_DATA_SOURCE_ID;
-const ids={ko:'1'.repeat(32),en:'2'.repeat(32),ja:'3'.repeat(32),legacy:'4'.repeat(32),draft:'5'.repeat(32),future:'6'.repeat(32),foreign:'7'.repeat(32),unrelated:'8'.repeat(32)};
+const ids={zh:'9'.repeat(32),ko:'1'.repeat(32),en:'2'.repeat(32),ja:'3'.repeat(32),legacy:'4'.repeat(32),draft:'5'.repeat(32),future:'6'.repeat(32),foreign:'7'.repeat(32),unrelated:'8'.repeat(32)};
 function record(id,language,original,translations=[]){return {id,parent:{data_source_id:source},properties:{'제목':{title:[{plain_text:language+' title'}]},'공개':{checkbox:true},'게시일':{date:{start:'2026-01-02'}},'언어':{select:language?{name:language}:null},'분류':{select:{name:'개발 소식'}},'원문':{relation:original?[{id:original}]:[]},'번역본':{id:'siblings',relation:translations.map(id=>({id}))}}}}
 const pages={
- [ids.ko]:record(ids.ko,'KO',null,[ids.en,ids.ja,ids.draft,ids.future,ids.foreign,ids.unrelated]),
+ [ids.ko]:record(ids.ko,'KO',null,[ids.en,ids.ja,ids.zh,ids.draft,ids.future,ids.foreign,ids.unrelated]),
+ [ids.zh]:record(ids.zh,'ZH-TW',ids.ko),
  [ids.en]:record(ids.en,'EN',ids.ko),[ids.ja]:record(ids.ja,'JA',ids.ko),[ids.legacy]:record(ids.legacy,null),
  [ids.draft]:record(ids.draft,'JA',ids.ko),[ids.future]:record(ids.future,'EN',ids.ko),[ids.foreign]:record(ids.foreign,'EN',ids.ko),[ids.unrelated]:record(ids.unrelated,'JA',ids.legacy)
 };
@@ -33,9 +34,18 @@ const listApi=load('app/api/news/route.ts');const articleApi=load('app/api/news/
  assert(calls[0].options.body.includes('is_empty'));
  assert.deepEqual((await news.getNews(undefined,'en')).items.map(i=>i.id),[ids.en]);
  assert.deepEqual((await news.getNews(undefined,'ja')).items.map(i=>i.id),[ids.ja,ids.unrelated]);
- assert.deepEqual((await news.getNews(undefined,'zh-tw')).items.map(i=>i.id),[ids.ko,ids.legacy]);
+ assert.deepEqual((await news.getNews(undefined,'zh-tw')).items.map(i=>i.id),[ids.zh]);
+ const zh=await news.getNewsArticle(ids.zh,'zh-tw');
+ assert.equal(zh.language,'ZH-TW');assert.equal(zh.contentLanguage,'zh-tw');
+ assert.equal(zh.alternatePaths.kr,'/news/'+ids.ko);
+ assert.equal(await news.getNewsArticle(ids.ko,'zh-tw'),null);
+ assert.equal(await news.getNewsArticle(ids.zh,'en'),null);
+ const zhResponse=await articleApi.GET(new Request('https://example.test/api/news/'+ids.zh+'?locale=zh-tw'),{params:Promise.resolve({id:ids.zh})});
+ assert.equal(zhResponse.status,200);assert.equal((await zhResponse.json()).languageLabel,undefined);
+ const zhList=await (await listApi.GET(new Request('https://example.test/api/news?locale=zh-tw'))).json();assert.deepEqual(zhList.items.map(i=>i.id),[ids.zh]);
+ const zhStructured=load('lib/seo.ts').newsStructuredData(zh,'Traditional Chinese')['@graph'][0];assert.equal(zhStructured.inLanguage,'zh-TW');assert(zhStructured.url.includes('/zh-tw/news/'));
  const english=await news.getNewsArticle(ids.en,'en');assert.equal(english.blocks[0].text,'English article body');
- assert.deepEqual(english.alternatePaths,{en:'/en/news/'+ids.en,kr:'/news/'+ids.ko,ja:'/ja/news/'+ids.ja});
+ assert.deepEqual(english.alternatePaths,{en:'/en/news/'+ids.en,kr:'/news/'+ids.ko,ja:'/ja/news/'+ids.ja,'zh-tw':'/zh-tw/news/'+ids.zh});
  const structured=load('lib/seo.ts').newsStructuredData(english,'English article body')['@graph'][0];assert.equal(structured.url,'https://ritty.sam-meows.com/en/news/'+ids.en);assert.equal(structured.inLanguage,'en-US');
  const japanese=await news.getNewsArticle(ids.ja,'ja');assert.equal(japanese.alternatePaths.en,'/en/news/'+ids.en);
  assert.equal(await news.getNewsArticle(ids.en,'kr'),null);assert.equal(await news.getNewsArticle(ids.ko,'en'),null);
@@ -56,13 +66,13 @@ const listApi=load('app/api/news/route.ts');const articleApi=load('app/api/news/
  assert.equal(copy.newsCopy('ja','팀 레터'),'運営だより');assert.equal(copy.newsCopy('en','공지사항'),'Announcements');
  assert.equal(languages.formatNewsDate('2026-01-02','en'),'Jan 2, 2026');assert(languages.formatNewsDate('2026-01-02','ja').includes('2026年'));
  const sitemap=await load('app/sitemap.ts').default();
- for(const url of ['/news/'+ids.ko,'/en/news/'+ids.en,'/ja/news/'+ids.ja])assert(sitemap.some(row=>row.url.endsWith(url)));
+ for(const url of ['/news/'+ids.ko,'/en/news/'+ids.en,'/ja/news/'+ids.ja,'/zh-tw/news/'+ids.zh])assert(sitemap.some(row=>row.url.endsWith(url)));
  assert(!sitemap.some(row=>row.url.includes(ids.draft)||row.url.includes(ids.future)||row.url.includes(ids.foreign)));
  const englishSite=sitemap.find(row=>row.url.endsWith('/en/news/'+ids.en));assert(englishSite.alternates.languages.ja.endsWith('/ja/news/'+ids.ja));
  const {middleware}=load('middleware.ts'),{NextRequest}=require('next/server');
  for(const url of ['/en/news','/ja/news','/en/news/'+ids.en,'/ja/news/'+ids.ja])assert.equal(middleware(new NextRequest('https://example.test'+url)).headers.get('location'),null);
- assert.equal(middleware(new NextRequest('https://example.test/zh-tw/news')).headers.get('location'),'https://example.test/news');
+ assert.equal(middleware(new NextRequest('https://example.test/zh-tw/news')).headers.get('location'),null);
  assert.equal((await load('app/api/admin/news/route.ts').GET()).status,410);assert.equal((await load('app/api/admin/news/translate/route.ts').POST()).status,410);
  fail=true;assert.equal((await news.getNews(undefined,'en')).unavailable,true);
- console.log('Passed: KO/empty-language compatibility, EN/JA filtering, publication/date guards, locale-aware API and pagination, real translation IDs, reciprocal published relations, missing-translation list fallback, paginated relations, translated categories/dates, multilingual sitemap/hreflang, redirect removal, zh-TW fallback, retired admin endpoints, source failure. No live writes.');
+ console.log('Passed: KO/empty-language compatibility, EN/JA filtering, publication/date guards, locale-aware API and pagination, real translation IDs, reciprocal published relations, missing-translation list fallback, paginated relations, translated categories/dates, multilingual sitemap/hreflang, redirect removal, ZH-TW list/detail/API/relations/structured data and redirect removal, retired admin endpoints, source failure. No live writes.');
 })().catch(e=>{console.error(e);process.exitCode=1});

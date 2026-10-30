@@ -45,12 +45,6 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 301)
   }
 
-  if (pathname === '/zh-tw/news' || pathname.startsWith('/zh-tw/news/')) {
-    const url = request.nextUrl.clone()
-    url.pathname = pathname.slice('/zh-tw'.length)
-    return NextResponse.redirect(url, 301)
-  }
-
   // Set the document language on the server, including the initial HTML response.
   requestHeaders.set('x-ritty-language', pathname === '/en' || pathname.startsWith('/en/') ? 'en' : pathname === '/ja' || pathname.startsWith('/ja/') ? 'ja' : pathname === '/zh-tw' || pathname.startsWith('/zh-tw/') ? 'zh-Hant-TW' : 'ko')
 

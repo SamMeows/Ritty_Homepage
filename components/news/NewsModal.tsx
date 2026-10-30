@@ -59,8 +59,8 @@ export default function NewsModal({id, onClose, locale = 'kr'}: {id: string; onC
     <div ref={viewport} className="news-modal-scroll" onClick={event => {
       const link = (event.target as Element).closest<HTMLAnchorElement>('a[href]')
       const next = link?.getAttribute('href')?.match(/^\/(?:en\/|ja\/|zh-tw\/)?news\/([a-f\d-]+)$/i)
-      const destinationLocale = link?.getAttribute('href')?.startsWith('/en/') ? 'en' : link?.getAttribute('href')?.startsWith('/ja/') ? 'ja' : 'kr'
-      if (next && (destinationLocale === locale || (locale === 'zh-tw' && destinationLocale === 'kr')) && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { event.preventDefault(); setCurrentId(next[1]) }
+      const destinationLocale = link?.getAttribute('href')?.startsWith('/en/') ? 'en' : link?.getAttribute('href')?.startsWith('/ja/') ? 'ja' : link?.getAttribute('href')?.startsWith('/zh-tw/') ? 'zh-tw' : 'kr'
+      if (next && destinationLocale === locale && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { event.preventDefault(); setCurrentId(next[1]) }
     }}>
       {article ? <NewsArticle article={article}/> : error ? <div className="news-modal-state" role="alert"><p>{error}</p><button type="button" onClick={() => setRetry(value => value + 1)}>{t('다시 불러오기')}</button></div> : <p className="news-modal-state" role="status">{t('소식을 불러오는 중이에요…')}</p>}
     </div>
