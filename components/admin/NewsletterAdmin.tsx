@@ -228,7 +228,7 @@ export default function NewsletterAdmin() {
                 </select>
                 {!overview.articles.length && <p className="newsletter-admin__hint">이 언어로 공개된 개발일지가 아직 없어요.</p>}
                 {selected && <p className="newsletter-admin__hint">{selected.date} · {selected.category}</p>}
-                <label htmlFor="newsletter-subject">메일 제목</label><input id="newsletter-subject" value={subject} maxLength={200} placeholder="[리티 개발로그] 개발일지 제목" disabled={activity !== null || !articleId} onChange={event => { setSubject(event.target.value); invalidatePreview() }} />
+                <label htmlFor="newsletter-subject">메일 제목</label><input id="newsletter-subject" value={subject} maxLength={200} placeholder="[리티 개발일지] 개발일지 제목" disabled={activity !== null || !articleId} onChange={event => { setSubject(event.target.value); invalidatePreview() }} />
                 <label htmlFor="newsletter-summary">메일 앞 인사 <span className="newsletter-admin__optional">선택</span></label><textarea id="newsletter-summary" rows={4} value={summary} maxLength={4000} placeholder="원문 앞에 덧붙일 인사가 있으면 적어 주세요" disabled={activity !== null || !articleId} onChange={event => { setSummary(event.target.value); invalidatePreview() }} />
                 <p className="newsletter-admin__hint">선택한 글의 전체 본문과 사진이 순서대로 메일에 포함됩니다.</p>
                 <label htmlFor="newsletter-cover">대표 이미지 주소 <span className="newsletter-admin__optional">선택</span></label><input id="newsletter-cover" type="url" value={coverUrl} maxLength={2048} placeholder="https://…" disabled={activity !== null || !articleId} onChange={event => { setCoverUrl(event.target.value); invalidatePreview() }} />

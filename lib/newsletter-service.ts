@@ -93,8 +93,8 @@ function plainTitle(value: string) {
 }
 
 function subject(value: string) {
-  const prefix = '[리티 개발로그] '
-  const title = value.trim().replace(/^(?:(?:\(광고\)|\[광고\]|\[리티 개발로그\])\s*)+/, '').trim()
+  const prefix = '[리티 개발일지] '
+  const title = value.trim().replace(/^(?:(?:\(광고\)|\[광고\]|\[리티 개발로그\]|\[리티 개발\s?일지\])\s*)+/, '').trim()
   if (!title) throw new NewsletterServiceError(400, 'invalid_text')
   return prefix + truncate(title, 200 - prefix.length)
 }
