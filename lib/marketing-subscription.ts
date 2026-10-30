@@ -21,7 +21,7 @@ function config() {
 }
 async function notion(path: string, method = 'GET', body?: unknown, attempt = 0): Promise<any> {
  const response = await fetch('https://api.notion.com/v1' + path, { method,
-  headers: { Authorization: 'Bearer ' + config().token, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json' },
+  headers: { Authorization: 'Bearer ' + config().token, 'Notion-Version': '2025-09-03', 'Content-Type': 'application/json' },
   body: body === undefined ? undefined : JSON.stringify(body), cache: 'no-store', signal: AbortSignal.timeout(15000) })
  // An explicit rate-limit rejection is safe to retry; ambiguous writes are not.
  if (response.status === 429 && attempt < 2) {
@@ -74,7 +74,8 @@ function verify(token: string) {
  return timingSafeEqual(Buffer.from(signed), Buffer.from(signature(id))) ? id : null
 }
 function member(page: any) {
- return !page.archived && !page.in_trash && (normalizedId(page.parent?.database_id) === config().database || !!manualContact(page))
+ const parentId = normalizedId(page.parent?.data_source_id === undefined ? page.parent?.database_id : page.parent.data_source_id)
+ return !page.archived && !page.in_trash && (parentId === config().database || !!manualContact(page))
 }
 function manualContact(page: any): { email: string; locale: string } | null {
  const queue = normalizedId(process.env.NEWSLETTER_QUEUE_PAGE_ID)
@@ -125,7 +126,7 @@ export async function listMarketingCandidates(locale: string): Promise<Marketing
  const result: MarketingRecipient[] = [], pageIds = new Set<string>(), cursors = new Set<string>()
  let cursor: string | undefined
  do {
-  const data = await notion('/databases/' + config().database + '/query', 'POST', {
+  const data = await notion('/data_sources/' + config().database + '/query', 'POST', {
    page_size: 100, ...(cursor ? { start_cursor: cursor } : {}), filter: { property: 'Locale', select: { equals: locale } },
   })
   if (!Array.isArray(data.results)) throw new Error('Invalid subscription list')
@@ -210,7 +211,7 @@ async function matchingEmailPageIds(email: string): Promise<string[]> {
  do {
   // Inspect all contact rows: a title filter's casing/whitespace semantics must
   // not let a duplicate address retain consent after another row withdraws.
-  const data = await notion('/databases/' + config().database + '/query', 'POST', {
+  const data = await notion('/data_sources/' + config().database + '/query', 'POST', {
    page_size: 100, ...(cursor ? { start_cursor: cursor } : {}),
   })
   if (!Array.isArray(data.results)) throw new Error('Invalid subscription list')
