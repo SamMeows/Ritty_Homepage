@@ -9,7 +9,7 @@ type Overview = { configuration: NewsletterConfiguration; articles: NewsItem[]; 
 type Session = { authenticated: boolean; email?: string }
 type Activity = 'preview' | 'send' | 'retry' | 'logout' | null
 const ROOT = '/api/admin/newsletter'
-const localeNames = { kr: '한국어', en: 'English', ja: '日本語' }
+const localeNames: Record<NewsletterLocale, string> = { kr: '한국어', en: 'English', ja: '日本語', 'zh-tw': '繁體中文 (ZH-TW)' }
 const statusNames = { queued: '발송 대기', sending: '발송 중', completed: '처리 완료', attention: '확인 필요', duplicate: '이미 요청한 글' }
 const messages: Record<string, string> = {
   unauthorized: '로그인이 만료됐어요. 다시 로그인해 주세요.', forbidden: '등록된 관리자 계정으로 로그인해 주세요.',

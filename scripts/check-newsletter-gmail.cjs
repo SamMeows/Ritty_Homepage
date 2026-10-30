@@ -84,7 +84,7 @@ async function run() {
   assert(!rendered.html.includes('<script>') && !rendered.html.includes('<img src=x'))
   assert(rendered.html.includes('&lt;script&gt;') && rendered.html.includes('&lt;Sam&gt;') && rendered.html.includes('&amp; 반가워요'))
   assert(rendered.text.includes('<script>') && !rendered.text.includes('&lt;script&gt;'))
-  for (const [locale, lang, unsubscribe] of [['kr', 'ko', '이메일 수신거부'], ['en', 'en', 'Unsubscribe'], ['ja', 'ja', 'メール配信停止']]) {
+  for (const [locale, lang, unsubscribe] of [['kr', 'ko', '이메일 수신거부'], ['en', 'en', 'Unsubscribe'], ['ja', 'ja', 'メール配信停止'], ['zh-tw', 'zh-TW', '取消訂閱']]) {
     const result = renderNewsletterEmail({ ...draft, locale }, { unsubscribeUrl: input.unsubscribeUrl })
     assert(result.html.includes(`lang="${lang}"`) && result.text.includes(unsubscribe))
   }

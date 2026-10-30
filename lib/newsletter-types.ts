@@ -1,4 +1,4 @@
-export const NEWSLETTER_LOCALES = ['kr', 'en', 'ja'] as const
+export const NEWSLETTER_LOCALES = ['kr', 'en', 'ja', 'zh-tw'] as const
 export type NewsletterLocale = (typeof NEWSLETTER_LOCALES)[number]
 
 export type NewsletterDraft = {

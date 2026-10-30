@@ -131,6 +131,25 @@ function delivery(status, retryable) { return { blockId: PAGE(300), value: { key
 
 async function main() {
   fixture()
+  article.language = 'ZH-TW'
+  article.title = 'Ritty 開發消息'
+  article.blocks = [{ type: 'paragraph', text: '一起看看最新的開發進度。' }]
+  candidates[0].locale = 'zh-tw'
+  assert.equal(service.newsletterLocale('zh-tw'), 'zh-tw')
+  assert.equal((await service.listNewsletterArticles('zh-tw')).length, 1)
+  const chinesePreview = await makePreview({ locale: 'zh-tw' })
+  assert.equal(chinesePreview.candidateCount, 1, 'only Traditional Chinese subscribers are included')
+  assert.equal(chinesePreview.draft.articleUrl, SITE + '/zh-tw/news/' + ARTICLE)
+  assert.ok(chinesePreview.html.includes('lang="zh-TW"'))
+  assert.ok(chinesePreview.html.includes('/unsubscribe?lang=zh-tw'))
+  assert.ok(chinesePreview.html.includes('取消訂閱'))
+  assert.deepEqual(approval.verifyNewsletterApproval(chinesePreview.approvalToken).recipients.map(row => row.pageId), [PAGE(1)])
+  const chineseJob = await service.sendApprovedNewsletter({ approvalToken: chinesePreview.approvalToken }, ADMIN)
+  assert.equal(chineseJob.job.draft.locale, 'zh-tw')
+  article.language = 'KO'
+  await fails(makePreview({ locale: 'zh-tw' }), 'article_not_available')
+
+  fixture()
   const preview = await makePreview()
   assert.equal(preview.candidateCount, 2)
   assert.equal(preview.draft.articleUrl, SITE + '/news/' + ARTICLE)
@@ -158,7 +177,7 @@ async function main() {
   await fails(makePreview({ subject: 'hello\r\nBcc: someone@example.test' }), 'invalid_text')
   await fails(makePreview({ summary: 'x'.repeat(4001) }), 'invalid_text')
   await fails(makePreview({ articleUrl: 'https://attacker.example.test/' }), 'invalid_request')
-  await fails(makePreview({ locale: 'zh-tw' }), 'invalid_locale')
+  await fails(makePreview({ locale: 'zh-cn' }), 'invalid_locale')
   await fails(makePreview({ articleId: '../pages' }), 'invalid_id')
   const prefixed = await makePreview({ subject: '(광고) (광고) 제목' })
   assert.equal(prefixed.draft.subject, '(광고) 제목')

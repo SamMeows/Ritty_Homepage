@@ -10,6 +10,7 @@ const id = value => value.toString(16).padStart(32, '0');
 const timestamp = Date.now();
 const draft = { articleId: id(1), locale: 'kr', title: '개발일지', subject: '(광고) 리티 개발일지', summary: '새로운 이야기', articleUrl: 'https://example.com/kr/news/' + id(1), articleModifiedAt: new Date(timestamp).toISOString() };
 function harness(options = {}) {
+  const draft = options.draft || { articleId: id(1), locale: 'kr', title: '개발일지', subject: '(광고) 리티 개발일지', summary: '새로운 이야기', articleUrl: 'https://example.com/kr/news/' + id(1), articleModifiedAt: new Date(timestamp).toISOString() };
   const recipients = options.recipients || [{ pageId: id(10), email: 'one@example.com', locale: 'kr' }, { pageId: id(11), email: 'two@example.com', locale: 'kr' }];
   const signed = approveNewsletter(draft, recipients.map(row => ({ pageId: row.pageId, emailHash: newsletterEmailHash(row.email) })), timestamp);
   const jobs = new Map();
@@ -53,6 +54,13 @@ function harness(options = {}) {
 }
 
 async function main() {
+  {
+    const h = harness({ draft: { ...draft, locale: 'zh-tw', title: 'Ritty 開發消息', articleUrl: 'https://example.com/zh-tw/news/' + id(1) }, recipients: [{ pageId: id(10), email: 'reader@example.com', locale: 'zh-tw' }] });
+    await h.run();
+    assert.equal(h.sends.length, 1);
+    assert.equal(h.sends[0].draft.locale, 'zh-tw');
+    assert.equal(h.first.job.status, 'completed');
+  }
   {
     const h = harness(); h.addJob(101);
     await h.run(); await h.run();

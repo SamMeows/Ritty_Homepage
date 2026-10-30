@@ -26,6 +26,12 @@ const copy = {
     unsubscribe: 'メール配信停止', reservation: 'メールの配信を停止しても、事前登録は維持されます。',
     contact: 'お問い合わせ',
   },
+  'zh-tw': {
+    lang: 'zh-TW', eyebrow: 'Ritty 開發消息', action: '前往官網閱讀完整消息',
+    reason: '您收到這封郵件，是因為您已同意接收 Ritty 的開發消息。',
+    unsubscribe: '取消訂閱', reservation: '取消訂閱郵件不會影響您的事前登錄。',
+    contact: '聯絡我們',
+  },
 } as const
 
 function escapeHtml(value: string): string {
