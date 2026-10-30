@@ -93,9 +93,10 @@ function plainTitle(value: string) {
 }
 
 function subject(value: string) {
-  const title = value.replace(/^(?:\(광고\)\s*)+/, '').trim()
+  const prefix = '[리티 개발로그] '
+  const title = value.trim().replace(/^(?:(?:\(광고\)|\[광고\]|\[리티 개발로그\])\s*)+/, '').trim()
   if (!title) throw new NewsletterServiceError(400, 'invalid_text')
-  return '(광고) ' + truncate(title, 195)
+  return prefix + truncate(title, 200 - prefix.length)
 }
 
 // A temporary Notion/S3 signature will usually expire before a newsletter is read.
