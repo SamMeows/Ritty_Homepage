@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 
 const id = '123456781234123412341234567890ab';
 const database = 'abcdefabcdefabcdefabcdefabcdefab';
+const databaseContainer = 'fedcbafedcbafedcbafedcbafedcbafe';
 const optionalVersion = '2026-10-26-registration-v2-optional-marketing';
 const marker = 'ritty_marketing_subscription_v1:';
 const pages = new Map(), blockLists = new Map();
@@ -14,7 +15,7 @@ const otherId = n => n.toString(16).padStart(32, '0');
 function page(options = {}) {
  const { pageId = id, email = 'person@example.com', locale = 'kr', version = optionalVersion, consent = true,
   archived = false, parent = database, suppressed = false, source = '', campaign = '', isTest = false } = options;
- return { id: pageId, archived, parent: { database_id: parent }, properties: {
+ return { id: pageId, archived, parent: { data_source_id: parent, database_id: databaseContainer }, properties: {
   Email: { type: 'title', title: rich(email) }, Locale: { type: 'select', select: { name: locale } },
   'Consent Version': { type: 'rich_text', rich_text: rich(version) },
   'Marketing Consent': { type: 'checkbox', checkbox: consent },
@@ -39,7 +40,7 @@ function json(value, status = 200) { return Response.json(value, { status }); }
 async function mockFetch(input, options) {
  const url = new URL(input), method = options.method;
  assert.equal(url.origin, 'https://api.notion.com');
- assert.equal(options.headers['Notion-Version'], '2022-06-28');
+ assert.equal(options.headers['Notion-Version'], '2025-09-03');
  assert.equal(options.headers.Authorization, 'Bearer test-token');
  assert.equal(options.cache, 'no-store');
  const body = options.body ? JSON.parse(options.body) : undefined;
@@ -86,7 +87,7 @@ async function mockFetch(input, options) {
   block.paragraph = body.paragraph;
   return json({});
  }
- if (url.pathname === '/v1/databases/' + database + '/query' && method === 'POST') {
+ if (url.pathname === '/v1/data_sources/' + database + '/query' && method === 'POST') {
   if (failQuery) return json({}, 503);
   assert.equal(body.page_size, 100);
   if (body.filter) assert.equal(body.filter.property, 'Locale');
@@ -134,6 +135,29 @@ const recipient = { pageId: id, email: 'person@example.com', locale: 'kr' };
  pages.get(queueId).public_url = 'https://example.com/public';
  await assert.rejects(m.addNewsletterContact('new@example.com', 'kr'), /scope/);
  delete mockProcess.env.NEWSLETTER_QUEUE_PAGE_ID;
+
+ // A source and its container have different IDs. Scope by source, never by a sibling's container.
+ reset();
+ assert.deepEqual(await m.getMarketingRecipient(id), recipient);
+ assert.deepEqual(await m.listMarketingCandidates('kr'), [recipient]);
+ const siblingSource = reset();
+ siblingSource.parent = { data_source_id: otherId(99), database_id: databaseContainer };
+ assert.equal(await m.getMarketingRecipient(id), null);
+ assert.deepEqual(await m.listMarketingCandidates('kr'), []);
+ siblingSource.parent.database_id = database;
+ assert.equal(await m.getMarketingRecipient(id), null, 'source parent cannot fall back to a matching container');
+ const malformedSource = reset();
+ malformedSource.parent = { data_source_id: 'invalid', database_id: database };
+ assert.equal(await m.getMarketingRecipient(id), null);
+ const legacyParent = reset();
+ legacyParent.parent = { database_id: database };
+ assert.deepEqual(await m.getMarketingRecipient(id), recipient);
+ const wrongLegacyParent = reset();
+ wrongLegacyParent.parent = { database_id: otherId(99) };
+ assert.equal(await m.getMarketingRecipient(id), null);
+ const missingParent = reset();
+ missingParent.parent = {};
+ assert.equal(await m.getMarketingRecipient(id), null);
 
  // Consent versions never substitute for the operator-maintained checkbox.
  for (const version of ['2026-10', '2026-10-new-launch']) {
