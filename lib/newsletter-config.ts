@@ -20,7 +20,7 @@ export function newsletterSigningSecret() {
 
 export function newsletterConfiguration(): NewsletterConfiguration {
   const required = ['NOTION_TOKEN', 'NOTION_PRE_REGISTER_DB_ID', 'NEWSLETTER_QUEUE_PAGE_ID',
-    'NEWSLETTER_FROM_EMAIL', 'NEWSLETTER_COMPANY_ADDRESS', 'NEWSLETTER_GITHUB_TOKEN']
+    'NEWSLETTER_FROM_EMAIL', 'NEWSLETTER_GITHUB_TOKEN']
   const missing = required.filter(key => !process.env[key]?.trim())
   if ((process.env.MARKETING_UNSUBSCRIBE_SECRET || '').length < 32) missing.push('MARKETING_UNSUBSCRIBE_SECRET')
   const enabled = process.env.NEWSLETTER_ENABLED === 'true'

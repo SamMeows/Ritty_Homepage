@@ -7,10 +7,10 @@ const { load } = require('./load-typescript.cjs')
 
 const gmail = load('lib/newsletter-gmail.ts')
 const { renderNewsletterEmail } = load('lib/newsletter-email.ts')
-const keys = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REFRESH_TOKEN', 'NEWSLETTER_FROM_EMAIL', 'NEWSLETTER_COMPANY_NAME', 'NEWSLETTER_CONTACT_EMAIL', 'NEWSLETTER_COMPANY_ADDRESS']
+const keys = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REFRESH_TOKEN', 'NEWSLETTER_FROM_EMAIL', 'NEWSLETTER_SENDER_ACCOUNT', 'NEWSLETTER_COMPANY_NAME', 'NEWSLETTER_CONTACT_EMAIL', 'NEWSLETTER_COMPANY_ADDRESS']
 const previousEnv = Object.fromEntries(keys.map(key => [key, process.env[key]]))
 const originalFetch = global.fetch
-let scenario = 0, calls = [], sendMode = 'ok', tokenMode = 'ok', identityMode = 'ok'
+let scenario = 0, calls = [], sendMode = 'ok', tokenMode = 'ok', identityMode = 'ok', aliasMode = 'accepted'
 const draft = {
   articleId: 'article-1', locale: 'kr', title: '새로운 리티 이야기', subject: '(광고) 새로운 리티 이야기',
   summary: '리티가 당근을 수확했어요.\n\n다음 소식도 기대해 주세요!', articleUrl: 'https://ritty.example/news/one',
@@ -22,6 +22,7 @@ const json = (body, status = 200) => new Response(JSON.stringify(body), { status
 function reset() {
   scenario++
   calls = []; sendMode = 'ok'; tokenMode = 'ok'; identityMode = 'ok'
+  aliasMode = 'accepted'; delete process.env.NEWSLETTER_SENDER_ACCOUNT
   Object.assign(process.env, {
     GOOGLE_CLIENT_ID: 'offline-test.apps.googleusercontent.com', GOOGLE_CLIENT_SECRET: 'test-client-secret',
     GOOGLE_REFRESH_TOKEN: `test-refresh-token-${scenario}`, NEWSLETTER_FROM_EMAIL: 'sender@example.com',
@@ -30,7 +31,7 @@ function reset() {
 }
 
 global.fetch = async (url, options) => {
-  assert(['https://oauth2.googleapis.com/token', 'https://openidconnect.googleapis.com/v1/userinfo', 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send'].includes(url), 'Unexpected outbound destination')
+  assert(['https://oauth2.googleapis.com/token', 'https://openidconnect.googleapis.com/v1/userinfo', 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send', 'https://gmail.googleapis.com/gmail/v1/users/me/settings/sendAs/hello%40sam-meows.com'].includes(url), 'Unexpected outbound destination')
   assert.equal(options.redirect, 'error', 'Credentials must not follow redirects')
   assert.equal(options.cache, 'no-store')
   calls.push({ url, options })
@@ -40,6 +41,10 @@ global.fetch = async (url, options) => {
     if (tokenMode === '400' || tokenMode === '401') return json({ error: 'invalid_grant', error_description: 'test-refresh-token' }, Number(tokenMode))
     if (tokenMode === '429') return json({ error: 'too_many_requests' }, 429)
     return json({ access_token: 'test-access-token', expires_in: 3600 })
+  }
+  if (url.includes('/settings/sendAs/')) {
+    assert.equal(options.headers.Authorization, 'Bearer test-access-token')
+    return aliasMode === '403' ? json({}, 403) : json({ sendAsEmail: 'hello@sam-meows.com', verificationStatus: aliasMode })
   }
   if (url.endsWith('/userinfo')) {
     assert.equal(options.headers.Authorization, 'Bearer test-access-token')
@@ -97,6 +102,12 @@ async function run() {
     { type: 'paragraph', text: '마지막 문장' },
   ] }
   const fullEmail = renderNewsletterEmail(fullDraft, { unsubscribeUrl: input.unsubscribeUrl })
+  assert(fullEmail.html.includes('/ritty/newsletter-logo-white.png'))
+  assert(fullEmail.html.includes('/ritty/newsletter-sky.png'))
+  assert(fullEmail.html.includes('bgcolor="#25234d"') && fullEmail.html.includes('border-radius:999px'))
+  assert(fullEmail.html.includes('서울특별시 강남구 역삼로 180 시드존 삼냥이즈'))
+  assert(fullEmail.html.includes('mailto:hello@sam-meows.com'))
+  assert(!fullEmail.html.includes('#427fd6') && fullEmail.html.includes('max-width:480px'))
   assert(fullEmail.html.includes('전체 본문 '.repeat(250)))
   assert(fullEmail.html.includes('<img src="https://example.com/news-image"'))
   assert(fullEmail.html.includes('사진 &lt;설명&gt;'))
@@ -112,6 +123,7 @@ async function run() {
   const mime = decodeMime(sentRequests()[0])
   assert.equal((mime.match(/^To:/gm) || []).length, 1)
   assert(mime.includes('To: <reader@example.com>\r\n') && !/^Cc:|^Bcc:/m.test(mime))
+  assert(mime.includes('Reply-To: <hello@sam-meows.com>'))
   assert(mime.includes('List-Unsubscribe-Post: List-Unsubscribe=One-Click'))
   assert.equal(decodeSubject(mime), draft.subject)
   const sections = mime.split(/--ritty_newsletter_[a-f0-9]+/)
@@ -161,6 +173,15 @@ async function run() {
   assert.equal(calls.filter(call => call.url.endsWith('/token')).length, 2, 'A later explicit retry refreshes rejected credentials')
   assert.equal(sentRequests().length, 2)
 
+  reset(); process.env.NEWSLETTER_SENDER_ACCOUNT = 'sender@example.com'; process.env.NEWSLETTER_FROM_EMAIL = 'hello@sam-meows.com'
+  await gmail.sendNewsletterEmail(input)
+  assert(decodeMime(sentRequests()[0]).includes('From: Ritty <hello@sam-meows.com>'))
+  assert.equal(calls.length, 4, 'an alias must be verified before sending')
+  for (const mode of ['pending', '403']) {
+    reset(); process.env.NEWSLETTER_SENDER_ACCOUNT = 'sender@example.com'; process.env.NEWSLETTER_FROM_EMAIL = 'hello@sam-meows.com'; aliasMode = mode
+    await expectError(gmail.sendNewsletterEmail(input), 'rejected', true, 'alias_unverified')
+    assert.equal(sentRequests().length, 0, 'unverified or inaccessible aliases must not send')
+  }
   const helper = await import(pathToFileURL(path.resolve('scripts/authorize-newsletter-gmail.mjs')).href)
   assert(helper.validState('correct-state', 'correct-state'))
   assert(!helper.validState('correct-state', 'wrong-state') && !helper.validState('correct-state', null))
@@ -169,6 +190,9 @@ async function run() {
   const authUrl = new URL(helper.buildAuthorizationUrl({ clientId: 'client', from: 'sender@example.com', redirectUri: 'http://127.0.0.1:53682/oauth/callback', state: 'secure-state', verifier: 'pkce-verifier' }))
   assert.equal(authUrl.origin, 'https://accounts.google.com')
   assert.equal(authUrl.searchParams.get('scope'), 'openid email https://www.googleapis.com/auth/gmail.send')
+  const aliasAuth = new URL(helper.buildAuthorizationUrl({ clientId: 'client', from: 'hello@sam-meows.com', account: 'dev@sam-meows.com', redirectUri: 'http://127.0.0.1:53682/oauth/callback', state: 'secure-state', verifier: 'pkce-verifier' }))
+  assert(aliasAuth.searchParams.get('scope').includes('gmail.settings.basic'))
+  assert.equal(aliasAuth.searchParams.get('login_hint'), 'dev@sam-meows.com')
   assert.equal(authUrl.searchParams.get('code_challenge'), createHash('sha256').update('pkce-verifier').digest('base64url'))
   assert.equal(authUrl.searchParams.get('state'), 'secure-state')
   assert.equal(authUrl.searchParams.get('access_type'), 'offline')

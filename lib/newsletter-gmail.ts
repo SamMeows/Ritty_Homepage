@@ -2,6 +2,7 @@ import 'server-only'
 import { createHash } from 'node:crypto'
 import type { NewsletterDraft } from './newsletter-types'
 import { renderNewsletterEmail } from './newsletter-email'
+import { NEWSLETTER_BRAND } from './newsletter-brand'
 
 const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token'
 const USERINFO_ENDPOINT = 'https://openidconnect.googleapis.com/v1/userinfo'
@@ -58,10 +59,14 @@ async function jsonResponse(response: Response): Promise<Record<string, unknown>
 }
 
 async function accessToken(from: string): Promise<string> {
+  let account: string
+  try { account = mailbox(process.env.NEWSLETTER_SENDER_ACCOUNT || from) } catch {
+    throw new GmailSendError('연결할 Google 계정 주소를 확인해 주세요.', { kind: 'rejected', retryable: true, code: 'invalid_sender_account' })
+  }
   const clientId = process.env.GOOGLE_CLIENT_ID || ''
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || ''
   const refreshToken = process.env.GOOGLE_REFRESH_TOKEN || ''
-  const credentialHash = createHash('sha256').update(JSON.stringify([clientId, clientSecret, refreshToken, from])).digest('hex')
+  const credentialHash = createHash('sha256').update(JSON.stringify([clientId, clientSecret, refreshToken, from, account])).digest('hex')
   if (cachedAccess?.credentialHash === credentialHash && cachedAccess.expiresAt > Date.now() + 60_000) return cachedAccess.token
   let response: Response
   try {
@@ -95,8 +100,22 @@ async function accessToken(from: string): Promise<string> {
       kind: 'rejected', retryable: true, code: 'identity_unavailable',
     })
   }
-  if (identity.email_verified !== true || typeof identity.email !== 'string' || identity.email.toLowerCase() !== from) {
+  if (identity.email_verified !== true || typeof identity.email !== 'string' || identity.email.toLowerCase() !== account) {
     throw new GmailSendError('연결한 Google 계정과 설정한 발신 주소가 일치하지 않습니다.', { kind: 'rejected', retryable: true, code: 'sender_mismatch' })
+  }
+  if (account !== from) {
+    let aliasResponse: Response
+    try {
+      aliasResponse = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/settings/sendAs/' + encodeURIComponent(from), {
+        headers: { Authorization: `Bearer ${body.access_token}` }, cache: 'no-store', redirect: 'error', signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      })
+    } catch {
+      throw new GmailSendError('발신 별칭을 확인하지 못했습니다. 아직 이메일은 보내지 않았습니다.', { kind: 'rejected', retryable: true, code: 'alias_unavailable' })
+    }
+    const alias = await jsonResponse(aliasResponse)
+    if (!aliasResponse.ok || alias.sendAsEmail !== from || alias.verificationStatus !== 'accepted') {
+      throw new GmailSendError('Gmail에서 발신 별칭을 인증하고 별칭 확인 권한으로 다시 연결해 주세요.', { kind: 'rejected', retryable: true, code: 'alias_unverified' })
+    }
   }
   const expiresIn = typeof body.expires_in === 'number' && Number.isFinite(body.expires_in) ? Math.max(0, Math.min(body.expires_in, 3600)) : 300
   cachedAccess = { credentialHash, token: body.access_token, expiresAt: Date.now() + expiresIn * 1000 }
@@ -135,11 +154,11 @@ export async function sendNewsletterEmail(input: {
     const rendered = renderNewsletterEmail(input.draft, {
       unsubscribeUrl: input.unsubscribeUrl,
       companyName: process.env.NEWSLETTER_COMPANY_NAME,
-      contactEmail: process.env.NEWSLETTER_CONTACT_EMAIL || from,
-      companyAddress: process.env.NEWSLETTER_COMPANY_ADDRESS,
+      contactEmail: NEWSLETTER_BRAND.contact,
+      companyAddress: NEWSLETTER_BRAND.address,
     })
     const mime = [
-      `From: Ritty <${from}>`, `To: <${email}>`, `Subject: ${encodedSubject(input.draft.subject)}`,
+      `From: Ritty <${from}>`, `Reply-To: <${NEWSLETTER_BRAND.contact}>`, `To: <${email}>`, `Subject: ${encodedSubject(input.draft.subject)}`,
       `Date: ${new Date().toUTCString()}`, `Message-ID: <${messageKey}@${from.split('@')[1]}>`,
       'MIME-Version: 1.0', `List-Unsubscribe: <${unsubscribe.href}>`,
       'List-Unsubscribe-Post: List-Unsubscribe=One-Click',

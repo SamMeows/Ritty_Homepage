@@ -10,11 +10,12 @@ import { pathToFileURL } from 'node:url'
 const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token'
 const USERINFO_ENDPOINT = 'https://openidconnect.googleapis.com/v1/userinfo'
 const REQUIRED_SCOPE = 'https://www.googleapis.com/auth/gmail.send'
+const ALIAS_SCOPE = 'https://www.googleapis.com/auth/gmail.settings.basic'
 const LOCAL_FILE = '.env.newsletter.local'
 
 export function validateSetupEmail(value) {
   if (typeof value !== 'string' || value.length > 254 || /[\u0000-\u0020\u007f]/.test(value) || !/^[A-Za-z0-9.!#$%&'*+\/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?\.[A-Za-z]{2,}$/.test(value)) {
-    throw new Error('NEWSLETTER_FROM_EMAIL must be the exact primary email of the Workspace sender.')
+    throw new Error('Use a valid primary mailbox or verified Gmail Send mail as address.')
   }
   return value.toLowerCase()
 }
@@ -26,12 +27,12 @@ export function validState(expected, received) {
   return left.length === right.length && timingSafeEqual(left, right)
 }
 
-export function buildAuthorizationUrl({ clientId, from, redirectUri, state, verifier }) {
+export function buildAuthorizationUrl({ clientId, from, redirectUri, state, verifier, account = from }) {
   const url = new URL('https://accounts.google.com/o/oauth2/v2/auth')
   url.search = new URLSearchParams({
     client_id: clientId, redirect_uri: redirectUri, response_type: 'code',
-    scope: `openid email ${REQUIRED_SCOPE}`, access_type: 'offline', prompt: 'consent select_account',
-    login_hint: from, state, code_challenge: createHash('sha256').update(verifier).digest('base64url'),
+    scope: `openid email ${REQUIRED_SCOPE}${account !== from ? ' ' + ALIAS_SCOPE : ''}`, access_type: 'offline', prompt: 'consent select_account',
+    login_hint: account, state, code_challenge: createHash('sha256').update(verifier).digest('base64url'),
     code_challenge_method: 'S256',
   }).toString()
   return url.href
@@ -76,7 +77,7 @@ async function writeLocalCredentials(values) {
   }
 }
 
-async function exchangeAndVerify({ code, verifier, redirectUri, clientId, clientSecret, from }) {
+async function exchangeAndVerify({ code, verifier, redirectUri, clientId, clientSecret, from, account }) {
   const response = await fetch(TOKEN_ENDPOINT, {
     method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ code, code_verifier: verifier, redirect_uri: redirectUri, client_id: clientId, client_secret: clientSecret, grant_type: 'authorization_code' }),
@@ -93,8 +94,17 @@ async function exchangeAndVerify({ code, verifier, redirectUri, clientId, client
   })
   if (!profileResponse.ok) throw new Error('Could not verify the authorized sender. No credentials were saved.')
   const profile = await profileResponse.json()
-  if (profile.email_verified !== true || typeof profile.email !== 'string' || profile.email.toLowerCase() !== from) {
-    throw new Error('The selected Google account does not match NEWSLETTER_FROM_EMAIL. No credentials were saved.')
+  if (profile.email_verified !== true || typeof profile.email !== 'string' || profile.email.toLowerCase() !== account) {
+    throw new Error('The selected Google account does not match NEWSLETTER_SENDER_ACCOUNT (or NEWSLETTER_FROM_EMAIL when unset). No credentials were saved.')
+  }
+  if (account !== from) {
+    if (!token.scope.split(' ').includes(ALIAS_SCOPE)) throw new Error('Alias verification permission was not granted. No credentials were saved.')
+    const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/settings/sendAs/' + encodeURIComponent(from), {
+      headers: { Authorization: `Bearer ${token.access_token}` }, redirect: 'error', signal: AbortSignal.timeout(30_000),
+    })
+    if (!response.ok) throw new Error('Could not verify the Gmail Send mail as address. No credentials were saved.')
+    const alias = await response.json()
+    if (alias.sendAsEmail !== from || alias.verificationStatus !== 'accepted') throw new Error('The Gmail Send mail as address is not verified. No credentials were saved.')
   }
   return token.refresh_token
 }
@@ -106,7 +116,9 @@ const help = `Authorize the Ritty newsletter sender (local computer only).
    and this helper's callback can be registered on the same Web client.
 3. Add the exact redirect URI: http://127.0.0.1:53682/oauth/callback
 4. Put GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and NEWSLETTER_FROM_EMAIL in the
-   git-ignored .env.newsletter.local file. Use the sender's primary mailbox.
+   git-ignored .env.newsletter.local file. For aliases, also set
+   NEWSLETTER_SENDER_ACCOUNT to the primary mailbox, and verify the From address
+   in that account's Gmail Send mail as settings before running this helper.
 5. Run:
    node --env-file=.env.newsletter.local scripts/authorize-newsletter-gmail.mjs
 
@@ -132,6 +144,7 @@ export async function main() {
   const clientId = process.env.GOOGLE_CLIENT_ID || ''
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || ''
   const from = validateSetupEmail(process.env.NEWSLETTER_FROM_EMAIL || '')
+  const account = validateSetupEmail(process.env.NEWSLETTER_SENDER_ACCOUNT || from)
   if (!clientId || !clientSecret || /[\r\n]/.test(clientId + clientSecret)) throw new Error('Load GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET from the ignored local environment file. Use --help for instructions.')
   const port = Number(process.env.NEWSLETTER_OAUTH_PORT || 53682)
   if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error('Invalid NEWSLETTER_OAUTH_PORT')
@@ -164,8 +177,8 @@ export async function main() {
     if (!code || code.length > 4096) { response.writeHead(400); response.end('Missing authorization code.'); return }
     busy = true
     try {
-      const refreshToken = await exchangeAndVerify({ code, verifier, redirectUri, clientId, clientSecret, from })
-      await writeLocalCredentials({ GOOGLE_CLIENT_ID: clientId, GOOGLE_CLIENT_SECRET: clientSecret, GOOGLE_REFRESH_TOKEN: refreshToken, NEWSLETTER_FROM_EMAIL: from })
+      const refreshToken = await exchangeAndVerify({ code, verifier, redirectUri, clientId, clientSecret, from, account })
+      await writeLocalCredentials({ GOOGLE_CLIENT_ID: clientId, GOOGLE_CLIENT_SECRET: clientSecret, GOOGLE_REFRESH_TOKEN: refreshToken, NEWSLETTER_FROM_EMAIL: from, NEWSLETTER_SENDER_ACCOUNT: account })
       completed = true
       console.log('Sender verified. Credentials saved to the ignored .env.newsletter.local file. No email was sent.')
       console.log('Copy the four sender values to GitHub Actions secrets. Do not upload the local file or put the refresh token in Vercel.')
@@ -183,7 +196,7 @@ export async function main() {
   process.once('SIGINT', interrupted)
   try {
     await new Promise((resolveListening, rejectListening) => { server.once('error', rejectListening); server.listen(port, '127.0.0.1', resolveListening) })
-    console.log(`Open the URL below on this computer. Sign in as the NEWSLETTER_FROM_EMAIL account.\n${buildAuthorizationUrl({ clientId, from, redirectUri, state, verifier })}`)
+    console.log(`Open the URL below on this computer. Sign in as ${account}.\n${buildAuthorizationUrl({ clientId, from, account, redirectUri, state, verifier })}`)
     await done
   } finally {
     clearTimeout(timeout)

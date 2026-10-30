@@ -7,6 +7,7 @@ import { newsletterAuthResponse } from './newsletter-auth'
 import { newsletterConfiguration, newsletterId, newsletterOrigin, NEWSLETTER_MAX_RECIPIENTS, NEWSLETTER_WORKFLOW } from './newsletter-config'
 import { renderNewsletterEmail } from './newsletter-email'
 import { newsletterContent, newsletterImagePath } from './newsletter-content'
+import { NEWSLETTER_BRAND } from './newsletter-brand'
 import { createNewsletterJob, listNewsletterJobIds, newsletterJobView, readNewsletterJob, requestNewsletterRetry, type JobDetails } from './newsletter-store'
 import { NEWSLETTER_LOCALES, type NewsletterDraft, type NewsletterLocale, type NewsletterPreview, type NewsletterRecipient } from './newsletter-types'
 
@@ -247,8 +248,8 @@ export async function previewNewsletter(input: Record<string, unknown>): Promise
   }
   const rendered = renderNewsletterEmail(draft, {
     unsubscribeUrl: new URL('/unsubscribe?lang=' + locale, newsletterOrigin()).href,
-    companyName: process.env.NEWSLETTER_COMPANY_NAME, contactEmail: process.env.NEWSLETTER_CONTACT_EMAIL || process.env.NEWSLETTER_FROM_EMAIL,
-    companyAddress: process.env.NEWSLETTER_COMPANY_ADDRESS,
+    companyName: process.env.NEWSLETTER_COMPANY_NAME, contactEmail: NEWSLETTER_BRAND.contact,
+    companyAddress: NEWSLETTER_BRAND.address,
   })
   if (Buffer.byteLength(rendered.html, 'utf8') > 95_000) throw new NewsletterServiceError(413, 'content_too_large')
   return { draft, html: rendered.html, candidateCount: emails.size, approvalToken: approval.token, expiresAt: approval.expiresAt }

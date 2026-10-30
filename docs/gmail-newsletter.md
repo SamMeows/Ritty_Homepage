@@ -61,7 +61,7 @@ Google은 로컬 테스트를 위한 localhost redirect URI를 지원합니다. 
 
 로그인 주소와 메일 안의 공개 링크 주소는 분리했습니다. `NEWSLETTER_AUTH_ORIGIN`은 로컬 로그인·쿠키·Origin 검사에만 사용하고, `NEXT_PUBLIC_SITE_URL`은 메일 원문·수신거부 링크의 공개 HTTPS 주소로 유지합니다. 포트를 바꾸면 로그인 origin과 Google에 등록한 callback의 포트를 함께 맞춥니다. 운영에서는 `NEWSLETTER_AUTH_ORIGIN`을 비워 기본 사이트 origin을 사용합니다.
 
-미리보기에는 `NOTION_TOKEN`, `NOTION_PRE_REGISTER_DB_ID`, 소식 DB 접근 설정, 32자 이상의 `MARKETING_UNSUBSCRIBE_SECRET`이 필요합니다. 메일 하단을 확인하려면 발신 주소·회사명·주소도 채웁니다. 발송 이력까지 볼 때만 `NEWSLETTER_QUEUE_PAGE_ID`를 설정하면 됩니다. 미리보기만 확인할 때는 Gmail refresh token이나 GitHub 실행 토큰이 필요하지 않습니다.
+미리보기에는 `NOTION_TOKEN`, `NOTION_PRE_REGISTER_DB_ID`, 소식 DB 접근 설정, 32자 이상의 `MARKETING_UNSUBSCRIBE_SECRET`이 필요합니다. 발신 주소·회사명은 환경변수로 설정하고, 회사 주소·문의 이메일은 `lib/newsletter-brand.ts`에서 관리합니다. 발송 이력까지 볼 때만 `NEWSLETTER_QUEUE_PAGE_ID`를 설정하면 됩니다. 미리보기만 확인할 때는 Gmail refresh token이나 GitHub 실행 토큰이 필요하지 않습니다.
 
 환경변수를 바꾼 뒤 개발 서버를 재시작합니다. `NEWSLETTER_ENABLED=false`에서는 화면과 미리보기를 확인할 수 있고 실제 발송 요청은 서버에서 거부됩니다. 운영 대량 발송 워커는 단일 실행 보장을 위해 GitHub Actions에서 실행하도록 제한되어 있습니다. 로컬에서 그 실행 제한을 우회하지 말고 오프라인 테스트를 사용합니다.
 
@@ -96,9 +96,9 @@ http://127.0.0.1:53682/oauth/callback
 | `NOTION_NEWS_TOKEN` | 소식 전용 token이 있다면 설정. 없으면 `NOTION_TOKEN` 사용 |
 | `NEWSLETTER_QUEUE_PAGE_ID` | 1단계에서 만든 비공개 일반 페이지 ID |
 | `MARKETING_UNSUBSCRIBE_SECRET` | 32자 이상 안정적인 무작위 서명 키. 웹·Actions에 반드시 같은 값 |
-| `NEWSLETTER_FROM_EMAIL` | 연결할 Workspace 계정의 정확한 기본 이메일 주소. 별칭은 현재 지원하지 않음 |
-| `NEWSLETTER_COMPANY_NAME`, `NEWSLETTER_COMPANY_ADDRESS` | 메일 하단의 실제 회사명과 주소. 주소 필수 |
-| `NEWSLETTER_CONTACT_EMAIL` | 수신자 문의 이메일. 생략하면 발신 주소 사용 |
+| `NEWSLETTER_FROM_EMAIL` | 실제 발신 주소. 기본 계정 또는 Gmail에서 인증된 발신 별칭 |
+| `NEWSLETTER_SENDER_ACCOUNT` | 별칭을 사용할 때 OAuth로 연결하는 Google 계정의 기본 주소. 생략하면 발신 주소와 동일 |
+| `NEWSLETTER_COMPANY_NAME` | 메일 하단 회사명. 주소·문의 이메일은 `lib/newsletter-brand.ts`에서 공통 관리 |
 | `NEXT_PUBLIC_SITE_URL` | 실제 공개 HTTPS origin. 기본 `https://ritty.sam-meows.com` |
 | `NEWSLETTER_GITHUB_TOKEN` | 이 저장소만 선택한 fine-grained PAT. Repository permissions의 Actions: Read and write |
 | `NEWSLETTER_GITHUB_REPOSITORY` | 기본 `SamMeows/Ritty_Homepage` |
@@ -126,8 +126,8 @@ node --env-file=.env.newsletter.local scripts/authorize-newsletter-gmail.mjs
 | 종류 | 이름 |
 | --- | --- |
 | Secrets | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN`, `NOTION_TOKEN`, `MARKETING_UNSUBSCRIBE_SECRET` |
-| Variables — 필수 | `NOTION_PRE_REGISTER_DB_ID`, `NEWSLETTER_QUEUE_PAGE_ID`, `NEWSLETTER_FROM_EMAIL`, `NEWSLETTER_COMPANY_ADDRESS`, `NEWSLETTER_ENABLED` |
-| Variables — 운영값 | `NEXT_PUBLIC_SITE_URL`, `NEWSLETTER_COMPANY_NAME`, `NEWSLETTER_CONTACT_EMAIL` |
+| Variables — 필수 | `NOTION_PRE_REGISTER_DB_ID`, `NEWSLETTER_QUEUE_PAGE_ID`, `NEWSLETTER_FROM_EMAIL`, `NEWSLETTER_ENABLED` |
+| Variables — 운영값 | `NEXT_PUBLIC_SITE_URL`, `NEWSLETTER_COMPANY_NAME`, 별칭 사용 시 `NEWSLETTER_SENDER_ACCOUNT` |
 
 발신 주소·회사 정보·사이트 origin·Notion ID는 웹과 같은 값으로 맞춥니다. 처음에는 Actions Variable의 `NEWSLETTER_ENABLED`도 `false`로 둡니다. `NEWSLETTER_FROM_EMAIL`은 **Variable**이며 Secrets에만 넣으면 워크플로가 읽지 못합니다.
 
@@ -195,3 +195,13 @@ npm run build
 ```
 
 테스트는 Notion·Google·Gmail을 mock으로 대체하며 실제 연락처를 변경하거나 메일을 보내지 않습니다. 배포 후 OAuth 연결, DNS 인증, 도착 메일과 메일 서비스의 수신거부 UI는 별도의 운영 검증 항목입니다.
+
+## hello 주소로 발송하기
+
+`hello@sam-meows.com`이 Google 그룹이어도 `dev@sam-meows.com` Gmail의 **설정 → 계정 → 다른 주소에서 메일 보내기**에 추가하고 인증해야 합니다. 그룹 생성·수신 전달 설정만으로 발신 설정이 끝나지는 않습니다. 그룹의 인증 메일을 받을 수 있는 사람이 인증을 완료합니다.
+
+인증 후 로컬 연결 파일에서 `NEWSLETTER_FROM_EMAIL=hello@sam-meows.com`, `NEWSLETTER_SENDER_ACCOUNT=dev@sam-meows.com`으로 설정하고 연결 도우미를 다시 실행합니다. 별칭을 사용하는 경우에만 `gmail.settings.basic` 권한을 추가로 요청하며, 발송 전에 Gmail API에서 해당 주소의 `verificationStatus=accepted`를 확인합니다. 미인증·권한 부족이면 Gmail 발송 요청을 하지 않습니다.
+
+새로 발급된 refresh token은 GitHub Actions Secrets에 반영하고, GitHub Variables와 홈페이지의 `NEWSLETTER_FROM_EMAIL`을 `hello@sam-meows.com`, Actions의 `NEWSLETTER_SENDER_ACCOUNT`를 `dev@sam-meows.com`으로 맞춥니다. Gmail 인증과 새 토큰 확인 전에는 운영 발신 주소를 먼저 바꾸지 않습니다.
+
+메일 주소 표시는 `lib/newsletter-brand.ts`를 기준으로 홈페이지 미리보기와 실제 발송에 동일하게 적용합니다. 회사 주소는 서울특별시 강남구 역삼로 180 시드존 삼냥이즈, 문의·Reply-To는 hello@sam-meows.com입니다. 이전 `NEWSLETTER_COMPANY_ADDRESS`·`NEWSLETTER_CONTACT_EMAIL` 환경변수는 사용하지 않습니다.
