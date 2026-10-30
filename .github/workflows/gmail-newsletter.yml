@@ -44,4 +44,5 @@ jobs:
           NEWSLETTER_FROM_EMAIL: ${{ vars.NEWSLETTER_FROM_EMAIL }}
           NEWSLETTER_SENDER_ACCOUNT: ${{ vars.NEWSLETTER_SENDER_ACCOUNT }}
           NEWSLETTER_COMPANY_NAME: ${{ vars.NEWSLETTER_COMPANY_NAME }}
+          NEWSLETTER_COMPANY_ADDRESS: ${{ vars.NEWSLETTER_COMPANY_ADDRESS }}
         run: node scripts/run-newsletter-worker.cjs
