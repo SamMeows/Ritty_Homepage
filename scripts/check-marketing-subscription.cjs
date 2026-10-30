@@ -135,9 +135,12 @@ const recipient = { pageId: id, email: 'person@example.com', locale: 'kr' };
  await assert.rejects(m.addNewsletterContact('new@example.com', 'kr'), /scope/);
  delete mockProcess.env.NEWSLETTER_QUEUE_PAGE_ID;
 
- // Exact required-consent versions are eligible without a modern state/checkbox.
+ // Consent versions never substitute for the operator-maintained checkbox.
  for (const version of ['2026-10', '2026-10-new-launch']) {
   reset({ version, consent: false });
+  assert.equal(await m.getMarketingRecipient(id), null);
+  assert.deepEqual(await m.listMarketingCandidates('kr'), []);
+  reset({ version, consent: true });
   assert.deepEqual(await m.getMarketingRecipient(id), recipient);
   assert.deepEqual(await m.listMarketingCandidates('kr'), [recipient]);
   assert.equal(calls.some(call => call.method === 'PATCH'), false);
@@ -149,11 +152,11 @@ const recipient = { pageId: id, email: 'person@example.com', locale: 'kr' };
  reset({ version: 'unknown', consent: true }); assert.equal(await m.canReceiveMarketing(id), true);
  const noCheckbox = reset({ version: '2026-10', consent: false });
  delete noCheckbox.properties['Marketing Consent'];
- assert.equal(await m.canReceiveMarketing(id), true);
+ assert.equal(await m.canReceiveMarketing(id), false);
  reset({ consent: true }, [stateBlock(false)]); assert.equal(await m.canReceiveMarketing(id), false);
  reset({ version: '2026-10', consent: false }, [stateBlock(false, false, { withdrawnAt: '2026-10-29T12:00:00Z' })]);
  assert.equal(await m.canReceiveMarketing(id), false);
- reset({ consent: false }, [stateBlock(true)]); assert.equal(await m.canReceiveMarketing(id), true);
+ reset({ consent: false }, [stateBlock(true)]); assert.equal(await m.canReceiveMarketing(id), false);
  reset({ consent: true }, [stateBlock(true, false, { withdrawnAt: '2026-10-29T12:00:00Z' })]);
  assert.equal(await m.canReceiveMarketing(id), false);
 
@@ -198,8 +201,8 @@ const recipient = { pageId: id, email: 'person@example.com', locale: 'kr' };
   page({ pageId: otherId(6), locale: 'en' }), page({ pageId: otherId(7), suppressed: true }),
  ];
  const candidates = await m.listMarketingCandidates('kr');
- assert.deepEqual(candidates.map(value => value.pageId), [id, otherId(2), otherId(5)]);
- assert.equal(candidates.filter(value => value.email === 'person@example.com').length, 2);
+ assert.deepEqual(candidates.map(value => value.pageId), [id, otherId(5)]);
+ assert.equal(candidates.filter(value => value.email === 'person@example.com').length, 1);
  assert.equal(calls.length, 4);
  assert(calls.every(call => call.path.endsWith('/query')));
  const beforeUnknownLocale = calls.length;
@@ -223,7 +226,7 @@ const recipient = { pageId: id, email: 'person@example.com', locale: 'kr' };
  reset({ archived: true }); assert.equal(await m.unsubscribeMarketing(token), false);
 
  // Legacy withdrawal appends durable state once; checked before every actual send.
- reset({ version: '2026-10', consent: false });
+ reset({ version: '2026-10', consent: true });
  let sends = 0;
  assert.equal((await m.deliverMarketingEmail(id, 'kr', async link => { sends++; assert(link.includes('#')); })).sent, true);
  assert.equal((await m.deliverMarketingEmail(id, 'en', async () => { sends++; })).sent, false);
@@ -327,5 +330,5 @@ const recipient = { pageId: id, email: 'person@example.com', locale: 'kr' };
  assert.equal(failure.headers.get('Cache-Control'), 'no-store');
  assert.equal(failure.headers.get('Referrer-Policy'), 'no-referrer');
 
- console.log('PASS: exact legacy consent, optional consent, fresh withdrawal checks, test/suppression exclusions, strict email validation, paginated candidate/state reads, malformed/conflicting state rejection, signed links, durable idempotent withdrawal across duplicate emails, checkbox/query failure ordering, bounded JSON/RFC8058 POST and GET non-mutation. No live requests or sends.');
+ console.log('PASS: checkbox-only DB consent, no legacy-version fallback, manual contacts, fresh withdrawal checks, test/suppression exclusions, strict email validation, paginated candidate/state reads, malformed/conflicting state rejection, signed links, durable idempotent withdrawal across duplicate emails, checkbox/query failure ordering, bounded JSON/RFC8058 POST and GET non-mutation. No live requests or sends.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

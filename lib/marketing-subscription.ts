@@ -2,8 +2,6 @@ import 'server-only'
 import { createHmac, timingSafeEqual } from 'node:crypto'
 
 const MARKER = 'ritty_marketing_subscription_v1:'
-// The operator confirmed that these exact forms required marketing consent.
-const REQUIRED_CONSENT_VERSIONS = new Set(['2026-10', '2026-10-new-launch'])
 const LOCALES = new Set(['kr', 'en', 'ja', 'zh-tw'])
 const CONTACT_TITLE = 'Ritty newsletter contact · '
 type State = { subscribed: boolean; isTest: boolean; updatedAt: string; withdrawnAt?: string }
@@ -102,9 +100,8 @@ function propertyIsTest(page: any) {
   || plain(props['UTM Source']?.rich_text).trim().toLowerCase() === 'internal_test'
   || plain(props['UTM Campaign']?.rich_text).trim().toLowerCase() === 'registration_qa'
 }
-function hasHistoricalConsent(page: any) {
- const props = page.properties || {}
- return props['Marketing Consent']?.checkbox === true || REQUIRED_CONSENT_VERSIONS.has(plain(props['Consent Version']?.rich_text))
+function hasCheckedConsent(page: any) {
+ return page.properties?.['Marketing Consent']?.checkbox === true
 }
 function recipientFromPage(page: any): MarketingRecipient | null {
  if (!member(page) || propertyIsTest(page) || page.properties?.['Email Suppressed']?.checkbox === true) return null
@@ -134,7 +131,7 @@ export async function listMarketingCandidates(locale: string): Promise<Marketing
   if (!Array.isArray(data.results)) throw new Error('Invalid subscription list')
   for (const page of data.results) {
    const recipient = recipientFromPage(page)
-   if (recipient && recipient.locale === locale && hasHistoricalConsent(page) && !pageIds.has(recipient.pageId)) {
+   if (recipient && recipient.locale === locale && hasCheckedConsent(page) && !pageIds.has(recipient.pageId)) {
     pageIds.add(recipient.pageId); result.push(recipient)
    }
   }
@@ -176,10 +173,13 @@ export async function getMarketingRecipient(pageId: string): Promise<MarketingRe
  if (!record || record.bodyIsTest) return null
  const recipient = recipientFromPage(record.page)
  if (!recipient) return null
+ // The operator maintains the DB checkbox. Neither a legacy form version nor
+ // an old positive state may override an unchecked/missing checkbox.
+ if (!manualContact(record.page) && !hasCheckedConsent(record.page)) return null
  const state = record.states[0]?.state
- // Dedicated state is authoritative. A legacy version must never restore a withdrawal.
+ // Stored withdrawals still veto consent; checking the DB box cannot undo them.
  if (state) return state.subscribed && !state.isTest && !state.withdrawnAt ? recipient : null
- return hasHistoricalConsent(record.page) ? recipient : null
+ return hasCheckedConsent(record.page) ? recipient : null
 }
 export async function canReceiveMarketing(pageId: string) {
  return !!await getMarketingRecipient(pageId)
