@@ -10,25 +10,25 @@ type EmailOptions = {
 
 const copy = {
   kr: {
-    lang: 'ko', eyebrow: '리티에서 도착한 편지', action: '리티 홈페이지 방문하기',
+    lang: 'ko', action: '리티 홈페이지 방문하기',
     reason: '리티의 개발 소식 수신에 동의하신 분께 보내드리는 이메일입니다.',
     unsubscribe: '이메일 수신거부', reservation: '이메일 수신을 중단해도 사전예약은 유지됩니다.',
     contact: '문의',
   },
   en: {
-    lang: 'en', eyebrow: 'A letter from Ritty', action: 'Visit Ritty',
+    lang: 'en', action: 'Visit Ritty',
     reason: 'You are receiving this email because you agreed to receive updates from Ritty.',
     unsubscribe: 'Unsubscribe', reservation: 'Unsubscribing from emails does not cancel your preregistration.',
     contact: 'Contact',
   },
   ja: {
-    lang: 'ja', eyebrow: 'リティからのお便り', action: 'リティのホームページへ',
+    lang: 'ja', action: 'リティのホームページへ',
     reason: 'リティの開発情報の受信に同意された方にお送りしています。',
     unsubscribe: 'メール配信停止', reservation: 'メールの配信を停止しても、事前登録は維持されます。',
     contact: 'お問い合わせ',
   },
   'zh-tw': {
-    lang: 'zh-TW', eyebrow: '來自 Ritty 的一封信', action: '前往 Ritty 官網',
+    lang: 'zh-TW', action: '前往 Ritty 官網',
     reason: '您收到這封郵件，是因為您已同意接收 Ritty 的開發消息。',
     unsubscribe: '取消訂閱', reservation: '取消訂閱郵件不會影響您的事前登錄。',
     contact: '聯絡我們',
@@ -120,13 +120,13 @@ export function renderNewsletterEmail(draft: NewsletterDraft, options: EmailOpti
   const html = `<!doctype html>
 <html lang="${labels.lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>${escapedTitle}</title>
 <style>@media only screen and (max-width:480px){.letter-outer{padding:12px 8px!important}.letter-gutter{padding-left:24px!important;padding-right:24px!important}.letter-title{font-size:27px!important}.letter-header{padding-top:28px!important;padding-bottom:26px!important}}</style></head>
-<body style="margin:0;padding:0;background:#151631;color:#49375f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo','Malgun Gothic',Arial,sans-serif;">
+<body style="margin:0;padding:0;color:#49375f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo','Malgun Gothic',Arial,sans-serif;">
 <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${preheader}</div>
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#151631"><tr><td class="letter-outer" align="center" style="padding:32px 12px;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td class="letter-outer" align="center" style="padding:32px 12px;">
 <!--[if mso]><table role="presentation" width="640" align="center"><tr><td><![endif]-->
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f8f6fe" style="max-width:640px;background:#f8f6fe;border:1px solid #74639a;border-radius:20px;">
 <tr><td class="letter-gutter letter-header" background="${escapeHtml(skyUrl)}" bgcolor="#25234d" style="padding:30px 40px;background:#25234d url('${escapeHtml(skyUrl)}') center center / cover no-repeat;border-radius:19px 19px 0 0;">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td valign="middle"><a href="${escapeHtml(new URL('/', articleUrl).href)}" style="text-decoration:none;"><img src="${escapeHtml(logoUrl)}" alt="Ritty" width="132" height="60" style="display:block;width:132px;height:auto;border:0;color:#ffffff;font-size:32px;"></a><p style="margin:8px 0 0;font-size:12px;line-height:1.6;letter-spacing:.3px;color:#e8dff9;">${escapeHtml(labels.eyebrow)}</p></td><td width="106" align="right" valign="middle"><span style="display:inline-block;padding:8px 12px;border:1px solid #c8b7eb;border-radius:999px;font-size:9px;letter-spacing:1.2px;line-height:1.8;font-weight:700;color:#ffffff;background:#7560a6;white-space:nowrap;">DEV LETTER</span></td></tr></table>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td valign="middle"><a href="${escapeHtml(new URL('/', articleUrl).href)}" style="text-decoration:none;"><img src="${escapeHtml(logoUrl)}" alt="Ritty" width="132" height="60" style="display:block;width:132px;height:auto;border:0;color:#ffffff;font-size:32px;"></a></td><td width="106" align="right" valign="middle"><span style="display:inline-block;padding:8px 12px;border:1px solid #c8b7eb;border-radius:999px;font-size:9px;letter-spacing:1.2px;line-height:1.8;font-weight:700;color:#ffffff;background:#7560a6;white-space:nowrap;">DEV LETTER</span></td></tr></table>
 </td></tr>
 ${cover}
 <tr><td class="letter-gutter" style="padding:34px 40px 38px;word-break:break-word;overflow-wrap:anywhere;">
@@ -141,7 +141,7 @@ ${cover}
 </td></tr></table><!--[if mso]></td></tr></table><![endif]-->
 <p style="margin:18px 0 0;font-size:9px;letter-spacing:1.5px;color:#a89ac3;">RITTY · SAM-MEOWS</p>
 </td></tr></table></body></html>`
-  const text = [labels.eyebrow, draft.title, draft.summary.trim(), body.text, `${labels.action}: ${articleUrl}`,
+  const text = [draft.title, draft.summary.trim(), body.text, `${labels.action}: ${articleUrl}`,
     labels.reason, labels.reservation, companyName, companyAddress, contactText,
     `${labels.unsubscribe}: ${unsubscribeUrl}`].filter(Boolean).join('\n\n')
   return { html, text }
