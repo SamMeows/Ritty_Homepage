@@ -1,18 +1,42 @@
 import 'server-only'
 import { createHmac, timingSafeEqual } from 'node:crypto'
+
 const MARKER = 'ritty_marketing_subscription_v1:'
+// The operator confirmed that these exact forms required marketing consent.
+const REQUIRED_CONSENT_VERSIONS = new Set(['2026-10', '2026-10-new-launch'])
+const LOCALES = new Set(['kr', 'en', 'ja', 'zh-tw'])
 type State = { subscribed: boolean; isTest: boolean; updatedAt: string; withdrawnAt?: string }
+type StateRecord = { blockId: string; state: State }
+type SubscriptionRecord = { page: any; states: StateRecord[]; bodyIsTest: boolean }
+export type MarketingRecipient = { pageId: string; email: string; locale: string }
+
+function normalizedId(value: unknown): string | null {
+ if (typeof value !== 'string') return null
+ const id = value.replace(/-/g, '').toLowerCase()
+ return /^[a-f0-9]{32}$/.test(id) ? id : null
+}
 function config() {
- const token = process.env.NOTION_TOKEN, database = process.env.NOTION_PRE_REGISTER_DB_ID
+ const token = process.env.NOTION_TOKEN, database = normalizedId(process.env.NOTION_PRE_REGISTER_DB_ID)
  if (!token || !database) throw new Error('Subscription storage unavailable')
  return { token, database }
 }
-async function notion(path: string, method = 'GET', body?: unknown) {
+async function notion(path: string, method = 'GET', body?: unknown, attempt = 0): Promise<any> {
  const response = await fetch('https://api.notion.com/v1' + path, { method,
- headers: { Authorization: 'Bearer ' + config().token, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json' },
- body: body === undefined ? undefined : JSON.stringify(body), cache: 'no-store', signal: AbortSignal.timeout(15000) })
+  headers: { Authorization: 'Bearer ' + config().token, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json' },
+  body: body === undefined ? undefined : JSON.stringify(body), cache: 'no-store', signal: AbortSignal.timeout(15000) })
+ // An explicit rate-limit rejection is safe to retry; ambiguous writes are not.
+ if (response.status === 429 && attempt < 2) {
+  const seconds = Number(response.headers.get('retry-after') || 1)
+  if (Number.isFinite(seconds) && seconds >= 0 && seconds <= 15) {
+   await new Promise(resolve => setTimeout(resolve, Math.max(seconds, 1) * 1000))
+   return notion(path, method, body, attempt + 1)
+  }
+ }
  if (!response.ok) throw new Error('Subscription storage request failed')
  return response.json()
+}
+function plain(richText: unknown): string {
+ return Array.isArray(richText) ? richText.map(t => t?.plain_text ?? t?.text?.content ?? '').join('') : ''
 }
 function paragraph(state: State) { return { rich_text: [{ type: 'text', text: { content: MARKER + JSON.stringify(state) } }] } }
 export function marketingSubscriptionBlock(subscribed: boolean, isTest: boolean) {
@@ -21,14 +45,28 @@ export function marketingSubscriptionBlock(subscribed: boolean, isTest: boolean)
 function signature(id: string) {
  return createHmac('sha256', process.env.MARKETING_UNSUBSCRIBE_SECRET || config().token).update('ritty:marketing-only:v1:' + id).digest('base64url')
 }
-// Mail builders must check canReceiveMarketing immediately before sending.
+function credential(pageId: string) {
+ const id = normalizedId(pageId)
+ if (!id) throw new Error('Invalid registration id')
+ return id + '.' + signature(id)
+}
+function siteUrl(path: string) {
+ const base = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://ritty.sam-meows.com')
+ const local = process.env.NODE_ENV !== 'production' && ['localhost', '127.0.0.1'].includes(base.hostname)
+ if (base.protocol !== 'https:' && !(local && base.protocol === 'http:')) throw new Error('Invalid site origin')
+ return new URL(path, base)
+}
 export function marketingUnsubscribeUrl(pageId: string, locale = 'kr') {
- const id = pageId.replace(/-/g, '').toLowerCase()
- if (!/^[a-f0-9]{32}$/.test(id)) throw new Error('Invalid registration id')
- const url = new URL('/unsubscribe', process.env.NEXT_PUBLIC_SITE_URL || 'https://ritty.sam-meows.com')
- url.searchParams.set('lang', locale)
- // Fragment keeps the bearer credential out of HTTP access logs and referrers.
- url.hash = id + '.' + signature(id)
+ const url = siteUrl('/unsubscribe')
+ url.searchParams.set('lang', LOCALES.has(locale) ? locale : 'kr')
+ // Fragment keeps the visible link's bearer credential out of access logs/referrers.
+ url.hash = credential(pageId)
+ return url.toString()
+}
+export function marketingOneClickUnsubscribeUrl(pageId: string, _locale = 'kr') {
+ const url = siteUrl('/api/marketing/unsubscribe')
+ // RFC 8058 clients must POST this URL. Do not log or track its query string.
+ url.searchParams.set('token', credential(pageId))
  return url.toString()
 }
 function verify(token: string) {
@@ -36,46 +74,173 @@ function verify(token: string) {
  const [id, signed] = token.split('.')
  return timingSafeEqual(Buffer.from(signed), Buffer.from(signature(id))) ? id : null
 }
-async function subscription(id: string): Promise<{ blockId: string; state: State; hasConsentColumn: boolean } | null> {
- const page = await notion('/pages/' + id)
- if (page.archived || page.in_trash || page.parent?.database_id?.replace(/-/g, '') !== config().database.replace(/-/g, '')) return null
+function member(page: any) {
+ return !page.archived && !page.in_trash && normalizedId(page.parent?.database_id) === config().database
+}
+function emailAddress(value: string): string | null {
+ // Reject control characters before trimming; never pass them into a mail header.
+ if (/[\u0000-\u001f\u007f]/.test(value)) return null
+ const email = value.trim().toLowerCase()
+ if (email.length > 254 || !/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/.test(email)) return null
+ const [local, domain] = email.split('@')
+ if (local.length > 64 || local.startsWith('.') || local.endsWith('.') || local.includes('..') || domain.split('.').some(label => label.length > 63)) return null
+ return email
+}
+function propertyIsTest(page: any) {
+ const props = page.properties || {}
+ return props['Is Test']?.checkbox === true
+  || plain(props['UTM Source']?.rich_text).trim().toLowerCase() === 'internal_test'
+  || plain(props['UTM Campaign']?.rich_text).trim().toLowerCase() === 'registration_qa'
+}
+function hasHistoricalConsent(page: any) {
+ const props = page.properties || {}
+ return props['Marketing Consent']?.checkbox === true || REQUIRED_CONSENT_VERSIONS.has(plain(props['Consent Version']?.rich_text))
+}
+function recipientFromPage(page: any): MarketingRecipient | null {
+ if (!member(page) || propertyIsTest(page) || page.properties?.['Email Suppressed']?.checkbox === true) return null
+ const pageId = normalizedId(page.id)
+ const email = emailAddress(plain(page.properties?.Email?.title))
+ const locale = page.properties?.Locale?.select?.name
+ return pageId && email && typeof locale === 'string' && LOCALES.has(locale) ? { pageId, email, locale } : null
+}
+function nextCursor(data: any, seen: Set<string>): string | undefined {
+ if (!data.has_more) return undefined
+ if (typeof data.next_cursor !== 'string' || !data.next_cursor || seen.has(data.next_cursor)) throw new Error('Invalid subscription pagination')
+ seen.add(data.next_cursor)
+ return data.next_cursor
+}
+
+// Property-only estimate for previews. Every recipient must be checked again at send time.
+// Keep duplicate emails as separate records so the worker can reconcile their state.
+export async function listMarketingCandidates(locale: string): Promise<MarketingRecipient[]> {
+ if (!LOCALES.has(locale)) return []
+ const result: MarketingRecipient[] = [], pageIds = new Set<string>(), cursors = new Set<string>()
  let cursor: string | undefined
  do {
-  const data = await notion('/blocks/' + id + '/children?page_size=100' + (cursor ? '&start_cursor=' + encodeURIComponent(cursor) : ''))
-  for (const block of data.results) {
-   const value = block.paragraph?.rich_text.map((t: { plain_text?: string; text?: { content: string } }) => t.plain_text ?? t.text?.content ?? '').join('') || ''
-   if (!value.startsWith(MARKER)) continue
-   const state = JSON.parse(value.slice(MARKER.length)) as State
-   if (typeof state.subscribed !== 'boolean' || typeof state.isTest !== 'boolean') throw new Error('Invalid subscription state')
-   return { blockId: block.id, state, hasConsentColumn: page.properties?.['Marketing Consent']?.type === 'checkbox' }
+  const data = await notion('/databases/' + config().database + '/query', 'POST', {
+   page_size: 100, ...(cursor ? { start_cursor: cursor } : {}), filter: { property: 'Locale', select: { equals: locale } },
+  })
+  if (!Array.isArray(data.results)) throw new Error('Invalid subscription list')
+  for (const page of data.results) {
+   const recipient = recipientFromPage(page)
+   if (recipient && recipient.locale === locale && hasHistoricalConsent(page) && !pageIds.has(recipient.pageId)) {
+    pageIds.add(recipient.pageId); result.push(recipient)
+   }
   }
-  cursor = data.has_more ? data.next_cursor : undefined
+  cursor = nextCursor(data, cursors)
  } while (cursor)
- return null // Legacy registrations are not silently opted into development emails.
+ return result
 }
-export async function canReceiveMarketing(id: string) {
+async function subscription(id: string): Promise<SubscriptionRecord | null> {
+ const page = await notion('/pages/' + id)
+ if (!member(page) || normalizedId(page.id) !== id) return null
+ const states: StateRecord[] = [], cursors = new Set<string>()
+ let cursor: string | undefined, bodyIsTest = false
+ do {
+  const data = await notion('/blocks/' + id + '/children?page_size=100' + (cursor ? '&start_cursor=' + encodeURIComponent(cursor) : ''))
+  if (!Array.isArray(data.results)) throw new Error('Invalid subscription blocks')
+  for (const block of data.results) {
+   const value = plain(block.paragraph?.rich_text ?? block[block.type]?.rich_text).trim()
+   if (/^registration_test:\s*true\s*$/im.test(value)) bodyIsTest = true
+   if (!value.includes(MARKER)) continue
+   if (!value.startsWith(MARKER) || block.type !== 'paragraph') throw new Error('Invalid subscription state')
+   const state = JSON.parse(value.slice(MARKER.length)) as State
+   if (!state || typeof state.subscribed !== 'boolean' || typeof state.isTest !== 'boolean'
+    || typeof state.updatedAt !== 'string' || !Number.isFinite(Date.parse(state.updatedAt))
+    || (state.withdrawnAt !== undefined && (typeof state.withdrawnAt !== 'string' || !Number.isFinite(Date.parse(state.withdrawnAt))))
+    || typeof block.id !== 'string') throw new Error('Invalid subscription state')
+   states.push({ blockId: block.id, state })
+  }
+  cursor = nextCursor(data, cursors)
+ } while (cursor)
+ // Concurrent identical withdrawals are harmless; contradictory states require repair.
+ const first = states[0]?.state
+ if (first && states.some(({ state }) => state.subscribed !== first.subscribed || state.isTest !== first.isTest || !!state.withdrawnAt !== !!first.withdrawnAt)) throw new Error('Conflicting subscription state')
+ return { page, states, bodyIsTest }
+}
+export async function getMarketingRecipient(pageId: string): Promise<MarketingRecipient | null> {
+ const id = normalizedId(pageId)
+ if (!id) return null
  const record = await subscription(id)
- return !!record?.state.subscribed && !record.state.isTest
+ if (!record || record.bodyIsTest) return null
+ const recipient = recipientFromPage(record.page)
+ if (!recipient) return null
+ const state = record.states[0]?.state
+ // Dedicated state is authoritative. A legacy version must never restore a withdrawal.
+ if (state) return state.subscribed && !state.isTest && !state.withdrawnAt ? recipient : null
+ return hasHistoricalConsent(record.page) ? recipient : null
+}
+export async function canReceiveMarketing(pageId: string) {
+ return !!await getMarketingRecipient(pageId)
+}
+async function persistWithdrawal(id: string, record: SubscriptionRecord) {
+ const now = new Date().toISOString()
+ if (!record.states.length) {
+  // Old registrations have no state block. Persist withdrawal before updating UI fields.
+  const state: State = { subscribed: false, isTest: record.bodyIsTest || propertyIsTest(record.page), updatedAt: now, withdrawnAt: now }
+  await notion('/blocks/' + id + '/children', 'PATCH', { children: [{ object: 'block', type: 'paragraph', paragraph: paragraph(state) }] })
+ } else {
+  for (const { blockId, state } of record.states) {
+   if (state.subscribed || !state.withdrawnAt) await notion('/blocks/' + blockId, 'PATCH', {
+    paragraph: paragraph({ ...state, subscribed: false, updatedAt: now, withdrawnAt: state.withdrawnAt || now }),
+   })
+  }
+ }
+}
+async function syncConsentColumn(id: string, record: SubscriptionRecord) {
+ const consent = record.page.properties?.['Marketing Consent']
+ if (consent?.type === 'checkbox' && consent.checkbox !== false) {
+  await notion('/pages/' + id, 'PATCH', { properties: { 'Marketing Consent': { checkbox: false } } })
+ }
+}
+async function matchingEmailPageIds(email: string): Promise<string[]> {
+ const ids = new Set<string>(), cursors = new Set<string>()
+ let cursor: string | undefined
+ do {
+  // Inspect all contact rows: a title filter's casing/whitespace semantics must
+  // not let a duplicate address retain consent after another row withdraws.
+  const data = await notion('/databases/' + config().database + '/query', 'POST', {
+   page_size: 100, ...(cursor ? { start_cursor: cursor } : {}),
+  })
+  if (!Array.isArray(data.results)) throw new Error('Invalid subscription list')
+  for (const page of data.results) {
+   const pageId = normalizedId(page.id)
+   if (pageId && member(page) && emailAddress(plain(page.properties?.Email?.title)) === email) ids.add(pageId)
+  }
+  cursor = nextCursor(data, cursors)
+ } while (cursor)
+ return [...ids]
 }
 export async function unsubscribeMarketing(token: string) {
  const id = verify(token)
  if (!id) return false
  const record = await subscription(id)
  if (!record) return false
- const now = new Date().toISOString()
- if (record.state.subscribed) await notion('/blocks/' + record.blockId, 'PATCH', { paragraph: paragraph({ ...record.state, subscribed: false, updatedAt: now, withdrawnAt: now }) })
- if (record.hasConsentColumn) await notion('/pages/' + id, 'PATCH', { properties: { 'Marketing Consent': { checkbox: false } } })
+ // Commit the addressed contact first, even if duplicate lookup later fails.
+ await persistWithdrawal(id, record)
+ let failed = false
+ try { await syncConsentColumn(id, record) } catch { failed = true }
+ const email = emailAddress(plain(record.page.properties?.Email?.title))
+ if (email) {
+  for (const duplicateId of await matchingEmailPageIds(email)) {
+   if (duplicateId === id) continue
+   try {
+    const duplicate = await subscription(duplicateId)
+    // Recheck after the query in case this row's address changed meanwhile.
+    if (!duplicate || emailAddress(plain(duplicate.page.properties?.Email?.title)) !== email) continue
+    await persistWithdrawal(duplicateId, duplicate)
+    await syncConsentColumn(duplicateId, duplicate)
+   } catch { failed = true }
+  }
+ }
+ if (failed) throw new Error('Subscription withdrawal synchronization failed')
  return true
 }
 
-// Call this wrapper for each development-news recipient, instead of sending directly.
 // Launch/reward mail follows its separate pre-registration workflow.
-export async function deliverMarketingEmail(
- pageId: string,
- locale: string,
- send: (unsubscribeUrl: string) => Promise<void>,
-) {
- if (!await canReceiveMarketing(pageId)) return { sent: false as const }
+export async function deliverMarketingEmail(pageId: string, locale: string, send: (unsubscribeUrl: string) => Promise<void>) {
+ const recipient = await getMarketingRecipient(pageId)
+ if (!recipient || recipient.locale !== locale) return { sent: false as const }
  await send(marketingUnsubscribeUrl(pageId, locale))
  return { sent: true as const }
 }

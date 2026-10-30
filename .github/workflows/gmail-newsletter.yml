@@ -1,0 +1,48 @@
+name: Gmail development newsletter
+on:
+  schedule:
+    # The button dispatches immediately. This hourly fallback recovers a lost
+    # dispatch or a run stopped at its time budget without constant polling.
+    - cron: '17 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ritty-gmail-newsletter
+  cancel-in-progress: false
+jobs:
+  send:
+    if: vars.NEWSLETTER_ENABLED == 'true' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Check offline newsletter contracts
+        run: |
+          node scripts/check-marketing-subscription.cjs
+          node scripts/check-newsletter-auth.cjs
+          node scripts/check-newsletter-gmail.cjs
+          node scripts/check-newsletter-service.cjs
+          node scripts/check-newsletter-worker.cjs
+      - name: Send approved campaigns
+        env:
+          NEWSLETTER_ENABLED: ${{ vars.NEWSLETTER_ENABLED }}
+          NEWSLETTER_SERIAL_WORKER: 'true'
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://ritty.sam-meows.com' }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_PRE_REGISTER_DB_ID: ${{ vars.NOTION_PRE_REGISTER_DB_ID }}
+          NEWSLETTER_QUEUE_PAGE_ID: ${{ vars.NEWSLETTER_QUEUE_PAGE_ID }}
+          MARKETING_UNSUBSCRIBE_SECRET: ${{ secrets.MARKETING_UNSUBSCRIBE_SECRET }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          NEWSLETTER_FROM_EMAIL: ${{ vars.NEWSLETTER_FROM_EMAIL }}
+          NEWSLETTER_COMPANY_NAME: ${{ vars.NEWSLETTER_COMPANY_NAME || 'SamMeows' }}
+          NEWSLETTER_COMPANY_ADDRESS: ${{ vars.NEWSLETTER_COMPANY_ADDRESS }}
+          NEWSLETTER_CONTACT_EMAIL: ${{ vars.NEWSLETTER_CONTACT_EMAIL }}
+        run: node scripts/run-newsletter-worker.cjs

@@ -4,6 +4,13 @@ import { isAdVariant } from './lib/ad-variants'
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const requestHeaders = new Headers(request.headers)
+  const privateRoute = pathname === '/admin/newsletter' || pathname.startsWith('/admin/newsletter/')
+    || pathname === '/unsubscribe' || pathname.startsWith('/unsubscribe/')
+    || pathname === '/api/admin/newsletter' || pathname.startsWith('/api/admin/newsletter/')
+    || pathname === '/api/marketing/unsubscribe'
+  // Always overwrite the browser's value; this flag only controls rendering, never authorization.
+  requestHeaders.set('x-ritty-private-route', privateRoute ? '1' : '0')
 
   // Randomize landing copy independently of advertising delivery.
   if (pathname === '/ad' || pathname === '/ad/') {
@@ -28,7 +35,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/api') ||
     pathname.includes('.') // files like favicon.png, sitemap.xml
   ) {
-    return NextResponse.next()
+    return NextResponse.next({ request: { headers: requestHeaders } })
   }
 
   // Redirect /kr to / (301 permanent redirect for SEO)
@@ -45,7 +52,6 @@ export function middleware(request: NextRequest) {
   }
 
   // Set the document language on the server, including the initial HTML response.
-  const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-ritty-language', pathname === '/en' || pathname.startsWith('/en/') ? 'en' : pathname === '/ja' || pathname.startsWith('/ja/') ? 'ja' : pathname === '/zh-tw' || pathname.startsWith('/zh-tw/') ? 'zh-Hant-TW' : 'ko')
 
   // Internal Korean route mapping lives in next.config.js, after middleware.
@@ -54,5 +60,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next|api|.*\\..*).*)'],
+  matcher: ['/((?!_next|api|.*\\..*).*)', '/admin/newsletter/:path*', '/unsubscribe/:path*', '/api/admin/newsletter/:path*', '/api/marketing/unsubscribe'],
 }
