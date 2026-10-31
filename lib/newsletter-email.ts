@@ -8,6 +8,13 @@ type EmailOptions = {
   companyAddress?: string
 }
 
+const bodyFonts = {
+  kr: "'Pretendard','Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',Arial,sans-serif",
+  en: "'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif",
+  ja: "'Noto Sans JP','Hiragino Kaku Gothic ProN','Yu Gothic',Meiryo,Arial,sans-serif",
+  'zh-tw': "'Noto Sans TC','PingFang TC','Microsoft JhengHei',Arial,sans-serif",
+} as const
+
 const copy = {
   kr: {
     lang: 'ko', action: '리티 홈페이지 방문하기',
@@ -73,18 +80,18 @@ function renderBlocks(blocks: NewsletterBlock[]): { html: string; text: string }
       const previous = html[html.length - 1]
       const item = `<li style="margin:8px 0;">${content}${children.html}</li>`
       if (previous?.endsWith(`</${tag}>`)) html[html.length - 1] = previous.slice(0, -(`</${tag}>`.length)) + item + `</${tag}>`
-      else html.push(`<${tag} style="padding-left:24px;font-size:15px;line-height:2;color:#625571;">${item}</${tag}>`)
+      else html.push(`<${tag} style="padding-left:24px;font-size:16px;line-height:1.9;color:#625571;">${item}</${tag}>`)
       text.push(`${block.type === 'numbered_list_item' ? '1.' : '•'} ${block.text}`, children.text)
       continue
     } else if (block.type === 'quote' || block.type === 'callout') {
-      html.push(`<blockquote style="margin:20px 0;padding:12px 18px;border-left:3px solid #b7a5d1;background:#eee7f7;line-height:1.8;">${content}</blockquote>`)
+      html.push(`<blockquote style="margin:20px 0;padding:12px 18px;border-left:3px solid #b7a5d1;background:#eee7f7;font-size:16px;line-height:1.9;">${content}</blockquote>`)
       text.push(block.text)
     } else if (block.type === 'code') {
       html.push(`<pre style="white-space:pre-wrap;word-break:break-word;background:#eee7f7;padding:16px;line-height:1.6;">${escapeHtml(block.text)}</pre>`)
       text.push(block.text)
     } else {
-      if (content) html.push(`<p style="margin:0 0 16px;font-size:15px;line-height:2;color:#625571;">${content}</p>`)
-      if (url) html.push(`<p style="margin:0 0 16px;line-height:1.8;word-break:break-all;"><a href="${escapeHtml(url)}" style="color:#7861b9;">${escapeHtml(url)}</a></p>`)
+      if (content) html.push(`<p style="margin:0 0 16px;font-size:16px;line-height:1.9;color:#625571;">${content}</p>`)
+      if (url) html.push(`<p style="margin:0 0 16px;font-size:16px;line-height:1.9;word-break:break-all;"><a href="${escapeHtml(url)}" style="color:#7861b9;">${escapeHtml(url)}</a></p>`)
       text.push(block.text, url || '')
     }
     html.push(children.html)
@@ -95,6 +102,7 @@ function renderBlocks(blocks: NewsletterBlock[]): { html: string; text: string }
 
 export function renderNewsletterEmail(draft: NewsletterDraft, options: EmailOptions): { html: string; text: string } {
   const labels = copy[draft.locale]
+  const fontFamily = bodyFonts[draft.locale]
   if (!labels) throw new Error('Unsupported newsletter language')
   if (!draft.title.trim() || (!draft.blocks && !draft.summary.trim())) throw new Error('Newsletter title and content are required')
   const articleUrl = httpsUrl(draft.articleUrl, 'article URL')
@@ -111,7 +119,7 @@ export function renderNewsletterEmail(draft: NewsletterDraft, options: EmailOpti
   const contactText = contactEmail ? `${labels.contact}: ${contactEmail}` : ''
   const escapedTitle = escapeHtml(draft.title)
   const paragraphs = draft.summary.trim().split(/\r?\n\s*\r?\n/).filter(Boolean)
-    .map(paragraph => `<p style="margin:0 0 16px;font-size:15px;line-height:2;color:#625571;">${escapeHtml(paragraph).replace(/\r?\n/g, '<br>')}</p>`).join('')
+    .map(paragraph => `<p style="margin:0 0 16px;font-size:16px;line-height:1.9;color:#625571;">${escapeHtml(paragraph).replace(/\r?\n/g, '<br>')}</p>`).join('')
   const cover = coverUrl
     ? `<tr><td style="padding:0;"><img src="${escapeHtml(coverUrl)}" alt="${escapedTitle}" width="640" style="display:block;width:100%;max-width:640px;height:auto;border:0;"></td></tr>`
     : ''
@@ -119,8 +127,9 @@ export function renderNewsletterEmail(draft: NewsletterDraft, options: EmailOpti
   const preheader = escapeHtml((draft.summary || draft.blocks?.find(block => block.text)?.text || draft.title).slice(0, 120))
   const html = `<!doctype html>
 <html lang="${labels.lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>${escapedTitle}</title>
+<!--[if !mso]><!--><style>@font-face{font-family:'Pretendard';font-style:normal;font-weight:400;font-display:swap;src:url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/woff2/Pretendard-Regular.woff2') format('woff2')}</style><!--<![endif]-->
 <style>@media only screen and (max-width:480px){.letter-outer{padding:12px 8px!important}.letter-gutter{padding-left:24px!important;padding-right:24px!important}.letter-title{font-size:27px!important}.letter-header{padding-top:28px!important;padding-bottom:26px!important}}</style></head>
-<body style="margin:0;padding:0;color:#49375f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo','Malgun Gothic',Arial,sans-serif;">
+<body style="margin:0;padding:0;color:#49375f;font-family:${fontFamily};font-size:16px;font-weight:400;line-height:1.9;">
 <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${preheader}</div>
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td class="letter-outer" align="center" style="padding:32px 12px;">
 <!--[if mso]><table role="presentation" width="640" align="center"><tr><td><![endif]-->
@@ -129,7 +138,7 @@ export function renderNewsletterEmail(draft: NewsletterDraft, options: EmailOpti
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td valign="middle"><a href="${escapeHtml(new URL('/', articleUrl).href)}" style="text-decoration:none;"><img src="${escapeHtml(logoUrl)}" alt="Ritty" width="132" height="60" style="display:block;width:132px;height:auto;border:0;color:#ffffff;font-size:32px;"></a></td><td width="106" align="right" valign="middle"><span style="display:inline-block;padding:8px 12px;border:1px solid #c8b7eb;border-radius:999px;font-size:9px;letter-spacing:1.2px;line-height:1.8;font-weight:700;color:#ffffff;background:#7560a6;white-space:nowrap;">DEV LETTER</span></td></tr></table>
 </td></tr>
 ${cover}
-<tr><td class="letter-gutter" style="padding:34px 40px 38px;word-break:break-word;overflow-wrap:anywhere;">
+<tr><td class="letter-gutter" style="padding:34px 40px 38px;font-family:${fontFamily};font-size:16px;font-weight:400;line-height:1.9;word-break:break-word;overflow-wrap:anywhere;">
 <h1 class="letter-title" style="margin:0 0 28px;font-size:32px;line-height:1.5;letter-spacing:-1px;font-weight:750;color:#49375f;">${escapedTitle}</h1>${paragraphs}${body.html}
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:34px 0 0;border-top:1px solid #ddd2ed;"><tr><td style="padding-top:26px;"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td bgcolor="#9b79d9" style="border:2px solid #d9c7ff;border-radius:999px;background:#9b79d9;"><a href="${escapeHtml(articleUrl)}" style="display:inline-block;padding:14px 24px;border-radius:999px;color:#ffffff;font-size:14px;line-height:1.6;font-weight:bold;text-decoration:none;">${escapeHtml(labels.action)} &nbsp;↗</a></td></tr></table></td></tr></table>
 </td></tr>
