@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import { getNews, getNewsArticle, type NewsItem } from './news'
 import { newsArticlePath, newsLanguage } from './news-languages'
 import { findNewsletterTestRecipients, addNewsletterContact, getNewsletterContact, listMarketingCandidates, type MarketingRecipient } from './marketing-subscription'
-import { approveNewsletter, newsletterEmailHash, newsletterJobKey, verifyNewsletterApproval } from './newsletter-approval'
+import { approveNewsletter, newsletterBatchKey, newsletterEmailHash, newsletterJobKey, verifyNewsletterApproval } from './newsletter-approval'
 import { newsletterAuthResponse } from './newsletter-auth'
 import { newsletterConfiguration, newsletterId, newsletterOrigin, NEWSLETTER_MAX_RECIPIENTS, NEWSLETTER_WORKFLOW } from './newsletter-config'
 import { renderNewsletterEmail } from './newsletter-email'
@@ -302,7 +302,9 @@ export async function sendApprovedNewsletter(input: Record<string, unknown>, app
   if (article.modifiedAt !== approval.draft.articleModifiedAt || plainTitle(article.title) !== approval.draft.title) {
     throw new NewsletterServiceError(409, 'article_changed')
   }
-  const key = newsletterJobKey(approval.draft)
+  // One signed preview is one immutable normal batch. Older article-wide jobs
+  // remain untouched; recipient-level deduplication happens in the worker.
+  const key = newsletterBatchKey(approval.draft, input.approvalToken as string)
   const existing = await existingJob(key)
   if (existing) {
     const dispatched = existing.job.status === 'queued' ? await dispatchNewsletterWorker() : false

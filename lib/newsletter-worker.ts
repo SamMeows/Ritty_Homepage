@@ -1,5 +1,5 @@
 import 'server-only'
-import { newsletterEmailHash, newsletterJobKey, verifyNewsletterApproval, type NewsletterApproval } from './newsletter-approval'
+import { newsletterBatchKey, newsletterEmailHash, newsletterJobKey, verifyNewsletterApproval, type NewsletterApproval } from './newsletter-approval'
 import { newsletterId } from './newsletter-config'
 import { GmailSendError, gmailConfigurationMissing, sendNewsletterEmail } from './newsletter-gmail'
 import { getMarketingRecipient, getNewsletterTestRecipient, marketingOneClickUnsubscribeUrl, marketingUnsubscribeUrl } from './marketing-subscription'
@@ -25,12 +25,16 @@ const defaultDependencies = {
 }
 export type NewsletterWorkerDependencies = typeof defaultDependencies
 type StoredDelivery = JobDetails['deliveries'][number]
+const alreadyDeliveredError = '같은 글과 언어의 이전 작업에서 이미 발송했거나 발송 결과가 불확실하여 제외했습니다.'
 
 function approvedJob(details: JobDetails): NewsletterApproval {
   const { job } = details
   const approval = verifyNewsletterApproval(job.approvalToken, { approvedAt: job.approvedAt })
+  const validKey = approval.mode === 'test'
+    ? job.key === newsletterJobKey(approval.draft, approval.testId)
+    : job.key === newsletterJobKey(approval.draft) || job.key === newsletterBatchKey(approval.draft, job.approvalToken)
   if ((job.mode !== undefined && job.mode !== 'test') || job.mode !== approval.mode
-    || newsletterJobKey(approval.draft, approval.mode === 'test' ? approval.testId : undefined) !== job.key
+    || !validKey
     || JSON.stringify(approval.draft) !== JSON.stringify(job.draft)) {
     throw new Error('Campaign contents differ from the administrator approval')
   }
@@ -58,6 +62,8 @@ function validateLedger(details: JobDetails, approval: NewsletterApproval) {
   for (const { value } of details.deliveries) {
     const expected = groups.get(value.key)
     if (seen.has(value.key) || !expected || value.locale !== approval.draft.locale
+      || !['pending', 'sending', 'submitted', 'skipped', 'failed', 'unknown'].includes(value.status)
+      || !Array.isArray(value.pageIds) || typeof value.email !== 'string'
       || JSON.stringify([...value.pageIds].map(newsletterId).sort()) !== JSON.stringify([...expected].sort())
       || (value.email !== '' && newsletterEmailHash(value.email) !== value.key)
       || (value.status !== 'skipped' && !value.email)) {
@@ -65,7 +71,10 @@ function validateLedger(details: JobDetails, approval: NewsletterApproval) {
     }
     seen.add(value.key)
   }
-  if (details.job.prepared && seen.size !== groups.size) throw new Error('Prepared campaign has missing delivery records')
+  const hasAttempt = details.deliveries.some(({ value }) => ['sending', 'submitted', 'failed', 'unknown'].includes(value.status))
+  if ((details.job.prepared || details.job.status === 'completed' || details.job.status === 'sending' || hasAttempt) && seen.size !== groups.size) {
+    throw new Error('Prepared campaign has missing delivery records')
+  }
   return groups
 }
 
@@ -101,17 +110,20 @@ async function updateDelivery(row: StoredDelivery, changes: Partial<DeliveryReco
   row.value = next
 }
 
-async function prepare(details: JobDetails, approval: NewsletterApproval, dependencies: NewsletterWorkerDependencies) {
+async function prepare(details: JobDetails, approval: NewsletterApproval, dependencies: NewsletterWorkerDependencies, blockedRecipient: (emailHash: string) => boolean) {
   const groups = validateLedger(details, approval)
   if (details.job.prepared) return details
   const existing = new Set(details.deliveries.map(row => row.value.key))
   const missing: DeliveryRecord[] = []
   for (const [key, pageIds] of groups) {
     if (existing.has(key)) continue
-    const email = await eligibleEmail(pageIds, key, approval.draft.locale, dependencies, approval.mode === 'test')
+    // A blocked normal address needs no metadata read and cannot become eligible
+    // again through consent changes. Test deliveries stay entirely independent.
+    const blocked = approval.mode !== 'test' && blockedRecipient(key)
+    const email = blocked ? null : await eligibleEmail(pageIds, key, approval.draft.locale, dependencies, approval.mode === 'test')
     missing.push({ key, pageIds, email: email || '', locale: approval.draft.locale,
       status: email ? 'pending' : 'skipped', updatedAt: new Date(dependencies.now()).toISOString(),
-      ...(email ? {} : { error: '동의 철회·발송 제외·주소 또는 언어 변경으로 제외했습니다.' }),
+      ...(email ? {} : { error: blocked ? alreadyDeliveredError : '동의 철회·발송 제외·주소 또는 언어 변경으로 제외했습니다.' }),
     })
   }
   // If an append times out, stop. The next run reads durable records before
@@ -155,21 +167,36 @@ export async function runNewsletterWorker(options: {
   // have submitted this campaign. Storage failure here stops the whole run.
   for (const id of await dependencies.listJobs()) jobs.push(await dependencies.readJob(id))
   const groups = new Map<string, JobDetails[]>()
+  // Validate every persisted ledger, including completed and duplicate jobs,
+  // before sending anything. Otherwise a corrupt older record can hide a send.
+  const blockedRecipients = new Set<string>()
+  const recipientKey = (details: JobDetails, emailHash: string) => newsletterJobKey(details.job.draft) + ':' + emailHash
   for (const details of jobs) {
-    approvedJob(details)
+    const approval = approvedJob(details)
+    validateLedger(details, approval)
+    if (approval.mode !== 'test') {
+      for (const { value } of details.deliveries) {
+        if (['submitted', 'sending', 'unknown'].includes(value.status)) blockedRecipients.add(recipientKey(details, value.key))
+      }
+    }
     const group = groups.get(details.job.key) || []
     group.push(details); groups.set(details.job.key, group)
+  }
+  // Check exact-key ownership globally too, before an earlier group can send.
+  for (const group of groups.values()) {
+    if (group.filter(details => details.deliveries.length > 0 && details.job.status !== 'duplicate').length > 1) {
+      throw new Error('Multiple delivery ledgers exist for one campaign; sending is stopped')
+    }
   }
   for (const group of groups.values()) {
     // Prefer the durable campaign that already owns delivery records. Queue
     // insertion order is the tie-breaker before any campaign has been prepared.
     const owners = group.filter(details => details.deliveries.length > 0 && details.job.status !== 'duplicate')
-    if (owners.length > 1) throw new Error('Multiple delivery ledgers exist for one campaign; sending is stopped')
     const details = owners[0] || group.find(item => item.job.status !== 'duplicate')
     if (!details) continue
     for (const duplicate of group) {
       if (duplicate.job.id === details.job.id || duplicate.job.status === 'duplicate') continue
-      await updateJob(duplicate, { status: 'duplicate', error: '같은 글과 언어의 발송 기록이 이미 있습니다.' }, dependencies)
+      await updateJob(duplicate, { status: 'duplicate', error: '동일한 발송 승인 작업이 이미 있습니다.' }, dependencies)
       summary.duplicates++
     }
     if (details.job.status === 'completed' || details.job.status === 'duplicate') continue
@@ -192,13 +219,18 @@ export async function runNewsletterWorker(options: {
       }
       const retryAuthorized = await applyRetryCommands(current, dependencies)
       if (current.job.status === 'attention' && !retryAuthorized) continue
-      current = await prepare(current, approval, dependencies)
+      current = await prepare(current, approval, dependencies, emailHash => blockedRecipients.has(recipientKey(current, emailHash)))
       await updateJob(current, { status: 'sending', error: undefined }, dependencies)
       summary.campaigns++
       let paused = false
       for (const row of current.deliveries) {
         if (row.value.status !== 'pending') continue
         if (attempts >= maxMessages || dependencies.now() - startedAt >= timeBudgetMs) break
+        if (approval.mode !== 'test' && blockedRecipients.has(recipientKey(current, row.value.key))) {
+          await updateDelivery(row, { status: 'skipped', retryable: false, error: alreadyDeliveredError }, dependencies)
+          summary.skipped++
+          continue
+        }
         // Fail closed if the current registration cannot be read. This happens
         // before marking an attempt or contacting Gmail.
         const email = await eligibleEmail(row.value.pageIds, row.value.key, current.job.draft.locale, dependencies, approval.mode === 'test')
@@ -222,12 +254,14 @@ export async function runNewsletterWorker(options: {
             error: known ? error.message : '발송 결과를 확인할 수 없습니다. 보낸편지함을 확인해 주세요.',
             retryable: unknown ? false : error.retryable,
           }, dependencies)
+          if (unknown && approval.mode !== 'test') blockedRecipients.add(recipientKey(current, row.value.key))
           paused = true
           break
         }
         // Intentionally outside the Gmail catch: if persisting this response
         // fails, retain `sending` and stop. Never reinterpret it as a rejection.
         await updateDelivery(row, { status: 'submitted', messageId: result.messageId, error: undefined }, dependencies)
+        if (approval.mode !== 'test') blockedRecipients.add(recipientKey(current, row.value.key))
         summary.submitted++
         await dependencies.sleep(2000)
       }

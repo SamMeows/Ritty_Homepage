@@ -11,7 +11,7 @@ type Session = { authenticated: boolean; email?: string }
 type Activity = 'preview' | 'send' | 'test' | 'retry' | 'logout' | 'recipient' | null
 const ROOT = '/api/admin/newsletter'
 const localeNames: Record<NewsletterLocale, string> = { kr: '한국어', en: 'English', ja: '日本語', 'zh-tw': '繁體中文 (ZH-TW)' }
-const statusNames = { queued: '발송 대기', sending: '발송 중', completed: '처리 완료', attention: '확인 필요', duplicate: '이미 요청한 글' }
+const statusNames = { queued: '발송 대기', sending: '발송 중', completed: '처리 완료', attention: '확인 필요', duplicate: '중복 요청' }
 const messages: Record<string, string> = {
   test_recipient_unavailable: '테스트 수신 주소 csj0934@naver.com을 확인할 수 없어요. 등록 정보를 확인해 주세요.',
   invalid_email: '올바른 이메일 주소를 입력해 주세요.', invalid_recipients: '발송 대상 목록을 확인해 주세요.',
@@ -168,7 +168,7 @@ export default function NewsletterAdmin() {
     void act('send', async () => {
       const result = await api<{ job: NewsletterJobView; dispatched: boolean; reused?: boolean }>('/send', { approvalToken: preview.approvalToken })
       rememberJob(result.job); setPreview(null)
-      setNotice(result.reused ? '이미 발송 요청한 글이에요. 기존 발송 기록을 표시합니다.' : result.dispatched ? '발송을 요청했어요. 아래에서 진행 상태를 확인할 수 있습니다.' : '발송 요청이 저장됐어요. 백그라운드 작업이 시작되면 진행 상태가 갱신됩니다.')
+      setNotice(result.reused ? '같은 발송 요청이 이미 저장되어 있어요. 기존 요청의 진행 상태를 표시합니다.' : result.dispatched ? '발송을 요청했어요. 아래에서 진행 상태를 확인할 수 있습니다.' : '발송 요청이 저장됐어요. 백그라운드 작업이 시작되면 진행 상태가 갱신됩니다.')
     })
   }
   const sendTest = () => {
@@ -259,7 +259,7 @@ export default function NewsletterAdmin() {
                   <div className="newsletter-admin__preview-info"><p><span>보내는 주소</span><strong>{overview.configuration.sender || '설정 필요'}</strong></p><p><span>메일 제목</span><strong>{preview.draft.subject}</strong></p></div>
                   <iframe title="개발일지 이메일 미리보기" srcDoc={preview.html} sandbox="" referrerPolicy="no-referrer" />
                   <div className="newsletter-admin__send-area"><div><strong>테스트 발송 · {NEWSLETTER_TEST_EMAIL}</strong><p className="newsletter-admin__hint">선택한 수신자 목록과 무관하게 이 주소 한 곳으로만 보냅니다. 구독 상태는 바꾸지 않습니다.</p></div><button className="newsletter-admin__secondary" onClick={sendTest} disabled={!canSend || activity !== null}>{activity === 'test' ? '테스트 요청 중…' : '내게 테스트 발송'}</button></div>
-                  <div className="newsletter-admin__send-area"><div><strong>선택한 발송 대상 {preview.candidateCount.toLocaleString('ko-KR')}명</strong><p className="newsletter-admin__hint">수신거부·차단 상태는 발송 직전에 다시 확인해요.</p></div><button className="newsletter-admin__primary" onClick={send} disabled={!canSend || activity !== null}>{activity === 'send' ? '요청 저장 중…' : '선택 대상에게 발송'}</button></div>
+                  <div className="newsletter-admin__send-area"><div><strong>선택한 발송 대상 {preview.candidateCount.toLocaleString('ko-KR')}명</strong><p className="newsletter-admin__hint">이미 이 글을 받은 주소는 제외하고, 수신 동의 상태는 발송 직전에 다시 확인해요.</p></div><button className="newsletter-admin__primary" onClick={send} disabled={!canSend || activity !== null}>{activity === 'send' ? '요청 저장 중…' : '선택 대상에게 발송'}</button></div>
                   {expired && <p className="newsletter-admin__warning">미리보기 유효 시간이 지났어요. 다시 만든 뒤 발송해 주세요.</p>}
                   <p className="newsletter-admin__hint">버튼을 한 번 누르면 각 수신자에게 개별 메일로 발송해요. 발송은 백그라운드에서 계속됩니다.</p>
                 </> : <div className="newsletter-admin__empty"><span aria-hidden="true">↗</span><h3>먼저 미리보기를 만들어 주세요.</h3><p>메일 내용과 수신 대상을 확인한 뒤<br />한 번에 발송할 수 있어요.</p></div>}

@@ -16,6 +16,7 @@ export type NewsletterApproval = {
 
 export function newsletterEmailHash(email: string) { return createHash('sha256').update(email.trim().toLowerCase()).digest('hex') }
 export function newsletterJobKey(draft: NewsletterDraft, testId?: string) { return newsletterId(draft.articleId) + ':' + draft.locale + (testId === undefined ? '' : ':test:' + testId) }
+export function newsletterBatchKey(draft: NewsletterDraft, approvalToken: string) { return newsletterJobKey(draft) + ':batch:' + createHash('sha256').update(approvalToken).digest('hex') }
 function mac(body: string) { return createHmac('sha256', newsletterSigningSecret()).update('ritty:newsletter-approval:v1:' + body).digest('base64url') }
 
 function validateTestApproval(approval: { mode?: 'test'; testId?: string; recipients: ApprovedRecipient[] }) {

@@ -1,11 +1,11 @@
 const assert = require('node:assert/strict');
 const { load } = require('./load-typescript.cjs');
-const { approveNewsletter, newsletterEmailHash, newsletterJobKey, verifyNewsletterApproval } = load('lib/newsletter-approval.ts');
+const { approveNewsletter, newsletterBatchKey, newsletterEmailHash, newsletterJobKey, verifyNewsletterApproval } = load('lib/newsletter-approval.ts');
 const { runNewsletterWorker, newsletterWorkerMain } = load('lib/newsletter-worker.ts');
 const { GmailSendError } = load('lib/newsletter-gmail.ts');
 const { NEWSLETTER_TEST_EMAIL } = load('lib/newsletter-types.ts');
 const { newsletterSigningSecret } = load('lib/newsletter-config.ts');
-const { createHmac } = require('node:crypto');
+const { createHash, createHmac } = require('node:crypto');
 process.env.MARKETING_UNSUBSCRIBE_SECRET = 'offline-worker-test-secret-that-is-not-a-real-secret';
 global.fetch = async () => { throw new Error('Live network is forbidden in the worker tests'); };
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -50,11 +50,19 @@ function harness(options = {}) {
     sleep: async () => {},
   };
   function retry() { first.retries.push({ blockId: id(blockCounter++), value: { requestedAt: new Date(timestamp + 2000).toISOString(), handled: false } }); }
-  function prepare(status = 'pending') {
-    first.job.prepared = true;
-    first.deliveries = recipients.map(value => ({ blockId: id(blockCounter++), value: { key: newsletterEmailHash(value.email), pageIds: [value.pageId], email: value.email, locale: draft.locale, status, updatedAt: new Date(timestamp).toISOString() } }));
+  function addBatch(number = 200, batchRecipients = recipients, issuedAt = timestamp + 1) {
+    const entry = addJob(number);
+    const approved = approveNewsletter(draft, batchRecipients.map(row => ({ pageId: row.pageId, emailHash: newsletterEmailHash(row.email) })), issuedAt);
+    entry.job.approvalToken = approved.token;
+    entry.job.approvedAt = new Date(issuedAt).toISOString();
+    entry.job.key = newsletterBatchKey(draft, approved.token);
+    return entry;
   }
-  return { jobs, first, deps, sends, recipients, recipientCalls, addJob, retry, prepare, run: extra => runNewsletterWorker({ dependencies: deps, ...extra }) };
+  function prepare(status = 'pending', entry = first, batchRecipients = recipients) {
+    entry.job.prepared = true;
+    entry.deliveries = batchRecipients.map(value => ({ blockId: id(blockCounter++), value: { key: newsletterEmailHash(value.email), pageIds: [value.pageId], email: value.email, locale: draft.locale, status, updatedAt: new Date(timestamp).toISOString() } }));
+  }
+  return { jobs, first, deps, sends, recipients, recipientCalls, addJob, addBatch, retry, prepare, run: extra => runNewsletterWorker({ dependencies: deps, ...extra }) };
 }
 
 async function main() {
@@ -221,7 +229,8 @@ async function main() {
   }
   {
     const h = harness(); h.prepare(); h.first.deliveries.push(clone(h.first.deliveries[0]));
-    await h.run(); assert.equal(h.sends.length, 0); assert.equal(h.first.job.status, 'attention');
+    await assert.rejects(h.run(), /ledger/); assert.equal(h.sends.length, 0, 'all corrupt ledgers fail preflight');
+    assert.equal(h.first.job.status, 'queued', 'preflight failure does not mutate campaigns');
   }
   {
     const h = harness(); const token = h.first.job.approvalToken;
@@ -246,6 +255,106 @@ async function main() {
     assert.deepEqual(await listNewsletterJobIds(newsletterJobKey(draft)), [id(100)]);
     global.fetch = async () => { throw new Error('Live network is forbidden in the worker tests'); };
   }
-  console.log('PASS newsletter worker: approval, consent, duplicate clicks, interrupted sends, quota, retry and durable recovery (offline)');
+  {
+    const h = harness();
+    const expected = newsletterJobKey(draft) + ':batch:' + createHash('sha256').update(h.first.job.approvalToken).digest('hex');
+    assert.equal(newsletterBatchKey(draft, h.first.job.approvalToken), expected);
+    h.first.job.key = expected;
+    h.addJob(101).job.key = expected;
+    await h.run(); await h.run();
+    assert.equal(h.sends.length, 2, 'same exact batch key still has one canonical owner');
+    assert.equal(h.jobs.get(id(101)).job.status, 'duplicate');
+  }
+  for (const tamper of ['suffix', 'other-token', 'test-key']) {
+    const h = harness();
+    const key = newsletterBatchKey(draft, h.first.job.approvalToken);
+    h.first.job.key = tamper === 'suffix' ? key + '0' : tamper === 'other-token' ? newsletterBatchKey(draft, h.first.job.approvalToken + 'x') : newsletterJobKey(draft, testId);
+    await assert.rejects(h.run(), /differ/);
+    assert.equal(h.sends.length, 0, 'arbitrary or non-derived keys are rejected');
+  }
+  {
+    const h = testHarness(); h.first.job.key = newsletterBatchKey(draft, h.first.job.approvalToken);
+    await assert.rejects(h.run(), /differ/);
+    assert.equal(h.sends.length, 0, 'test approvals cannot use normal batch keys');
+  }
+  for (const status of ['submitted', 'sending', 'unknown']) {
+    const h = harness(); const a = h.recipients[0];
+    h.first.job.approvalToken = approveNewsletter(draft, [{ pageId: a.pageId, emailHash: newsletterEmailHash(a.email) }], timestamp).token;
+    h.prepare(status, h.first, [a]);
+    h.first.job.status = status === 'submitted' ? 'completed' : 'attention';
+    const batch = h.addBatch();
+    // Put the old ledger after the new batch to prove preflight reads all jobs.
+    h.jobs.delete(h.first.job.id); h.jobs.set(h.first.job.id, h.first);
+    await h.run(); await h.run();
+    assert.deepEqual(h.sends.map(row => row.email), ['two@example.com'], 'prior ' + status + ' blocks A but allows newly approved B');
+    assert.deepEqual(batch.deliveries.map(row => row.value.status), ['skipped', 'submitted']);
+    assert.match(batch.deliveries[0].value.error, /이미 발송|불확실/);
+    assert.equal(h.first.job.status, status === 'submitted' ? 'completed' : 'attention', 'old completed jobs never reopen');
+    if (status === 'sending') assert.equal(h.first.deliveries[0].value.status, 'unknown');
+  }
+  {
+    const h = harness(); h.first.job.key = newsletterBatchKey(draft, h.first.job.approvalToken);
+    const batch = h.addBatch();
+    assert.notEqual(h.first.job.key, batch.job.key, 'distinct signed approvals create distinct batches');
+    await h.run(); await h.run();
+    assert.deepEqual(h.sends.map(row => row.email).sort(), ['one@example.com', 'two@example.com']);
+    assert(batch.deliveries.every(row => row.value.status === 'skipped'), 'same-run submitted persistence blocks later batches');
+  }
+  {
+    const h = harness({ recipients: [{ pageId: id(10), email: 'one@example.com', locale: 'kr' }] });
+    const batch = h.addBatch(); const original = h.deps.send;
+    h.deps.send = async input => { await original(input); throw new GmailSendError('Unknown result', { kind: 'unknown', code: 'unknown' }); };
+    await h.run();
+    assert.equal(h.sends.length, 1, 'same-run unknown result blocks a later batch');
+    assert.equal(batch.deliveries[0].value.status, 'skipped');
+  }
+  {
+    const h = harness({ recipients: [{ pageId: id(10), email: 'one@example.com', locale: 'kr' }] });
+    const batch = h.addBatch(); const original = h.deps.send; let rejected = false;
+    h.deps.send = async input => {
+      if (!rejected) { rejected = true; throw new GmailSendError('Definite rejection', { kind: 'rejected', retryable: true, code: 'quota' }); }
+      return original(input);
+    };
+    await h.run();
+    assert.equal(h.first.deliveries[0].value.status, 'failed');
+    assert.equal(batch.deliveries[0].value.status, 'submitted', 'new explicitly approved work can retry known rejected delivery');
+    assert.equal(h.sends.length, 1);
+  }
+  {
+    const h = harness(); h.prepare('failed'); h.first.job.status = 'attention';
+    h.first.deliveries.forEach(row => { row.value.retryable = true; });
+    h.addBatch(); await h.run();
+    assert.equal(h.sends.length, 2, 'persisted rejected failures are not submitted-recipient blocks');
+    assert(h.first.deliveries.every(row => row.value.status === 'failed'), 'no automatic retries of the old failed job');
+  }
+  {
+    const h = harness({ recipients: [{ pageId: id(10), email: NEWSLETTER_TEST_EMAIL, locale: 'kr' }] });
+    const test = testHarness(); test.prepare('submitted'); test.first.job.status = 'completed';
+    const prior = clone(test.first); prior.job.id = id(201); prior.metadataBlock = id(5001);
+    prior.deliveries.forEach((row, index) => { row.blockId = id(6100 + index); });
+    h.jobs.set(prior.job.id, prior); await h.run();
+    assert.equal(h.sends.length, 1, 'test submitted records never suppress normal consented sends');
+  }
+  {
+    const h = harness(); h.first.job.key = newsletterBatchKey(draft, h.first.job.approvalToken);
+    const batch = h.addBatch(); h.prepare('pending', batch);
+    await h.run();
+    assert.equal(h.sends.length, 2, 'already prepared pending rows also check the same-run block index');
+    assert(batch.deliveries.every(row => row.value.status === 'skipped'));
+    assert([...h.recipientCalls.values()].every(count => count === 2), 'blocked pending rows skip before final recipient lookup');
+  }
+  for (const corrupt of ['duplicate', 'missing', 'partial-attempt', 'unapproved', 'bad-status', 'bad-email']) {
+    const h = harness(); const prior = h.addBatch();
+    h.prepare('submitted', prior); prior.job.status = 'completed';
+    if (corrupt === 'duplicate') prior.deliveries.push(clone(prior.deliveries[0]));
+    if (corrupt === 'missing') { prior.deliveries = []; prior.job.prepared = false; }
+    if (corrupt === 'partial-attempt') { prior.deliveries.pop(); prior.job.prepared = false; prior.job.status = 'queued'; }
+    if (corrupt === 'unapproved') prior.deliveries[0].value.pageIds = [id(999)];
+    if (corrupt === 'bad-status') prior.deliveries[0].value.status = 'not-a-status';
+    if (corrupt === 'bad-email') prior.deliveries[0].value.email = 'tampered@example.com';
+    await assert.rejects(h.run(), /ledger|missing/);
+    assert.equal(h.sends.length, 0, 'malformed later prior ledger must stop all sends: ' + corrupt);
+  }
+  console.log('PASS newsletter worker: approval-bound batches, recipient dedupe, consent, tests, interrupted sends, quota, retry and durable recovery (offline)');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });
