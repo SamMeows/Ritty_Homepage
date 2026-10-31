@@ -1,5 +1,6 @@
 import 'server-only'
 import { createHmac, timingSafeEqual } from 'node:crypto'
+import { NEWSLETTER_TEST_EMAIL } from './newsletter-types'
 
 const MARKER = 'ritty_marketing_subscription_v1:'
 const LOCALES = new Set(['kr', 'en', 'ja', 'zh-tw'])
@@ -181,6 +182,25 @@ export async function getMarketingRecipient(pageId: string): Promise<MarketingRe
  // Stored withdrawals still veto consent; checking the DB box cannot undo them.
  if (state) return state.subscribed && !state.isTest && !state.withdrawnAt ? recipient : null
  return hasCheckedConsent(record.page) ? recipient : null
+}
+// Identity-only lookup for the fixed operator test address. Never reads or writes consent.
+export async function getNewsletterTestRecipient(pageId: string): Promise<MarketingRecipient | null> {
+ const id = normalizedId(pageId)
+ if (!id) return null
+ const page = await notion('/pages/' + id)
+ if (normalizedId(page.id) !== id) return null
+ const recipient = recipientFromPage(page)
+ return recipient?.email === NEWSLETTER_TEST_EMAIL ? recipient : null
+}
+export async function findNewsletterTestRecipients(): Promise<MarketingRecipient[]> {
+ const recipients: MarketingRecipient[] = [], seen = new Set<string>()
+ for (const pageId of await matchingEmailPageIds(NEWSLETTER_TEST_EMAIL)) {
+  const recipient = await getNewsletterTestRecipient(pageId)
+  if (recipient && !seen.has(recipient.pageId)) {
+   seen.add(recipient.pageId); recipients.push(recipient)
+  }
+ }
+ return recipients
 }
 export async function canReceiveMarketing(pageId: string) {
  return !!await getMarketingRecipient(pageId)

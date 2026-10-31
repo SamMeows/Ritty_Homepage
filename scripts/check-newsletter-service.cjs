@@ -10,7 +10,7 @@ const PAGE = n => n.toString(16).padStart(32, '0')
 const ORIGINAL_ENV = { ...process.env }
 const originalFetch = global.fetch
 const seen = { auth: [], news: [], lookup: [], create: [], retries: [], dispatch: [] }
-let article, candidates, pages, jobs, authenticated, storageFailure, dispatchMode
+let article, candidates, pages, jobs, authenticated, storageFailure, dispatchMode, testContacts
 
 function fixture() {
   process.env.NOTION_TOKEN = 'offline-notion-secret'
@@ -34,6 +34,7 @@ function fixture() {
     { pageId: PAGE(2), email: ' person@example.test ', locale: 'kr' },
     { pageId: PAGE(3), email: 'another@example.test', locale: 'kr' },
   ]
+  testContacts = [{ pageId: PAGE(80), email: 'csj0934@naver.com', locale: 'kr' }]
   pages = [{ items: [article], cursor: null }]
   jobs = new Map()
   authenticated = true
@@ -65,6 +66,7 @@ const mocks = {
     async getNewsArticle(id, locale) { seen.news.push({ id, locale }); return article },
   },
   'lib/marketing-subscription.ts': {
+    async findNewsletterTestRecipients() { return testContacts },
     async listMarketingCandidates() { return candidates },
     async getNewsletterContact(pageId) { return pageId === PAGE(90) ? { pageId, email: 'manual@example.test', locale: 'kr' } : null },
     async addNewsletterContact(email, locale) { return email === 'blocked@example.test' ? null : [{ pageId: PAGE(90), email: email.toLowerCase(), locale }] },
@@ -110,6 +112,7 @@ const routes = {
   overview: load('app/api/admin/newsletter/route.ts'),
   preview: load('app/api/admin/newsletter/preview/route.ts'),
   send: load('app/api/admin/newsletter/send/route.ts'),
+  test: load('app/api/admin/newsletter/test/route.ts'),
   jobs: load('app/api/admin/newsletter/jobs/route.ts'),
   retry: load('app/api/admin/newsletter/retry/route.ts'),
 }
@@ -359,7 +362,7 @@ async function main() {
   details.job.status = 'completed'
   await fails(service.retryNewsletterJob({ id: details.job.id }), 'nothing_retryable')
 
-  for (const [name, endpoint, method] of [['overview', '', 'GET'], ['preview', '/preview', 'POST'], ['send', '/send', 'POST'], ['jobs', '/jobs', 'GET'], ['retry', '/retry', 'POST']]) {
+  for (const [name, endpoint, method] of [['overview', '', 'GET'], ['preview', '/preview', 'POST'], ['send', '/send', 'POST'], ['test', '/test', 'POST'], ['jobs', '/jobs', 'GET'], ['retry', '/retry', 'POST']]) {
     fixture(); authenticated = false
     const response = await routes[name][method](request(endpoint, method === 'POST' ? {} : undefined))
     assert.equal(response.status, 401, name)
@@ -369,7 +372,7 @@ async function main() {
   }
 
   fixture()
-  for (const name of ['preview', 'send', 'retry']) {
+  for (const name of ['preview', 'send', 'test', 'retry']) {
     const response = await routes[name].POST(request('/' + name, {}, { headers: { origin: 'https://attacker.example.test' } }))
     assert.equal(response.status, 403)
   }
@@ -408,6 +411,48 @@ async function main() {
   assert.equal(response.status, 500)
   assert.deepEqual(await response.json(), { error: 'request_failed' })
   assert.equal(seen.dispatch.length, 0)
+
+  // Test delivery is bound to the owner, independent from a completed normal campaign.
+  fixture()
+  const ownerPreview = await makePreview({ recipientIds: [PAGE(3)] })
+  const production = await service.sendApprovedNewsletter({ approvalToken: ownerPreview.approvalToken }, ADMIN)
+  jobs.get(production.job.id).job.status = 'completed'
+  const testSent = await service.sendTestApprovedNewsletter({ approvalToken: ownerPreview.approvalToken }, ADMIN)
+  assert.equal(testSent.recipient, 'csj0934@naver.com')
+  assert.equal(testSent.job.mode, 'test')
+  assert.notEqual(testSent.job.key, production.job.key)
+  assert.equal(testSent.job.key.startsWith(ARTICLE + ':kr:test:'), true)
+  assert.equal(testSent.job.draft.subject.startsWith('[테스트] '), true)
+  const ownerApproval = seen.create.at(-1).approvalToken
+  const testApproved = approval.verifyNewsletterApproval(ownerApproval)
+  assert.deepEqual(testApproved.recipients, [{ pageId: PAGE(80), emailHash: approval.newsletterEmailHash('csj0934@naver.com') }])
+  assert.equal(testApproved.mode, 'test')
+  const createCount = seen.create.length
+  assert.equal((await service.sendTestApprovedNewsletter({ approvalToken: ownerPreview.approvalToken }, ADMIN)).job.id, testSent.job.id)
+  assert.equal(seen.create.length, createCount)
+  jobs.get(testSent.job.id).job.status = 'completed'
+  const dispatchCount = seen.dispatch.length
+  await service.sendTestApprovedNewsletter({ approvalToken: ownerPreview.approvalToken }, ADMIN)
+  assert.equal(seen.dispatch.length, dispatchCount, 'duplicate test clicks never resend completed tests')
+  const freshTestPreview = await makePreview({ summary: '새 테스트 미리보기' })
+  const freshTest = await service.sendTestApprovedNewsletter({ approvalToken: freshTestPreview.approvalToken }, ADMIN)
+  assert.notEqual(freshTest.job.key, testSent.job.key)
+  assert.equal(jobs.get(production.job.id).job.status, 'completed')
+  await fails(service.sendApprovedNewsletter({ approvalToken: ownerApproval }, ADMIN), 'invalid_approval')
+  await fails(service.sendTestApprovedNewsletter({ approvalToken: ownerApproval }, ADMIN), 'invalid_approval')
+  await fails(service.sendTestApprovedNewsletter({ approvalToken: ownerPreview.approvalToken, email: 'other@example.test' }, ADMIN), 'invalid_request')
+  testContacts = [{ pageId: PAGE(80), email: 'other@example.test', locale: 'kr' }]
+  await fails(service.sendTestApprovedNewsletter({ approvalToken: ownerPreview.approvalToken }, ADMIN), 'test_recipient_unavailable')
+  testContacts = []
+  await fails(service.sendTestApprovedNewsletter({ approvalToken: ownerPreview.approvalToken }, ADMIN), 'test_recipient_unavailable')
+  fixture()
+  const routeTestPreview = await makePreview()
+  response = await routes.test.POST(request('/test', { approvalToken: routeTestPreview.approvalToken, email: 'other@example.test' }))
+  assert.equal(response.status, 400)
+  assert.equal(seen.create.length, 0)
+  response = await routes.test.POST(request('/test', { approvalToken: routeTestPreview.approvalToken }))
+  assert.equal(response.status, 202)
+  assert.equal((await response.json()).recipient, 'csj0934@naver.com')
 
   console.log('Newsletter service/API checks passed (offline; no Google, Notion or GitHub requests sent).')
 }

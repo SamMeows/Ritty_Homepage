@@ -103,7 +103,7 @@ const source = ts.transpileModule(fs.readFileSync('lib/marketing-subscription.ts
  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
 }).outputText;
 new Function('require', 'module', 'exports', 'fetch', 'process', source)(
- name => name === 'server-only' ? {} : require(name), mod, mod.exports, mockFetch,
+ name => name === 'server-only' ? {} : name === './newsletter-types' ? { NEWSLETTER_TEST_EMAIL: 'csj0934@naver.com' } : require(name), mod, mod.exports, mockFetch,
  mockProcess,
 );
 const m = mod.exports;
@@ -134,6 +134,46 @@ const recipient = { pageId: id, email: 'person@example.com', locale: 'kr' };
  assert.equal(await m.addNewsletterContact('person@example.com', 'zh-tw'), null, 'a different locale cannot be bypassed by manual entry');
  pages.get(queueId).public_url = 'https://example.com/public';
  await assert.rejects(m.addNewsletterContact('new@example.com', 'kr'), /scope/);
+ delete mockProcess.env.NEWSLETTER_QUEUE_PAGE_ID;
+
+ // Explicit own-address tests read identity metadata only, without restoring consent.
+ const testEmail = 'csj0934@naver.com';
+ reset({ email: testEmail, consent: false, locale: 'ja' }, [stateBlock(false, false, { withdrawnAt: '2026-10-29T12:00:00Z' })]);
+ assert.equal(await m.getMarketingRecipient(id), null);
+ const beforeTestIdentity = JSON.stringify([...pages, ...blockLists]);
+ calls = [];
+ assert.deepEqual(await m.getNewsletterTestRecipient(id), { pageId: id, email: testEmail, locale: 'ja' });
+ assert.deepEqual(calls.map(call => [call.path, call.method]), [['/v1/pages/' + id, 'GET']], 'test identity does not read subscription body');
+ assert.equal(JSON.stringify([...pages, ...blockLists]), beforeTestIdentity);
+ const beforeInvalidTest = calls.length;
+ assert.equal(await m.getNewsletterTestRecipient('invalid'), null); assert.equal(calls.length, beforeInvalidTest);
+ pages.get(id).properties.Email.title = rich('other@example.com');
+ assert.equal(await m.getNewsletterTestRecipient(id), null, 'address changes cannot redirect a test');
+ for (const options of [{ email: 'other@example.com' }, { parent: otherId(99) }, { archived: true }, { suppressed: true }, { isTest: true }]) {
+  reset({ email: testEmail, consent: false, ...options });
+  assert.equal(await m.getNewsletterTestRecipient(id), null);
+  assert(calls.every(call => call.method === 'GET'), 'identity lookup never mutates consent');
+ }
+ reset({ email: testEmail, consent: false, locale: 'ja' }, [stateBlock(false)]);
+ const ownDuplicateId = otherId(71), unrelatedId = otherId(72), ownManualId = otherId(73);
+ pages.set(ownDuplicateId, page({ pageId: ownDuplicateId, email: testEmail, locale: 'en', consent: false }));
+ blockLists.set(ownDuplicateId, [stateBlock(false)]);
+ pages.set(unrelatedId, page({ pageId: unrelatedId, email: 'other@example.com', consent: false }));
+ blockLists.set(unrelatedId, [stateBlock(false)]);
+ mockProcess.env.NEWSLETTER_QUEUE_PAGE_ID = queueId;
+ pages.set(queueId, { id: queueId, parent: {}, properties: {} });
+ const ownContactTitle = 'Ritty newsletter contact · zh-tw · ' + testEmail;
+ pages.set(ownManualId, { id: ownManualId, parent: { page_id: queueId }, properties: { title: { title: rich(ownContactTitle) } } });
+ blockLists.set(ownManualId, [stateBlock(false, false, { withdrawnAt: '2026-10-29T12:00:00Z' })]);
+ blockLists.set(queueId, [{ id: ownManualId, type: 'child_page', child_page: { title: ownContactTitle } }]);
+ queryRows = [pages.get(id), pages.get(id), pages.get(ownDuplicateId), pages.get(unrelatedId)]; queryPageSize = 1;
+ const beforeTestFind = JSON.stringify([...pages, ...blockLists]); calls = [];
+ assert.deepEqual((await m.findNewsletterTestRecipients()).map(value => value.pageId), [id, ownDuplicateId, ownManualId]);
+ assert.equal(JSON.stringify([...pages, ...blockLists]), beforeTestFind, 'finding test identities leaves withdrawn state unchanged');
+ assert(calls.every(call => call.method === 'GET' || (call.method === 'POST' && call.path.endsWith('/query'))));
+ assert.equal(await m.getMarketingRecipient(ownManualId), null, 'test lookup never resubscribes the manual contact');
+ pages.get(ownManualId).public_url = 'https://example.com/public';
+ assert.equal(await m.getNewsletterTestRecipient(ownManualId), null, 'public manual identities are outside private contact scope');
  delete mockProcess.env.NEWSLETTER_QUEUE_PAGE_ID;
 
  // A source and its container have different IDs. Scope by source, never by a sibling's container.

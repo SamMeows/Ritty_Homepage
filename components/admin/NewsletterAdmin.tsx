@@ -2,16 +2,18 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { NewsItem } from '@/lib/news'
+import { NEWSLETTER_TEST_EMAIL } from '@/lib/newsletter-types'
 import type { NewsletterConfiguration, NewsletterJobView, NewsletterLocale, NewsletterPreview, NewsletterRecipient } from '@/lib/newsletter-types'
 import './newsletter-admin.css'
 
 type Overview = { configuration: NewsletterConfiguration; articles: NewsItem[]; jobs: NewsletterJobView[]; recipients: NewsletterRecipient[] }
 type Session = { authenticated: boolean; email?: string }
-type Activity = 'preview' | 'send' | 'retry' | 'logout' | 'recipient' | null
+type Activity = 'preview' | 'send' | 'test' | 'retry' | 'logout' | 'recipient' | null
 const ROOT = '/api/admin/newsletter'
 const localeNames: Record<NewsletterLocale, string> = { kr: '한국어', en: 'English', ja: '日本語', 'zh-tw': '繁體中文 (ZH-TW)' }
 const statusNames = { queued: '발송 대기', sending: '발송 중', completed: '처리 완료', attention: '확인 필요', duplicate: '이미 요청한 글' }
 const messages: Record<string, string> = {
+  test_recipient_unavailable: '테스트 수신 주소 csj0934@naver.com을 확인할 수 없어요. 등록 정보를 확인해 주세요.',
   invalid_email: '올바른 이메일 주소를 입력해 주세요.', invalid_recipients: '발송 대상 목록을 확인해 주세요.',
   recipient_unavailable: '이 주소는 수신거부·차단·언어 변경 등으로 추가할 수 없어요. 기존 구독 정보를 확인해 주세요.',
   unauthorized: '로그인이 만료됐어요. 다시 로그인해 주세요.', forbidden: '등록된 관리자 계정으로 로그인해 주세요.',
@@ -169,6 +171,14 @@ export default function NewsletterAdmin() {
       setNotice(result.reused ? '이미 발송 요청한 글이에요. 기존 발송 기록을 표시합니다.' : result.dispatched ? '발송을 요청했어요. 아래에서 진행 상태를 확인할 수 있습니다.' : '발송 요청이 저장됐어요. 백그라운드 작업이 시작되면 진행 상태가 갱신됩니다.')
     })
   }
+  const sendTest = () => {
+    if (!preview) return
+    void act('test', async () => {
+      const result = await api<{ job: NewsletterJobView; recipient: string; dispatched: boolean; reused?: boolean }>('/test', { approvalToken: preview.approvalToken })
+      rememberJob(result.job)
+      setNotice(result.reused ? '이 미리보기의 테스트는 이미 요청됐어요. 다시 테스트하려면 미리보기를 새로 만들어 주세요.' : '테스트 발송을 요청했어요. ' + NEWSLETTER_TEST_EMAIL + ' 한 주소에만 보내며, 일반 발송·수신 동의 상태는 바꾸지 않습니다.')
+    })
+  }
   const retry = () => {
     if (!job) return
     const id = job.id
@@ -248,6 +258,7 @@ export default function NewsletterAdmin() {
                 {preview ? <>
                   <div className="newsletter-admin__preview-info"><p><span>보내는 주소</span><strong>{overview.configuration.sender || '설정 필요'}</strong></p><p><span>메일 제목</span><strong>{preview.draft.subject}</strong></p></div>
                   <iframe title="개발일지 이메일 미리보기" srcDoc={preview.html} sandbox="" referrerPolicy="no-referrer" />
+                  <div className="newsletter-admin__send-area"><div><strong>테스트 발송 · {NEWSLETTER_TEST_EMAIL}</strong><p className="newsletter-admin__hint">선택한 수신자 목록과 무관하게 이 주소 한 곳으로만 보냅니다. 구독 상태는 바꾸지 않습니다.</p></div><button className="newsletter-admin__secondary" onClick={sendTest} disabled={!canSend || activity !== null}>{activity === 'test' ? '테스트 요청 중…' : '내게 테스트 발송'}</button></div>
                   <div className="newsletter-admin__send-area"><div><strong>선택한 발송 대상 {preview.candidateCount.toLocaleString('ko-KR')}명</strong><p className="newsletter-admin__hint">수신거부·차단 상태는 발송 직전에 다시 확인해요.</p></div><button className="newsletter-admin__primary" onClick={send} disabled={!canSend || activity !== null}>{activity === 'send' ? '요청 저장 중…' : '선택 대상에게 발송'}</button></div>
                   {expired && <p className="newsletter-admin__warning">미리보기 유효 시간이 지났어요. 다시 만든 뒤 발송해 주세요.</p>}
                   <p className="newsletter-admin__hint">버튼을 한 번 누르면 각 수신자에게 개별 메일로 발송해요. 발송은 백그라운드에서 계속됩니다.</p>
@@ -263,7 +274,7 @@ export default function NewsletterAdmin() {
                 {!!job.failures.length && <details><summary>확인이 필요한 내역 {job.failures.length}건</summary><ul className="newsletter-admin__failures">{job.failures.map((failure, index) => <li key={failure.email + index}><strong>{failure.email}</strong><span>{failure.status === 'unknown' ? '결과 확인 필요' : '실패'}{failure.status === 'failed' && failure.retryable ? ' · 재시도 가능' : ''}</span>{failure.error && <p>{failure.error}</p>}</li>)}</ul></details>}
                 {retryable && <button className="newsletter-admin__secondary" disabled={activity !== null} onClick={retry}>{activity === 'retry' ? '재개 요청 중…' : '대기·재시도 가능한 건 이어 보내기'}</button>}
               </div>}
-              {overview.jobs.length ? <ul className="newsletter-admin__jobs">{overview.jobs.map(item => <li key={item.id}><button aria-pressed={job?.id === item.id} onClick={() => void refreshJob(item.id)}><span><strong>{item.draft.title}</strong><small>{dateLabel(item.createdAt)} · {localeNames[item.draft.locale]}</small></span><span className="newsletter-admin__badge">{statusNames[item.status]}</span></button></li>)}</ul> : <p className="newsletter-admin__hint">아직 발송 요청이 없어요. 첫 개발일지를 보내면 여기에 기록됩니다.</p>}
+              {overview.jobs.length ? <ul className="newsletter-admin__jobs">{overview.jobs.map(item => <li key={item.id}><button aria-pressed={job?.id === item.id} onClick={() => void refreshJob(item.id)}><span><strong>{item.mode === 'test' ? '[테스트] ' : ''}{item.draft.title}</strong><small>{dateLabel(item.createdAt)} · {localeNames[item.draft.locale]}</small></span><span className="newsletter-admin__badge">{statusNames[item.status]}</span></button></li>)}</ul> : <p className="newsletter-admin__hint">아직 발송 요청이 없어요. 첫 개발일지를 보내면 여기에 기록됩니다.</p>}
             </section>
           </>}
         </>}

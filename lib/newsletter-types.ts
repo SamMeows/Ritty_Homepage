@@ -1,3 +1,5 @@
+export const NEWSLETTER_TEST_EMAIL = 'csj0934@naver.com'
+
 export const NEWSLETTER_LOCALES = ['kr', 'en', 'ja', 'zh-tw'] as const
 export type NewsletterLocale = (typeof NEWSLETTER_LOCALES)[number]
 
@@ -39,6 +41,7 @@ export type DeliveryRecord = {
 
 export type NewsletterJobStatus = 'queued' | 'sending' | 'completed' | 'attention' | 'duplicate'
 export type NewsletterJob = {
+  mode?: 'test'
   id: string
   key: string
   draft: NewsletterDraft

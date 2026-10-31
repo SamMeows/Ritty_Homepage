@@ -1,7 +1,8 @@
 import 'server-only'
+import { createHash } from 'node:crypto'
 import { getNews, getNewsArticle, type NewsItem } from './news'
 import { newsArticlePath, newsLanguage } from './news-languages'
-import { addNewsletterContact, getNewsletterContact, listMarketingCandidates, type MarketingRecipient } from './marketing-subscription'
+import { findNewsletterTestRecipients, addNewsletterContact, getNewsletterContact, listMarketingCandidates, type MarketingRecipient } from './marketing-subscription'
 import { approveNewsletter, newsletterEmailHash, newsletterJobKey, verifyNewsletterApproval } from './newsletter-approval'
 import { newsletterAuthResponse } from './newsletter-auth'
 import { newsletterConfiguration, newsletterId, newsletterOrigin, NEWSLETTER_MAX_RECIPIENTS, NEWSLETTER_WORKFLOW } from './newsletter-config'
@@ -9,7 +10,7 @@ import { renderNewsletterEmail } from './newsletter-email'
 import { newsletterContent, newsletterImagePath } from './newsletter-content'
 import { NEWSLETTER_BRAND } from './newsletter-brand'
 import { createNewsletterJob, listNewsletterJobIds, newsletterJobView, readNewsletterJob, requestNewsletterRetry, type JobDetails } from './newsletter-store'
-import { NEWSLETTER_LOCALES, type NewsletterDraft, type NewsletterLocale, type NewsletterPreview, type NewsletterRecipient } from './newsletter-types'
+import { NEWSLETTER_TEST_EMAIL, NEWSLETTER_LOCALES, type NewsletterDraft, type NewsletterLocale, type NewsletterPreview, type NewsletterRecipient } from './newsletter-types'
 
 const CATEGORY = '개발 소식'
 const HISTORY_LIMIT = 10
@@ -296,6 +297,7 @@ export async function sendApprovedNewsletter(input: Record<string, unknown>, app
   let approval
   try { approval = verifyNewsletterApproval(input.approvalToken as string, { now: acceptedAt }) }
   catch { throw new NewsletterServiceError(409, 'invalid_approval') }
+  if (approval.mode === 'test') throw new NewsletterServiceError(409, 'invalid_approval')
   const article = await publishedArticle(id(approval.draft.articleId), approval.draft.locale)
   if (article.modifiedAt !== approval.draft.articleModifiedAt || plainTitle(article.title) !== approval.draft.title) {
     throw new NewsletterServiceError(409, 'article_changed')
@@ -313,6 +315,46 @@ export async function sendApprovedNewsletter(input: Record<string, unknown>, app
   // creates by the stable key before preparing any deliveries.
   const view = newsletterJobView({ job, metadataBlock: '', deliveries: [], retries: [] })
   return { job: view, dispatched: await dispatchNewsletterWorker(), reused: false }
+}
+
+export async function sendTestApprovedNewsletter(input: Record<string, unknown>, approvedBy: string) {
+  fields(input, ['approvalToken'])
+  requireSendingEnabled()
+  const acceptedAt = Date.now()
+  let approval
+  try { approval = verifyNewsletterApproval(input.approvalToken as string, { now: acceptedAt }) }
+  catch { throw new NewsletterServiceError(409, 'invalid_approval') }
+  if (approval.mode !== undefined) throw new NewsletterServiceError(409, 'invalid_approval')
+  const article = await publishedArticle(id(approval.draft.articleId), approval.draft.locale)
+  if (article.modifiedAt !== approval.draft.articleModifiedAt || plainTitle(article.title) !== approval.draft.title) {
+    throw new NewsletterServiceError(409, 'article_changed')
+  }
+  // The browser never supplies a test address. Only this fixed owner mailbox is eligible.
+  const contacts = await findNewsletterTestRecipients()
+  if (!contacts.length || contacts.length > NEWSLETTER_MAX_RECIPIENTS
+    || contacts.some(contact => contact.email !== NEWSLETTER_TEST_EMAIL)) {
+    throw new NewsletterServiceError(409, 'test_recipient_unavailable')
+  }
+  const recipients = [...new Map(contacts.map(contact => [id(contact.pageId), {
+    pageId: id(contact.pageId), emailHash: newsletterEmailHash(NEWSLETTER_TEST_EMAIL),
+  }])).values()]
+  const prefix = '[테스트] '
+  const draft: NewsletterDraft = { ...approval.draft, subject: prefix + truncate(approval.draft.subject, 200 - prefix.length) }
+  // Repeated clicks on one preview reuse one test; a new preview permits a fresh test.
+  const testId = createHash('sha256').update(input.approvalToken as string).digest('hex')
+  const key = newsletterJobKey(draft, testId)
+  const existing = await existingJob(key)
+  if (existing) {
+    if (existing.job.mode !== 'test') throw new NewsletterServiceError(409, 'campaign_needs_review')
+    return { job: newsletterJobView(existing), recipient: NEWSLETTER_TEST_EMAIL,
+      dispatched: existing.job.status === 'queued' ? await dispatchNewsletterWorker() : false, reused: true }
+  }
+  const testApproval = approveNewsletter(draft, recipients, acceptedAt, { mode: 'test', testId })
+  const now = new Date(acceptedAt).toISOString()
+  const job = await createNewsletterJob({ key, draft, approvalToken: testApproval.token, mode: 'test',
+    approvedAt: now, approvedBy, createdAt: now, updatedAt: now, status: 'queued', prepared: false })
+  const view = newsletterJobView({ job, metadataBlock: '', deliveries: [], retries: [] })
+  return { job: view, recipient: NEWSLETTER_TEST_EMAIL, dispatched: await dispatchNewsletterWorker(), reused: false }
 }
 
 export async function retryNewsletterJob(input: Record<string, unknown>) {

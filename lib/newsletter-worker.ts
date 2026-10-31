@@ -2,9 +2,9 @@ import 'server-only'
 import { newsletterEmailHash, newsletterJobKey, verifyNewsletterApproval, type NewsletterApproval } from './newsletter-approval'
 import { newsletterId } from './newsletter-config'
 import { GmailSendError, gmailConfigurationMissing, sendNewsletterEmail } from './newsletter-gmail'
-import { getMarketingRecipient, marketingOneClickUnsubscribeUrl, marketingUnsubscribeUrl } from './marketing-subscription'
+import { getMarketingRecipient, getNewsletterTestRecipient, marketingOneClickUnsubscribeUrl, marketingUnsubscribeUrl } from './marketing-subscription'
 import { appendNewsletterDeliveries, finishNewsletterRetry, listNewsletterJobIds, readNewsletterJob, saveNewsletterDelivery, saveNewsletterJob, type JobDetails } from './newsletter-store'
-import type { DeliveryRecord, NewsletterJob } from './newsletter-types'
+import { NEWSLETTER_TEST_EMAIL, type DeliveryRecord, type NewsletterJob } from './newsletter-types'
 
 // GitHub Actions is the only production consumer. Its fixed concurrency group
 // serializes writers across scheduled and button-triggered executions.
@@ -16,6 +16,7 @@ const defaultDependencies = {
   saveDelivery: saveNewsletterDelivery,
   finishRetry: finishNewsletterRetry,
   recipient: getMarketingRecipient,
+  testRecipient: getNewsletterTestRecipient,
   send: sendNewsletterEmail,
   unsubscribe: marketingUnsubscribeUrl,
   oneClick: marketingOneClickUnsubscribeUrl,
@@ -28,7 +29,9 @@ type StoredDelivery = JobDetails['deliveries'][number]
 function approvedJob(details: JobDetails): NewsletterApproval {
   const { job } = details
   const approval = verifyNewsletterApproval(job.approvalToken, { approvedAt: job.approvedAt })
-  if (newsletterJobKey(approval.draft) !== job.key || JSON.stringify(approval.draft) !== JSON.stringify(job.draft)) {
+  if ((job.mode !== undefined && job.mode !== 'test') || job.mode !== approval.mode
+    || newsletterJobKey(approval.draft, approval.mode === 'test' ? approval.testId : undefined) !== job.key
+    || JSON.stringify(approval.draft) !== JSON.stringify(job.draft)) {
     throw new Error('Campaign contents differ from the administrator approval')
   }
   const pages = new Set<string>()
@@ -68,7 +71,15 @@ function validateLedger(details: JobDetails, approval: NewsletterApproval) {
 
 // An explicit withdrawal in any duplicate registration blocks that email.
 // All records must still match the approved identity and language at send time.
-async function eligibleEmail(pageIds: string[], emailHash: string, locale: string, dependencies: NewsletterWorkerDependencies) {
+async function eligibleEmail(pageIds: string[], emailHash: string, locale: string, dependencies: NewsletterWorkerDependencies, isTest = false) {
+  if (isTest) {
+    if (emailHash !== newsletterEmailHash(NEWSLETTER_TEST_EMAIL) || !pageIds.length) return null
+    for (const pageId of pageIds) {
+      const recipient = await dependencies.testRecipient(pageId)
+      if (!recipient || recipient.email !== NEWSLETTER_TEST_EMAIL) return null
+    }
+    return NEWSLETTER_TEST_EMAIL
+  }
   let email = ''
   for (const pageId of pageIds) {
     const recipient = await dependencies.recipient(pageId)
@@ -97,7 +108,7 @@ async function prepare(details: JobDetails, approval: NewsletterApproval, depend
   const missing: DeliveryRecord[] = []
   for (const [key, pageIds] of groups) {
     if (existing.has(key)) continue
-    const email = await eligibleEmail(pageIds, key, approval.draft.locale, dependencies)
+    const email = await eligibleEmail(pageIds, key, approval.draft.locale, dependencies, approval.mode === 'test')
     missing.push({ key, pageIds, email: email || '', locale: approval.draft.locale,
       status: email ? 'pending' : 'skipped', updatedAt: new Date(dependencies.now()).toISOString(),
       ...(email ? {} : { error: '동의 철회·발송 제외·주소 또는 언어 변경으로 제외했습니다.' }),
@@ -190,7 +201,7 @@ export async function runNewsletterWorker(options: {
         if (attempts >= maxMessages || dependencies.now() - startedAt >= timeBudgetMs) break
         // Fail closed if the current registration cannot be read. This happens
         // before marking an attempt or contacting Gmail.
-        const email = await eligibleEmail(row.value.pageIds, row.value.key, current.job.draft.locale, dependencies)
+        const email = await eligibleEmail(row.value.pageIds, row.value.key, current.job.draft.locale, dependencies, approval.mode === 'test')
         if (!email || email !== row.value.email) {
           await updateDelivery(row, { status: 'skipped', error: '발송 직전 동의·주소·언어 확인에서 제외했습니다.' }, dependencies)
           summary.skipped++

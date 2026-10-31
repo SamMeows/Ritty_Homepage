@@ -1,11 +1,13 @@
 import 'server-only'
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
 import { newsletterId, newsletterSigningSecret, NEWSLETTER_MAX_RECIPIENTS } from './newsletter-config'
-import { NEWSLETTER_LOCALES, type NewsletterDraft } from './newsletter-types'
+import { NEWSLETTER_LOCALES, NEWSLETTER_TEST_EMAIL, type NewsletterDraft } from './newsletter-types'
 
 export type ApprovedRecipient = { pageId: string; emailHash: string }
 export type NewsletterApproval = {
   version: 1
+  mode?: 'test'
+  testId?: string
   draft: NewsletterDraft
   recipients: ApprovedRecipient[]
   issuedAt: number
@@ -13,12 +15,24 @@ export type NewsletterApproval = {
 }
 
 export function newsletterEmailHash(email: string) { return createHash('sha256').update(email.trim().toLowerCase()).digest('hex') }
-export function newsletterJobKey(draft: NewsletterDraft) { return newsletterId(draft.articleId) + ':' + draft.locale }
+export function newsletterJobKey(draft: NewsletterDraft, testId?: string) { return newsletterId(draft.articleId) + ':' + draft.locale + (testId === undefined ? '' : ':test:' + testId) }
 function mac(body: string) { return createHmac('sha256', newsletterSigningSecret()).update('ritty:newsletter-approval:v1:' + body).digest('base64url') }
 
-export function approveNewsletter(draft: NewsletterDraft, recipients: ApprovedRecipient[], now = Date.now()) {
+function validateTestApproval(approval: { mode?: 'test'; testId?: string; recipients: ApprovedRecipient[] }) {
+  if (approval.mode !== undefined && approval.mode !== 'test') throw new Error('Invalid newsletter approval mode')
+  if (approval.mode === undefined) {
+    if (approval.testId !== undefined) throw new Error('Test id requires test mode')
+    return
+  }
+  if (typeof approval.testId !== 'string' || !/^[a-f0-9]{64}$/.test(approval.testId)) throw new Error('Invalid newsletter test id')
+  const expected = newsletterEmailHash(NEWSLETTER_TEST_EMAIL)
+  if (approval.recipients.some(recipient => recipient.emailHash !== expected)) throw new Error('Invalid newsletter test recipient')
+}
+
+export function approveNewsletter(draft: NewsletterDraft, recipients: ApprovedRecipient[], now = Date.now(), options?: { mode: 'test'; testId: string }) {
   if (!recipients.length || recipients.length > NEWSLETTER_MAX_RECIPIENTS) throw new Error('발송 대상은 1명부터 500명까지 준비할 수 있습니다.')
-  const approval: NewsletterApproval = { version: 1, draft, recipients, issuedAt: now, expiresAt: now + 30 * 60_000 }
+  const approval: NewsletterApproval = { version: 1, draft, recipients, issuedAt: now, expiresAt: now + 30 * 60_000, ...(options ? { mode: options.mode, testId: options.testId } : {}) }
+  validateTestApproval(approval)
   const body = Buffer.from(JSON.stringify(approval)).toString('base64url')
   return { token: body + '.' + mac(body), expiresAt: new Date(approval.expiresAt).toISOString() }
 }
@@ -35,6 +49,7 @@ export function verifyNewsletterApproval(token: string, options: { now?: number;
   }
   if (!approval.draft || !NEWSLETTER_LOCALES.includes(approval.draft.locale) || !Array.isArray(approval.recipients)
     || !approval.recipients.length || approval.recipients.length > NEWSLETTER_MAX_RECIPIENTS) throw new Error('Invalid approved newsletter')
+  validateTestApproval(approval)
   newsletterId(approval.draft.articleId)
   for (const recipient of approval.recipients) {
     newsletterId(recipient.pageId)
