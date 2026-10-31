@@ -8,7 +8,7 @@ import { newsletterAuthResponse } from './newsletter-auth'
 import { newsletterConfiguration, newsletterId, newsletterOrigin, NEWSLETTER_MAX_RECIPIENTS, NEWSLETTER_WORKFLOW } from './newsletter-config'
 import { renderNewsletterEmail } from './newsletter-email'
 import { newsletterContent, newsletterImagePath } from './newsletter-content'
-import { NEWSLETTER_BRAND } from './newsletter-brand'
+import { NEWSLETTER_BRAND, NEWSLETTER_SUBJECT_PREFIXES, NEWSLETTER_TEST_SUBJECT_PREFIXES } from './newsletter-brand'
 import { createNewsletterJob, listNewsletterJobIds, newsletterJobView, readNewsletterJob, requestNewsletterRetry, type JobDetails } from './newsletter-store'
 import { NEWSLETTER_TEST_EMAIL, NEWSLETTER_LOCALES, type NewsletterDraft, type NewsletterLocale, type NewsletterPreview, type NewsletterRecipient } from './newsletter-types'
 
@@ -93,9 +93,16 @@ function plainTitle(value: string) {
   return truncate(value.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim(), 500)
 }
 
-function subject(value: string) {
-  const prefix = '[리티 개발일지] '
-  const title = value.trim().replace(/^(?:(?:\(광고\)|\[광고\]|\[리티 개발로그\]|\[리티 개발\s?일지\])\s*)+/, '').trim()
+function subject(value: string, locale: NewsletterLocale) {
+  const prefix = NEWSLETTER_SUBJECT_PREFIXES[locale] + ' '
+  const knownPrefixes = [...Object.values(NEWSLETTER_SUBJECT_PREFIXES), '(광고)', '[광고]', '[리티 개발로그]', '[리티 개발 일지]']
+  let title = value.trim()
+  // A copied or previously generated title must not retain another language's branding.
+  while (true) {
+    const previous = knownPrefixes.find(item => title.toLowerCase().startsWith(item.toLowerCase()))
+    if (!previous) break
+    title = title.slice(previous.length).trimStart()
+  }
   if (!title) throw new NewsletterServiceError(400, 'invalid_text')
   return prefix + truncate(title, 200 - prefix.length)
 }
@@ -200,7 +207,7 @@ export async function previewNewsletter(input: Record<string, unknown>): Promise
   if (customCover && !cover) throw new NewsletterServiceError(400, 'invalid_cover_url')
   const article = await publishedArticle(articleId, locale)
   const draft: NewsletterDraft = {
-    articleId, locale, title: plainTitle(article.title), subject: subject(customSubject || plainTitle(article.title)),
+    articleId, locale, title: plainTitle(article.title), subject: subject(customSubject || plainTitle(article.title), locale),
     summary: customSummary || '',
     blocks: newsletterContent(article.blocks || [], articleId, locale, newsletterOrigin()),
     articleUrl: new URL(newsArticlePath(newsLanguage(locale), articleId), newsletterOrigin()).href,
@@ -297,7 +304,7 @@ export async function sendApprovedNewsletter(input: Record<string, unknown>, app
   let approval
   try { approval = verifyNewsletterApproval(input.approvalToken as string, { now: acceptedAt }) }
   catch { throw new NewsletterServiceError(409, 'invalid_approval') }
-  if (approval.mode === 'test') throw new NewsletterServiceError(409, 'invalid_approval')
+  if (approval.mode === 'test' || !approval.draft.subject.startsWith(NEWSLETTER_SUBJECT_PREFIXES[approval.draft.locale] + ' ')) throw new NewsletterServiceError(409, 'invalid_approval')
   const article = await publishedArticle(id(approval.draft.articleId), approval.draft.locale)
   if (article.modifiedAt !== approval.draft.articleModifiedAt || plainTitle(article.title) !== approval.draft.title) {
     throw new NewsletterServiceError(409, 'article_changed')
@@ -326,7 +333,7 @@ export async function sendTestApprovedNewsletter(input: Record<string, unknown>,
   let approval
   try { approval = verifyNewsletterApproval(input.approvalToken as string, { now: acceptedAt }) }
   catch { throw new NewsletterServiceError(409, 'invalid_approval') }
-  if (approval.mode !== undefined) throw new NewsletterServiceError(409, 'invalid_approval')
+  if (approval.mode !== undefined || !approval.draft.subject.startsWith(NEWSLETTER_SUBJECT_PREFIXES[approval.draft.locale] + ' ')) throw new NewsletterServiceError(409, 'invalid_approval')
   const article = await publishedArticle(id(approval.draft.articleId), approval.draft.locale)
   if (article.modifiedAt !== approval.draft.articleModifiedAt || plainTitle(article.title) !== approval.draft.title) {
     throw new NewsletterServiceError(409, 'article_changed')
@@ -340,7 +347,7 @@ export async function sendTestApprovedNewsletter(input: Record<string, unknown>,
   const recipients = [...new Map(contacts.map(contact => [id(contact.pageId), {
     pageId: id(contact.pageId), emailHash: newsletterEmailHash(NEWSLETTER_TEST_EMAIL),
   }])).values()]
-  const prefix = '[테스트] '
+  const prefix = NEWSLETTER_TEST_SUBJECT_PREFIXES[approval.draft.locale] + ' '
   const draft: NewsletterDraft = { ...approval.draft, subject: prefix + truncate(approval.draft.subject, 200 - prefix.length) }
   // Repeated clicks on one preview reuse one test; a new preview permits a fresh test.
   const testId = createHash('sha256').update(input.approvalToken as string).digest('hex')

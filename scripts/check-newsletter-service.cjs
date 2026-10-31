@@ -140,6 +140,37 @@ async function createJob() {
 function delivery(status, retryable) { return { blockId: PAGE(300), value: { key: 'one', pageIds: [PAGE(1)], email: 'person@example.test', locale: 'kr', status, updatedAt: new Date().toISOString(), retryable } } }
 
 async function main() {
+  // Regression: language-specific subject prefixes, including stale previews.
+  for (const [locale, language, prefix, testPrefix] of [
+    ['kr', 'KO', '[리티 개발일지]', '[테스트]'],
+    ['en', 'EN', '[Ritty Dev Journal]', '[Test]'],
+    ['ja', 'JA', '[リティ開発日誌]', '[テスト]'],
+    ['zh-tw', 'ZH-TW', '[Ritty 開發日誌]', '[測試]'],
+  ]) {
+    fixture(); article.language = language; article.title = 'Story title';
+    candidates = candidates.map(row => ({ ...row, locale }));
+    const localized = await makePreview({ locale });
+    assert.equal(localized.draft.subject, prefix + ' Story title');
+    const mixed = await makePreview({ locale, subject: '(광고) [리티 개발로그] [리티 개발일지] [Ritty Dev Journal] [リティ開発日誌] [Ritty 開發日誌] Story title' });
+    assert.equal(mixed.draft.subject, prefix + ' Story title', 'replace old, repeated, or wrong-language branding');
+    assert.equal((await makePreview({ locale, subject: localized.draft.subject })).draft.subject, localized.draft.subject);
+    if (locale !== 'kr') {
+      const stale = approval.approveNewsletter({ ...localized.draft, subject: '[리티 개발일지] Story title' }, approval.verifyNewsletterApproval(localized.approvalToken).recipients);
+      await fails(service.sendApprovedNewsletter({ approvalToken: stale.token }, ADMIN), 'invalid_approval');
+      await fails(service.sendTestApprovedNewsletter({ approvalToken: stale.token }, ADMIN), 'invalid_approval');
+      assert.equal(seen.create.length + seen.dispatch.length, 0, 'old wrong-language previews cannot send');
+    }
+    const normal = await service.sendApprovedNewsletter({ approvalToken: localized.approvalToken }, ADMIN);
+    assert.equal(normal.job.draft.subject, prefix + ' Story title');
+    const test = await service.sendTestApprovedNewsletter({ approvalToken: localized.approvalToken }, ADMIN);
+    assert.equal(test.job.draft.subject, testPrefix + ' ' + prefix + ' Story title');
+    article.title = '🐾'.repeat(200);
+    const long = await makePreview({ locale });
+    assert(long.draft.subject.startsWith(prefix + ' ')); assert(long.draft.subject.length <= 200);
+    assert(!/[\ud800-\udbff]$/.test(long.draft.subject), 'do not split a surrogate pair');
+    await fails(makePreview({ locale, subject: prefix }), 'invalid_text');
+  }
+  console.log('PASS localized subject prefixes: kr/en/ja/zh-tw, custom/repeated/stale previews, test subjects, Unicode limits (offline)');
   fixture()
   const recipientOverview = await service.getNewsletterOverview('kr')
   assert.equal(recipientOverview.recipients.length, 2, 'duplicate emails appear once')
