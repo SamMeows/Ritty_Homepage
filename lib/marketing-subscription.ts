@@ -15,7 +15,7 @@ function normalizedId(value: unknown): string | null {
  return /^[a-f0-9]{32}$/.test(id) ? id : null
 }
 function config() {
- const token = process.env.NOTION_TOKEN, database = normalizedId(process.env.NOTION_PRE_REGISTER_DB_ID)
+ const token = process.env.NOTION_TOKEN, database = normalizedId(process.env.NEWSLETTER_RECIPIENT_DATA_SOURCE_ID || process.env.NOTION_PRE_REGISTER_DB_ID)
  if (!token || !database) throw new Error('Subscription storage unavailable')
  return { token, database }
 }

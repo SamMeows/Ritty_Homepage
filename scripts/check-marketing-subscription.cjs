@@ -159,6 +159,17 @@ const recipient = { pageId: id, email: 'person@example.com', locale: 'kr' };
  missingParent.parent = {};
  assert.equal(await m.getMarketingRecipient(id), null);
 
+ // Newsletter source configuration is separate from the legacy registration container.
+ mockProcess.env.NEWSLETTER_RECIPIENT_DATA_SOURCE_ID = database;
+ mockProcess.env.NOTION_PRE_REGISTER_DB_ID = databaseContainer;
+ reset();
+ assert.deepEqual(await m.getMarketingRecipient(id), recipient);
+ assert.deepEqual(await m.listMarketingCandidates('kr'), [recipient]);
+ mockProcess.env.NEWSLETTER_RECIPIENT_DATA_SOURCE_ID = 'invalid';
+ await assert.rejects(() => m.getMarketingRecipient(id), /storage unavailable/);
+ delete mockProcess.env.NEWSLETTER_RECIPIENT_DATA_SOURCE_ID;
+ mockProcess.env.NOTION_PRE_REGISTER_DB_ID = database;
+
  // Consent versions never substitute for the operator-maintained checkbox.
  for (const version of ['2026-10', '2026-10-new-launch']) {
   reset({ version, consent: false });
