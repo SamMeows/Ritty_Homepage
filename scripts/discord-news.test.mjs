@@ -104,7 +104,7 @@ test('caps a batch at five and drains the remainder on next run', async () => {
 })
 test('card limits text, includes website URL and cover, drops unsafe image', () => {
   const a = { id: 'a'.repeat(32), title: 't'.repeat(300), cover: 'https://example.com/image.png', blocks: [{ type: 'paragraph', text: 'x'.repeat(900) }] }
-  const p = payload(a); assert.equal(p.embeds[0].title.length, 256)
+  const p = payload(a); assert.equal(p.embeds[0].title.length, 256); assert.equal(p.thread_name.length, 100)
   assert.match(p.embeds[0].url, /\/news\/a{32}$/); assert.ok(p.embeds[0].description.length < 600)
   assert.ok(p.embeds[0].image); a.cover = 'javascript:alert(1)'; assert.equal(payload(a).embeds[0].image, undefined)
 })
@@ -125,6 +125,10 @@ test('routes Korean and English posts to their own webhooks, URLs and card langu
   assert.match(koCard.description, /개발일지 읽기/)
   assert.match(enCard.description, /Read the devlog/)
   assert.equal(f.deliveries[1].body.username, 'Ritty News')
+  assert.equal(f.deliveries[0].body.thread_name, '개발일지')
+  assert.equal(f.deliveries[1].body.thread_name, 'A bigger home')
+  assert.deepEqual(f.deliveries[0].body.applied_tags, ['1568575302345560086'])
+  assert.deepEqual(f.deliveries[1].body.applied_tags, ['1568575304513884262'])
   assert.equal(f.deliveries[0].body.content, '집사님들! 새로운 개발로그가 올라왔어요! 🐾')
   assert.equal(f.deliveries[1].body.content, 'Hey, Ritty parents! A new devlog is here! 🐾')
   assert.ok(f.websiteCalls.includes(`https://ritty.sam-meows.com/api/news/${en.id}?locale=en`))
