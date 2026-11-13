@@ -31,8 +31,8 @@ export default async function RittyLanding({ variant = 'cozy-life', locale = 'kr
     : locale === 'en' ? markup
     .replaceAll('https://project-meow.notion.site/1bd423ba89b680f4b37dcb1ec02aa36c?pvs=74', dict.links.privacy)
     .replaceAll('https://project-meow.notion.site/1bd423ba89b680cc9c4ffaa284da0d85?pvs=74', dict.links.terms)
-    .replaceAll('https://www.instagram.com/ritty_kr/', 'https://www.instagram.com/ritty_meow/')
-    .replaceAll('https://www.tiktok.com/@ritty_kr', 'https://www.tiktok.com/@rittymeow') : markup
+    .replaceAll('https://www.instagram.com/ritty_kr/', 'https://www.instagram.com/ritty.cat/')
+    .replaceAll('https://www.tiktok.com/@ritty_kr', 'https://www.tiktok.com/@ritty_cat') : markup
   const policyMarkup = localizedMarkup.replaceAll('href="/news"', 'href="' + (locale === 'kr' ? '/news' : '/' + locale + '/news') + '"')
     .replaceAll('https://project-meow.notion.site/1bd423ba89b680f4b37dcb1ec02aa36c?pvs=74', dict.links.privacy)
     .replaceAll('https://project-meow.notion.site/Privacy-Policy-1be423ba89b680218e81d5956212eade?pvs=74', dict.links.privacy)
