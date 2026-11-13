@@ -26,7 +26,11 @@ export default async function RittyLanding({ variant = 'cozy-life', locale = 'kr
     .replaceAll('사전등록 안내 보기', '사전등록하기')
     .replaceAll('사전등록 안내', '사전등록하기')
   const localizedMarkup = locale === 'zh-tw' ? translateHomeMarkupChineseTraditional(markup)
+    .replaceAll('https://www.instagram.com/ritty_kr/', 'https://www.instagram.com/ritty.cat/')
+    .replaceAll('https://www.tiktok.com/@ritty_kr', 'https://www.tiktok.com/@ritty_cat')
     : locale === 'ja' ? translateHomeMarkupJapanese(markup)
+    .replaceAll('https://www.instagram.com/ritty_kr/', 'https://www.instagram.com/ritty.cat/')
+    .replaceAll('https://www.tiktok.com/@ritty_kr', 'https://www.tiktok.com/@ritty_cat')
     .replace('내 이야기를 들어주는<br>나만의 고양이 친구', '私の話を聞いてくれる<br>特別な猫の友だち')
     : locale === 'en' ? markup
     .replaceAll('https://project-meow.notion.site/1bd423ba89b680f4b37dcb1ec02aa36c?pvs=74', dict.links.privacy)
