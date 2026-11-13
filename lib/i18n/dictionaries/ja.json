@@ -135,13 +135,13 @@
     },
     {
       "key": "instagram",
-      "url": "https://www.instagram.com/ritty_meow/",
+      "url": "https://www.instagram.com/ritty.cat/",
       "sidebarIcon": "/images/instagram-sidebar.svg",
       "footerIcon": "/images/instagram-footer.svg"
     },
     {
       "key": "youtube",
-      "url": "https://www.youtube.com/@Ritty_meow",
+      "url": "https://www.youtube.com/@ritty_cat",
       "sidebarIcon": "/images/youtube-sidebar.png",
       "footerIcon": "/images/youtube-footer.png"
     },
