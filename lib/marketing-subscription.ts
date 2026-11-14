@@ -29,10 +29,11 @@ function subscriptionStorageError(path: string, method: string, category: string
 }
 async function notion(path: string, method = 'GET', body?: unknown, attempt = 0): Promise<any> {
  const readOnly = method === 'GET' || (method === 'POST' && /^\/data_sources\/[^/]+\/query$/.test(path))
+ const storage = config()
  let response: Response
  try {
   response = await fetch('https://api.notion.com/v1' + path, { method,
-   headers: { Authorization: 'Bearer ' + config().token, 'Notion-Version': '2025-09-03', 'Content-Type': 'application/json' },
+   headers: { Authorization: 'Bearer ' + storage.token, 'Notion-Version': '2025-09-03', 'Content-Type': 'application/json' },
    body: body === undefined ? undefined : JSON.stringify(body), cache: 'no-store', signal: AbortSignal.timeout(15000) })
  } catch (error) {
   const timeout = error instanceof Error && ['TimeoutError', 'AbortError'].includes(error.name)
