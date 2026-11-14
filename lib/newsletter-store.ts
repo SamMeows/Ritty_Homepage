@@ -11,6 +11,12 @@ export type JobDetails = { job: NewsletterJob; metadataBlock: string; deliveries
 let nextRequestAt = 0
 const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms))
 
+function newsletterStorageError(method: string, category: string, status?: number) {
+  return Object.assign(new Error('Newsletter storage request failed'), {
+    name: 'NewsletterStorageError', storage: 'campaign', operation: method === 'GET' ? 'read' : 'write', category,
+    ...(status === undefined ? {} : { status }),
+  })
+}
 export async function newsletterNotion(path: string, method = 'GET', body?: unknown): Promise<any> {
   const token = process.env.NOTION_TOKEN
   if (!token) throw new Error('Notion newsletter storage is not configured')
@@ -18,18 +24,40 @@ export async function newsletterNotion(path: string, method = 'GET', body?: unkn
     const start = Math.max(Date.now(), nextRequestAt)
     nextRequestAt = start + 400
     if (start > Date.now()) await sleep(start - Date.now())
-    const response = await fetch('https://api.notion.com/v1/' + path, {
-      method, headers: { Authorization: 'Bearer ' + token, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json' },
-      body: body === undefined ? undefined : JSON.stringify(body), cache: 'no-store', signal: AbortSignal.timeout(15_000),
-    })
+    let response: Response
+    try {
+      response = await fetch('https://api.notion.com/v1/' + path, {
+        method, headers: { Authorization: 'Bearer ' + token, 'Notion-Version': '2022-06-28', 'Content-Type': 'application/json' },
+        body: body === undefined ? undefined : JSON.stringify(body), cache: 'no-store', signal: AbortSignal.timeout(15_000),
+      })
+    } catch (error) {
+      const timeout = error instanceof Error && ['TimeoutError', 'AbortError'].includes(error.name)
+      if (method === 'GET' && attempt < 2 && (timeout || error instanceof TypeError)) {
+        await sleep(1000 * 2 ** attempt)
+        continue
+      }
+      throw newsletterStorageError(method, timeout ? 'timeout' : 'network')
+    }
     // A rejected rate-limit request is safe to retry. Never retry ambiguous creates/appends.
     if (response.status === 429 && attempt < 2) { await sleep(Math.min(30, Math.max(1, Number(response.headers.get('retry-after')) || 1)) * 1000); continue }
-    if (!response.ok) throw new Error('Newsletter storage request failed (' + response.status + ')')
-    return response.json()
+    if (method === 'GET' && attempt < 2 && [408, 500, 502, 503, 504].includes(response.status)) {
+      await sleep(1000 * 2 ** attempt)
+      continue
+    }
+    if (!response.ok) throw newsletterStorageError(method, 'http', response.status)
+    try { return await response.json() }
+    catch (error) {
+      const timeout = error instanceof Error && ['TimeoutError', 'AbortError'].includes(error.name)
+      const transient = timeout || error instanceof TypeError
+      if (method === 'GET' && transient && attempt < 2) {
+        await sleep(1000 * 2 ** attempt)
+        continue
+      }
+      throw newsletterStorageError(method, timeout ? 'timeout' : transient ? 'network' : 'invalid-json', response.status)
+    }
   }
   throw new Error('Newsletter storage is rate limited')
 }
-
 function richText(value: string) {
   const chunks: string[] = []
   const characters = Array.from(value)

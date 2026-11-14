@@ -151,6 +151,35 @@ async function applyRetryCommands(details: JobDetails, dependencies: NewsletterW
   return true
 }
 
+function newsletterFailureDiagnostic(error: unknown, stage: string) {
+  const value = error instanceof Error ? error as Error & Record<string, unknown> : undefined
+  const reasons: Record<string, string> = {
+    'Invalid subscription state': 'invalid-subscription-state',
+    'Conflicting subscription state': 'conflicting-subscription-state',
+    'Invalid subscription blocks': 'invalid-subscription-blocks',
+    'Invalid subscription pagination': 'invalid-subscription-pagination',
+    'Invalid subscription list': 'invalid-subscription-list',
+    'Subscription storage unavailable': 'subscription-storage-unavailable',
+    'Delivery preparation is incomplete': 'incomplete-ledger',
+    'Prepared campaign has missing delivery records': 'missing-delivery-records',
+    'Delivery ledger is inconsistent; manual review is required': 'inconsistent-ledger',
+    'Campaign contents differ from the administrator approval': 'approval-mismatch',
+    'Duplicate approved registration': 'duplicate-approved-registration',
+    'Newsletter record is too large': 'record-too-large',
+    'Newsletter storage needs archival': 'storage-needs-archival',
+  }
+  // Allowlisted metadata only: never include messages, stacks, URLs, IDs or bodies.
+  return {
+    stage,
+    errorType: value && ['Error', 'TypeError', 'SyntaxError', 'TimeoutError', 'AbortError', 'NewsletterStorageError'].includes(value.name) ? value.name : 'OtherError',
+    reason: value ? reasons[value.message] || 'unclassified' : 'unclassified',
+    ...(value && typeof value.storage === 'string' && ['subscription', 'campaign'].includes(value.storage) ? { storage: value.storage } : {}),
+    ...(value && typeof value.operation === 'string' && ['read', 'query', 'write'].includes(value.operation) ? { operation: value.operation } : {}),
+    ...(value && typeof value.category === 'string' && ['http', 'timeout', 'network', 'invalid-json'].includes(value.category) ? { category: value.category } : {}),
+    ...(value && Number.isInteger(value.status) && Number(value.status) >= 100 && Number(value.status) <= 599 ? { httpStatus: value.status } : {}),
+  }
+}
+
 export async function runNewsletterWorker(options: {
   dependencies?: Partial<NewsletterWorkerDependencies>
   maxMessages?: number
@@ -202,6 +231,7 @@ export async function runNewsletterWorker(options: {
     if (details.job.status === 'completed' || details.job.status === 'duplicate') continue
     if (attempts >= maxMessages || dependencies.now() - startedAt >= timeBudgetMs) break
     let current = details
+    let stage = 'approval-validation'
     try {
       const approval = approvedJob(current)
       validateLedger(current, approval)
@@ -217,9 +247,12 @@ export async function runNewsletterWorker(options: {
         summary.attention++
         continue
       }
+      stage = 'retry-command'
       const retryAuthorized = await applyRetryCommands(current, dependencies)
       if (current.job.status === 'attention' && !retryAuthorized) continue
+      stage = 'prepare'
       current = await prepare(current, approval, dependencies, emailHash => blockedRecipients.has(recipientKey(current, emailHash)))
+      stage = 'campaign-state'
       await updateJob(current, { status: 'sending', error: undefined }, dependencies)
       summary.campaigns++
       let paused = false
@@ -233,6 +266,7 @@ export async function runNewsletterWorker(options: {
         }
         // Fail closed if the current registration cannot be read. This happens
         // before marking an attempt or contacting Gmail.
+        stage = 'recipient-check'
         const email = await eligibleEmail(row.value.pageIds, row.value.key, current.job.draft.locale, dependencies, approval.mode === 'test')
         if (!email || email !== row.value.email) {
           await updateDelivery(row, { status: 'skipped', error: '발송 직전 동의·주소·언어 확인에서 제외했습니다.' }, dependencies)
@@ -242,6 +276,7 @@ export async function runNewsletterWorker(options: {
         const unsubscribeUrl = dependencies.unsubscribe(row.value.pageIds[0], row.value.locale)
         const oneClickUrl = dependencies.oneClick(row.value.pageIds[0], row.value.locale)
         // This write must succeed before any irreversible API call.
+        stage = 'pre-send-ledger'
         await updateDelivery(row, { status: 'sending', error: undefined, retryable: undefined }, dependencies)
         attempts++
         let result: { messageId: string }
@@ -260,6 +295,7 @@ export async function runNewsletterWorker(options: {
         }
         // Intentionally outside the Gmail catch: if persisting this response
         // fails, retain `sending` and stop. Never reinterpret it as a rejection.
+        stage = 'response-ledger'
         await updateDelivery(row, { status: 'submitted', messageId: result.messageId, error: undefined }, dependencies)
         if (approval.mode !== 'test') blockedRecipients.add(recipientKey(current, row.value.key))
         summary.submitted++
@@ -268,9 +304,11 @@ export async function runNewsletterWorker(options: {
       const pending = current.deliveries.some(row => row.value.status === 'pending')
       const needsReview = current.deliveries.some(row => ['failed', 'unknown'].includes(row.value.status))
       const status = paused ? 'attention' : pending ? 'queued' : needsReview ? 'attention' : 'completed'
+      stage = 'campaign-state'
       await updateJob(current, { status, error: paused ? '발송을 보류했습니다. 결과를 확인한 뒤 남은 대상의 발송을 재개할 수 있습니다.' : undefined }, dependencies)
       if (status === 'attention') summary.attention++
-    } catch {
+    } catch (error) {
+      console.error('newsletter_worker_failure', newsletterFailureDiagnostic(error, stage))
       // Never log recipient data, OAuth credentials, approval tokens or upstream
       // response bodies. Failure of this final write propagates and stops all work.
       await updateJob(current, { status: 'attention', error: '발송 기록 또는 수신 동의를 확인하지 못해 중단했습니다. 설정과 기록을 확인해 주세요.' }, dependencies)

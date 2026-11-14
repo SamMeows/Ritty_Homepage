@@ -20,11 +20,29 @@ function config() {
  if (!token || !database) throw new Error('Subscription storage unavailable')
  return { token, database }
 }
+function subscriptionStorageError(path: string, method: string, category: string, status?: number) {
+ const operation = method === 'GET' ? 'read' : method === 'POST' && /^\/data_sources\/[^/]+\/query$/.test(path) ? 'query' : 'write'
+ return Object.assign(new Error('Subscription storage request failed'), {
+  name: 'NewsletterStorageError', storage: 'subscription', operation, category,
+  ...(status === undefined ? {} : { status }),
+ })
+}
 async function notion(path: string, method = 'GET', body?: unknown, attempt = 0): Promise<any> {
- const response = await fetch('https://api.notion.com/v1' + path, { method,
-  headers: { Authorization: 'Bearer ' + config().token, 'Notion-Version': '2025-09-03', 'Content-Type': 'application/json' },
-  body: body === undefined ? undefined : JSON.stringify(body), cache: 'no-store', signal: AbortSignal.timeout(15000) })
- // An explicit rate-limit rejection is safe to retry; ambiguous writes are not.
+ const readOnly = method === 'GET' || (method === 'POST' && /^\/data_sources\/[^/]+\/query$/.test(path))
+ let response: Response
+ try {
+  response = await fetch('https://api.notion.com/v1' + path, { method,
+   headers: { Authorization: 'Bearer ' + config().token, 'Notion-Version': '2025-09-03', 'Content-Type': 'application/json' },
+   body: body === undefined ? undefined : JSON.stringify(body), cache: 'no-store', signal: AbortSignal.timeout(15000) })
+ } catch (error) {
+  const timeout = error instanceof Error && ['TimeoutError', 'AbortError'].includes(error.name)
+  if (readOnly && attempt < 2 && (timeout || error instanceof TypeError)) {
+   await new Promise(resolve => setTimeout(resolve, 1000 * 2 ** attempt))
+   return notion(path, method, body, attempt + 1)
+  }
+  throw subscriptionStorageError(path, method, timeout ? 'timeout' : 'network')
+ }
+ // An explicit rate-limit rejection is safe to retry, including rejected writes.
  if (response.status === 429 && attempt < 2) {
   const seconds = Number(response.headers.get('retry-after') || 1)
   if (Number.isFinite(seconds) && seconds >= 0 && seconds <= 15) {
@@ -32,8 +50,22 @@ async function notion(path: string, method = 'GET', body?: unknown, attempt = 0)
    return notion(path, method, body, attempt + 1)
   }
  }
- if (!response.ok) throw new Error('Subscription storage request failed')
- return response.json()
+ // Retry transient failures only for reads. Never repeat an ambiguous mutation.
+ if (readOnly && attempt < 2 && [408, 500, 502, 503, 504].includes(response.status)) {
+  await new Promise(resolve => setTimeout(resolve, 1000 * 2 ** attempt))
+  return notion(path, method, body, attempt + 1)
+ }
+ if (!response.ok) throw subscriptionStorageError(path, method, 'http', response.status)
+ try { return await response.json() }
+ catch (error) {
+  const timeout = error instanceof Error && ['TimeoutError', 'AbortError'].includes(error.name)
+  const transient = timeout || error instanceof TypeError
+  if (readOnly && transient && attempt < 2) {
+   await new Promise(resolve => setTimeout(resolve, 1000 * 2 ** attempt))
+   return notion(path, method, body, attempt + 1)
+  }
+  throw subscriptionStorageError(path, method, timeout ? 'timeout' : transient ? 'network' : 'invalid-json', response.status)
+ }
 }
 function plain(richText: unknown): string {
  return Array.isArray(richText) ? richText.map(t => t?.plain_text ?? t?.text?.content ?? '').join('') : ''
