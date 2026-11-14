@@ -26,13 +26,15 @@ export default async function RootLayout({
   const requestHeaders = await headers()
   const language = requestHeaders.get('x-ritty-language') || 'ko'
   const privateRoute = requestHeaders.get('x-ritty-private-route') === '1'
+  const languageFont = language === 'ja' ? '&family=Noto+Sans+JP:wght@400;500;700;900'
+    : language === 'zh-Hant-TW' ? '&family=Noto+Sans+TC:wght@400;500;700;900' : ''
   return (
     <html lang={language} suppressHydrationWarning>
       <head>
         {!privateRoute && <><link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Noto+Sans+KR:wght@100;300;400;500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&family=Poppins:wght@400;500;600&family=Righteous&display=swap"
+          href={`https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Righteous${languageFont}&display=swap`}
           rel="stylesheet"
         />
         <link

@@ -9,7 +9,7 @@ function load(file, imports = {}) {
   const code = ts.transpileModule(fs.readFileSync(file, 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX },
   }).outputText
-  new Function('require', 'module', 'exports', code)(name => name in imports ? imports[name] : name.startsWith('.') ? load(path.resolve(path.dirname(file),name)+'.ts') : require(name), module, module.exports)
+  new Function('require', 'module', 'exports', code)(name => name in imports ? imports[name] : name === 'next/cache' ? { unstable_cache: fn => fn } : name.startsWith('.') ? load(path.resolve(path.dirname(file),name)+'.ts') : require(name), module, module.exports)
   return module.exports
 }
 
@@ -56,10 +56,11 @@ async function main() {
   let calls = 0
   const sitemap = load('app/sitemap.ts', {
     '@/lib/news-languages': load('lib/news-languages.ts'),
+    '@/lib/seo': seo,
     '@/lib/news': { getNewsAlternates: async () => ({}), getNews: async (cursor, locale) => {
       calls++
-      const prefix=locale==='kr'?'':locale+'-'; const language=locale==='en'?'EN':locale==='ja'?'JA':'KO';
-      return cursor ? { items: [{id:prefix+'a',language}, {id:prefix+'b',language,modifiedAt:'2026-10-24T07:00:00.000Z'}],cursor:'next'} : {items:[{id:prefix+'a',language}],cursor:'next'}
+      const prefix=locale==='kr'?'':locale+'-'; const language=locale==='en'?'EN':locale==='ja'?'JA':locale==='zh-tw'?'ZH-TW':'KO';
+      return cursor ? { items: [{id:prefix+'a',language}, {id:prefix+'b',language,modifiedAt:'2026-10-24T07:00:00.000Z'}],cursor:null} : {items:[{id:prefix+'a',language}],cursor:'next'}
     } },
   })
   const entries = await sitemap.default()
@@ -70,14 +71,55 @@ async function main() {
   })
   await assert.rejects(unavailableSitemap.default(), /News sitemap source unavailable/)
 
-  assert.equal(calls, 6, 'Repeated cursors must not loop forever')
+  assert.equal(calls, 8, 'Each of four languages must load both pages')
   assert.equal(new Set(entries.map(entry => entry.url)).size, entries.length)
   assert(entries.some(entry => entry.url.endsWith('/news/b')), 'Older news must be discoverable')
   assert.equal(entries.find(entry => entry.url.endsWith('/news/b')).lastModified, '2026-10-24T07:00:00.000Z')
   assert(entries.some(entry => entry.url.includes('/en/news/en-b')))
   assert(entries.some(entry => entry.url.includes('/ja/news/ja-b')))
+  assert(entries.some(entry => entry.url.includes('/zh-tw/news/zh-tw-b')))
+  const cyclic = load('app/sitemap.ts', {
+    '@/lib/news-languages': load('lib/news-languages.ts'),
+    '@/lib/news': {getNews:async()=>({items:[],cursor:'same'})},
+  })
+  await assert.rejects(cyclic.default(), /repeated cursor/)
   assert(!entries.some(entry => entry.url.includes('/ad/')))
   assert.equal(entries[0].alternates.languages['x-default'], 'https://ritty.sam-meows.com')
+
+  const newsList = load('app/[locale]/news/page.tsx', {
+    '@/components/news/NewsLanguageLinks': {},
+    '@/lib/i18n/news-copy': load('lib/i18n/news-copy.ts'),
+    '@/components/landing/ad-site.css': {},
+    '@/components/news/news-page.css': {},
+    '@/lib/news': {},
+    '@/components/news/NewsFeed': {},
+  })
+  let language = 'ko'
+  const root = load('app/layout.tsx', {
+    'next/headers': {headers:async()=>new Headers({'x-ritty-language':language})},
+    'next/script': {default:()=>null},
+    '@/lib/contexts/MusicContext': {MusicProvider:()=>null},
+    '@/components/effects/ClickEffect': {default:()=>null},
+    './globals.css': {},
+  })
+  for (const locale of ['kr','en','ja','zh-tw']) {
+    const meta = await newsList.generateMetadata({params:Promise.resolve({locale})})
+    const homeMeta = JSON.parse(fs.readFileSync(`lib/i18n/dictionaries/${locale}.json`,'utf8')).meta
+    assert(meta.description && meta.description !== homeMeta.description)
+    assert.equal(meta.openGraph.description,meta.description)
+    assert.equal(meta.twitter.title,meta.title)
+    assert.equal(meta.twitter.description,meta.description)
+    assert.equal(meta.openGraph.images[0].url,meta.twitter.images[0].url)
+    assert.equal(meta.alternates.canonical,locale === 'kr' ? '/news' : `/${locale}/news`)
+    language = locale === 'kr' ? 'ko' : locale === 'zh-tw' ? 'zh-Hant-TW' : locale
+    const html = await root.default({children:null})
+    const head = html.props.children[0]
+    const fonts = head.props.children.props.children.find(node => node.props?.href?.includes('fonts.googleapis.com/css2')).props.href
+    assert(fonts.includes('family=Righteous'))
+    assert.equal(fonts.includes('Noto+Sans+JP'),locale === 'ja')
+    assert.equal(fonts.includes('Noto+Sans+TC'),locale === 'zh-tw')
+    assert(!fonts.includes('Noto+Sans+KR'), 'Korean already uses Pretendard/Paperlogy')
+  }
 
   for (const language of ['kr', 'en']) {
     const { meta } = JSON.parse(fs.readFileSync(`lib/i18n/dictionaries/${language}.json`, 'utf8'))

@@ -1,4 +1,5 @@
 import 'server-only'
+import { unstable_cache } from 'next/cache'
 import type { Locale } from './i18n/dictionaries'
 import { newsLanguage, newsLocale, newsArticlePath, type NewsLanguage } from './news-languages'
 
@@ -26,6 +27,13 @@ export async function newsRequest(path: string, body?: unknown, attempt = 0, met
   if (!res.ok) throw new NewsApiError(res.status)
   return res.json()
 }
+// Cache public reads only. Throw on failure so refreshes preserve good data.
+// Cache Components is disabled in this project, so use the Data Cache API.
+const publicNewsRequest = unstable_cache(
+  async (path: string, body: unknown, _day: string) => newsRequest(path, body),
+  ['ritty-public-news-v1', source],
+  { revalidate: 300, tags: ['ritty-public-news'] },
+)
 const plain = (rich: any[]) => (rich || []).map(t => t.plain_text || t.text?.content || '').join('')
 function item(page: any): NewsItem | null {
   const date = page.properties?.['게시일']?.date?.start
@@ -41,7 +49,7 @@ export async function getNews(cursor?: string, locale: Locale = 'kr'): Promise<N
   try {
     const language = newsLanguage(locale)
     const languageFilter = language === 'KO' ? {or:[{property:'언어',select:{equals:'KO'}},{property:'언어',select:{is_empty:true}}]} : {property:'언어',select:{equals:language}}
-    const data = await newsRequest(`data_sources/${source}/query`, { page_size: 20, ...(cursor ? {start_cursor:cursor} : {}), filter: {and:[{property:'공개',checkbox:{equals:true}},{property:'게시일',date:{on_or_before:today()}},languageFilter]}, sorts:[{property:'게시일',direction:'descending'}] })
+    const data = await publicNewsRequest(`data_sources/${source}/query`, { page_size: 20, ...(cursor ? {start_cursor:cursor} : {}), filter: {and:[{property:'공개',checkbox:{equals:true}},{property:'게시일',date:{on_or_before:today()}},languageFilter]}, sorts:[{property:'게시일',direction:'descending'}] }, today())
     return { items:data.results.map(item).filter((entry:NewsItem|null) => entry && entry.language === language), cursor:data.has_more ? data.next_cursor : null }
   } catch { return {items:[],cursor:null,unavailable:true} }
 }
@@ -49,7 +57,7 @@ async function blocks(id: string, depth = 0): Promise<NewsBlock[]> {
   if (depth > 8) throw new Error('News content nesting limit')
   const result: NewsBlock[] = []; let cursor: string | undefined
   do {
-    const data = await newsRequest(`blocks/${id}/children?page_size=100${cursor ? '&start_cursor='+encodeURIComponent(cursor):''}`)
+    const data = await publicNewsRequest(`blocks/${id}/children?page_size=100${cursor ? '&start_cursor='+encodeURIComponent(cursor):''}`, undefined, today())
     for (const b of data.results) {
       const value = b[b.type] || {}
       const text = plain(value.rich_text || value.caption)
@@ -67,7 +75,7 @@ async function blocks(id: string, depth = 0): Promise<NewsBlock[]> {
 async function newsPage(id: string): Promise<any | null> {
   if (!validNewsId(id)) return null
   let page
-  try { page = await newsRequest('pages/' + id) } catch(error) { if(error instanceof NewsApiError && error.status===404)return null;throw error }
+  try { page = await publicNewsRequest('pages/' + id, undefined, today()) } catch(error) { if(error instanceof NewsApiError && error.status===404)return null;throw error }
   return normalized(page.parent?.data_source_id || '') === normalized(source) && !page.archived && !page.in_trash ? page : null
 }
 export async function getNewsArticle(id: string, locale: Locale = 'kr'): Promise<NewsArticle | null> {
@@ -97,7 +105,7 @@ export async function getNewsAlternates(article: NewsItem, currentPage?: any): P
     relations = []
     let cursor: string | undefined
     do {
-      const data = await newsRequest('pages/' + rootId + '/properties/' + encodeURIComponent(root.properties['번역본'].id) + '?page_size=100' + (cursor ? '&start_cursor=' + encodeURIComponent(cursor) : ''))
+      const data = await publicNewsRequest('pages/' + rootId + '/properties/' + encodeURIComponent(root.properties['번역본'].id) + '?page_size=100' + (cursor ? '&start_cursor=' + encodeURIComponent(cursor) : ''), undefined, today())
       relations.push(...data.results.map((entry:any) => entry.relation).filter(Boolean))
       cursor = data.has_more ? data.next_cursor : undefined
     } while(cursor)
