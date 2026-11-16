@@ -1,0 +1,97 @@
+/* Keep the winter characters clear: copy sits in the sky on wide screens. */
+.ritty-site .hero.hero-winter {
+  min-height: 800px;
+  background: #101f49;
+}
+.ritty-site .hero-winter .hero-picture .hero-art {
+  object-position: center center;
+  transform: none;
+}
+.ritty-site .hero-winter .hero-shade {
+  background: linear-gradient(180deg, #09142e55, transparent 38%);
+}
+.ritty-site .hero-winter .hero-copy {
+  top: calc(var(--nav-height) + 16px);
+  left: 34%;
+  right: 7%;
+  max-width: none;
+  transform: none;
+  text-align: center;
+}
+.ritty-site .hero-winter h1.ad-headline {
+  font-size: clamp(32px, 2.8vw, 48px);
+  line-height: 1.22;
+  margin: 0 0 14px;
+  text-shadow: 0 2px 18px #07132e99;
+}
+.ritty-site .hero-winter .hero-copy > .hero-genre {
+  max-width: none;
+  font-size: clamp(14px, 1.2vw, 19px);
+  white-space: normal;
+  line-height: 1.6;
+  text-shadow: 0 2px 12px #07132e;
+}
+.ritty-site .hero-winter .hero-copy .hero-actions {
+  margin: 20px auto 0;
+}
+.ritty-site .hero-winter .hero-actions .button {
+  position: static;
+  display: inline-flex;
+  min-width: 210px;
+  min-height: 52px;
+  padding: 12px 28px;
+  font-size: 18px;
+}
+.ritty-site .hero-winter .cta-charm,
+.ritty-site .hero-winter .hero-meteors {
+  display: none;
+}
+/* Portrait screens show the entire illustration below the copy, without a crop. */
+@media (max-width: 1000px), (max-aspect-ratio: 6/5) {
+  .ritty-site .hero.hero-winter {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: auto;
+    min-height: 100svh;
+    padding-top: calc(var(--nav-height) + 24px);
+    background: linear-gradient(#101f49, #192e5b);
+  }
+  .ritty-site .hero-winter .hero-copy {
+    position: relative;
+    inset: auto;
+    order: 0;
+    width: 100%;
+    padding: 0 30px 28px;
+    flex-shrink: 0;
+  }
+  .ritty-site .hero-winter h1.ad-headline {
+    font-size: clamp(27px, 5.8vw, 40px);
+  }
+  .ritty-site .hero-winter .hero-copy > .hero-genre {
+    font-size: clamp(13px, 2.2vw, 17px);
+    max-width: 460px;
+    margin: 0 auto;
+  }
+  .ritty-site .hero-winter .hero-picture {
+    position: relative;
+    inset: auto;
+    order: 1;
+    width: 100%;
+    flex-shrink: 0;
+  }
+  .ritty-site .hero-winter .hero-picture .hero-art {
+    position: static;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1672 / 941;
+    object-fit: contain;
+  }
+  .ritty-site .hero-winter .hero-shade {
+    display: none;
+  }
+  .ritty-site .hero-winter .motion-toggle {
+    right: 16px;
+    bottom: 16px;
+  }
+}

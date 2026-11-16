@@ -2,6 +2,7 @@
 
 import '@/components/landing/ad-site.css'
 import '@/components/landing/world-patterns.css'
+import './winter-hero.css'
 
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { useState, useMemo } from 'react'
@@ -65,7 +66,7 @@ export default function AdLanding({ markup, news, newsPreview = '', dict, locale
     }
     node.addEventListener('click', open)
     const script = document.createElement('script')
-    script.src = '/ritty/site.js?v=20261025-copy-markup'
+    script.src = '/ritty/site.js?v=20261116-life-scenes'
     node.appendChild(script)
     return () => {
       disposeMotion()

@@ -2,6 +2,20 @@ import { homeEnglish } from './home-en'
 import { translateMarkupCopy } from './translate-markup'
 
 const japanese: Record<string, string> = {
+  "Fishing by the lake": "湖畔で釣りを楽しもう",
+  "Celebrate a big catch with Ritty.": "リティと大きな魚が釣れました。",
+  "A keeper and Ritty with a big fish on the dock": "桟橋で大きな魚を釣り上げた飼い主とリティ",
+  "Friends around the village": "村で出会う友だち",
+  "Meet new friends in the sunny village square.": "日差しの降りそそぐ広場で新しい友だちにご挨拶。",
+  "Keepers and cat friends greeting each other by the village fountain": "村の噴水の前で挨拶する飼い主と猫の友だち",
+  "A winter walk beneath shooting stars": "流れ星の下で冬のお散歩",
+  "Run through the snow with Ritty beneath a starry sky.": "リティと雪道を駆けながら星降る夜を楽しもう。",
+  "A keeper and Ritty running through snow beneath shooting stars": "流れ星が降る冬の夜、雪道を走る飼い主とリティ",
+  "Wow, what a big fish!": "わあ、大きなお魚！",
+  "Hello! Shall we play together?": "こんにちは！一緒に遊ぼう？",
+  "Look at our footprints in the snow!": "雪に私たちの足跡がついたよ！",
+  "View village scene": "村のシーンを見る",
+  "View winter scene": "冬のシーンを見る",
   'One day, a cat<br>fell from the sky!': 'ある日、空から<br>猫が降ってきた！',
   'A cat friend who is always there to listen': 'いつでも話を聞いてくれる、特別な猫の友だち',
   'A cozy life simulation with talking cats': 'おしゃべり猫たちとの癒やしの暮らし',

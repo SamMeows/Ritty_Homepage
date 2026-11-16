@@ -2,6 +2,20 @@ import { translateMarkupCopy } from './translate-markup'
 
 // Shared by the server-rendered homepage and its interactive scene controls.
 export const homeEnglish: Record<string, string> = {
+  "호숫가에서 낚시하는 날": "Fishing by the lake",
+  "리티와 함께 커다란 물고기를 낚았어요.": "Celebrate a big catch with Ritty.",
+  "부두에서 큰 물고기를 들어 올린 집사와 리티": "A keeper and Ritty with a big fish on the dock",
+  "마을에서 만나는 친구들": "Friends around the village",
+  "햇살 가득한 광장에서 새로운 친구와 인사해요.": "Meet new friends in the sunny village square.",
+  "마을 분수대 앞에서 인사하는 집사들과 고양이 친구들": "Keepers and cat friends greeting each other by the village fountain",
+  "별똥별 아래, 겨울 산책": "A winter walk beneath shooting stars",
+  "리티와 눈길을 달리며 별이 쏟아지는 밤을 즐겨요.": "Run through the snow with Ritty beneath a starry sky.",
+  "별똥별이 내리는 겨울밤 눈길을 달리는 집사와 리티": "A keeper and Ritty running through snow beneath shooting stars",
+  "우와, 정말 커다란 물고기야!": "Wow, what a big fish!",
+  "안녕! 우리 같이 놀까?": "Hello! Shall we play together?",
+  "눈 위에 우리 발자국이 생겼어!": "Look at our footprints in the snow!",
+  "마을 장면 보기": "View village scene",
+  "겨울 장면 보기": "View winter scene",
   '어느 날 갑자기<br>하늘에서 고양이가 떨어졌다!': 'One day, a cat<br>fell from the sky!',
   '내 이야기를 들어주는<br>나만의 고양이 친구': 'A cat friend who is always there to listen',
   '말하는 고양이와 함께하는 집사 생활 시뮬레이션 게임': 'A cozy life simulation with talking cats',

@@ -2,6 +2,20 @@ import { homeEnglish } from './home-en'
 import { translateMarkupCopy } from './translate-markup'
 
 const chinese: Record<string, string> = {
+  "Fishing by the lake": "在湖邊釣魚",
+  "Celebrate a big catch with Ritty.": "和 Ritty 一起釣到大魚了。",
+  "A keeper and Ritty with a big fish on the dock": "主人和 Ritty 在碼頭釣到大魚",
+  "Friends around the village": "在村莊遇見朋友",
+  "Meet new friends in the sunny village square.": "在陽光灑落的廣場向新朋友打招呼。",
+  "Keepers and cat friends greeting each other by the village fountain": "主人和貓咪朋友在村莊噴水池前互相打招呼",
+  "A winter walk beneath shooting stars": "流星下的冬日散步",
+  "Run through the snow with Ritty beneath a starry sky.": "和 Ritty 在雪地奔跑，共度繁星閃耀的夜晚。",
+  "A keeper and Ritty running through snow beneath shooting stars": "主人和 Ritty 在流星劃過的冬夜裡奔跑於雪地",
+  "Wow, what a big fish!": "哇，好大的一條魚！",
+  "Hello! Shall we play together?": "你好！一起玩吧？",
+  "Look at our footprints in the snow!": "看，雪地上有我們的腳印！",
+  "View village scene": "查看村莊場景",
+  "View winter scene": "查看冬日場景",
   'One day, a cat<br>fell from the sky!': '有一天，貓咪<br>突然從天而降！',
   'A cat friend who is always there to listen': '專屬於你、總是願意傾聽的貓咪夥伴',
   'A cozy life simulation with talking cats': '和會說話的貓咪一起享受療癒日常',

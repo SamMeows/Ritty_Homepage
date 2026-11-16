@@ -14,6 +14,7 @@ export default async function RittyLanding({ variant = 'cozy-life', locale = 'kr
   const original = await getDictionary(locale)
   const dict = {...original, preRegister:{...original.preRegister,title:locale === 'kr' ? '리티 사전등록' : locale === 'ja' ? 'Rittyの事前登録' : locale === 'zh-tw' ? 'Ritty 事前登錄' : 'Ritty Pre-registration',releaseNote:locale === 'kr' ? '출시 소식을 가장 먼저 받아보세요' : locale === 'ja' ? '配信情報をいち早くお届け' : locale === 'zh-tw' ? '搶先收到上線消息' : 'Be the first to hear about the launch'}}
   const markup = homeMarkup
+    .replace('class="hero"', 'class="hero hero-winter"')
     .replace('<div class="company-details">', '<div class="company-details" data-nosnippet>')
     .replace(/<a class="news-link"[\s\S]*?<\/a>/, '<div id="news-feed"></div>')
     .replace('<div id="news-feed"></div>', '<div id="news-feed"></div><div class="news-actions"><a class="news-all" href="/news">리티 소식 모두 보기 →</a></div>')
