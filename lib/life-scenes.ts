@@ -6,7 +6,6 @@ export const lifeScenes = [
   ['home', '03 / OUR HOME', '직접 만들어 꾸미는 집', '재료를 모아 가구를 만들고 원하는 곳에 놓아요. 집을 넓혀 더 많은 가구를 배치할 수도 있어요.'],
   ["fishing-friends","04 / FISHING","호숫가에서 낚시하는 날","리티와 함께 커다란 물고기를 낚았어요."],
   ["village-friends","05 / VILLAGE","마을에서 만나는 친구들","햇살 가득한 광장에서 새로운 친구와 인사해요."],
-  ["winter-friends","06 / WINTER","별똥별 아래, 겨울 산책","리티와 눈길을 달리며 별이 쏟아지는 밤을 즐겨요."],
 ] as const
 
 export function lifePanelsMarkup() {
