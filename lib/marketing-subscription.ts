@@ -27,9 +27,19 @@ function subscriptionStorageError(path: string, method: string, category: string
   ...(status === undefined ? {} : { status }),
  })
 }
+let nextNewsletterRead = 0
+const waitNewsletterRead = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms))
+
 async function notion(path: string, method = 'GET', body?: unknown, attempt = 0): Promise<any> {
  const readOnly = method === 'GET' || (method === 'POST' && /^\/data_sources\/[^/]+\/query$/.test(path))
  const storage = config()
+ const workerRead = readOnly && process.env.GITHUB_ACTIONS === 'true' && process.env.NEWSLETTER_SERIAL_WORKER === 'true'
+ if (workerRead) {
+  const now = Date.now()
+  const start = Math.max(now, nextNewsletterRead)
+  nextNewsletterRead = start + 550
+  if (start > now) await waitNewsletterRead(start - now)
+ }
  let response: Response
  try {
   response = await fetch('https://api.notion.com/v1' + path, { method,
@@ -44,7 +54,18 @@ async function notion(path: string, method = 'GET', body?: unknown, attempt = 0)
   throw subscriptionStorageError(path, method, timeout ? 'timeout' : 'network')
  }
  // An explicit rate-limit rejection is safe to retry, including rejected writes.
- if (response.status === 429 && attempt < 2) {
+ if (response.status === 429 && workerRead && attempt < 4) {
+  const header = response.headers.get('retry-after')
+  const seconds = header === null ? NaN : Number(header)
+  const backoffMs = 1000 * 2 ** attempt
+  const waitMs = Number.isFinite(seconds) && seconds >= 0 ? Math.max(seconds * 1000, backoffMs) : backoffMs
+  if (waitMs <= 60000) {
+   nextNewsletterRead = Math.max(nextNewsletterRead, Date.now() + waitMs)
+   await response.body?.cancel().catch(() => undefined)
+   return notion(path, method, body, attempt + 1)
+  }
+ }
+ if (response.status === 429 && !workerRead && attempt < 2) {
   const seconds = Number(response.headers.get('retry-after') || 1)
   if (Number.isFinite(seconds) && seconds >= 0 && seconds <= 15) {
    await new Promise(resolve => setTimeout(resolve, Math.max(seconds, 1) * 1000))
